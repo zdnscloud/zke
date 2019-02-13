@@ -38,7 +38,6 @@ type Cluster struct {
 	ClusterDomain                    string
 	ClusterCIDR                      string
 	ClusterDNSServer                 string
-	DinD                             bool
 	DockerDialerFactory              hosts.DialerFactory
 	EtcdHosts                        []*hosts.Host
 	EtcdReadyHosts                   []*hosts.Host
@@ -152,7 +151,6 @@ func InitClusterObject(ctx context.Context, rkeConfig *v3.RancherKubernetesEngin
 		RancherKubernetesEngineConfig: *rkeConfig,
 		ConfigPath:                    flags.ClusterFilePath,
 		ConfigDir:                     flags.ConfigDir,
-		DinD:                          flags.DinD,
 		CertificateDir:                flags.CertificateDir,
 		StateFilePath:                 GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir),
 		PrivateRegistriesMap:          make(map[string]v3.PrivateRegistry),

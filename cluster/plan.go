@@ -299,10 +299,6 @@ func (c *Cluster) BuildKubeControllerProcess(prefixPath string) v3.Process {
 		"terminated-pod-gc-threshold":      "1000",
 		"v":                                "2",
 	}
-	// Best security practice is to listen on localhost, but DinD uses private container network instead of Host.
-	if c.DinD {
-		CommandArgs["address"] = "0.0.0.0"
-	}
 
 	// check if our version has specific options for this component
 	serviceOptions := c.GetKubernetesServicesOptions()
@@ -506,10 +502,6 @@ func (c *Cluster) BuildKubeProxyProcess(host *hosts.Host, prefixPath string) v3.
 		"hostname-override":    host.HostnameOverride,
 		"kubeconfig":           pki.GetConfigPath(pki.KubeProxyCertName),
 	}
-	// Best security practice is to listen on localhost, but DinD uses private container network instead of Host.
-	if c.DinD {
-		CommandArgs["healthz-bind-address"] = "0.0.0.0"
-	}
 	// check if our version has specific options for this component
 	serviceOptions := c.GetKubernetesServicesOptions()
 	if serviceOptions.Kubeproxy != nil {
@@ -606,11 +598,6 @@ func (c *Cluster) BuildSchedulerProcess(prefixPath string) v3.Process {
 		"address":      "127.0.0.1",
 		"profiling":    "false",
 		"kubeconfig":   pki.GetConfigPath(pki.KubeSchedulerCertName),
-	}
-
-	// Best security practice is to listen on localhost, but DinD uses private container network instead of Host.
-	if c.DinD {
-		CommandArgs["address"] = "0.0.0.0"
 	}
 
 	// check if our version has specific options for this component

@@ -55,7 +55,6 @@ const (
 type ExternalFlags struct {
 	CertificateDir   string
 	ClusterFilePath  string
-	DinD             bool
 	ConfigDir        string
 	CustomCerts      bool
 	DisablePortCheck bool
