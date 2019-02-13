@@ -6,10 +6,10 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
-	"github.com/rancher/rke/docker"
-	"github.com/rancher/rke/hosts"
-	"github.com/rancher/rke/log"
-	"github.com/rancher/rke/util"
+	"github.com/zdnscloud/zke/docker"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/util"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 )

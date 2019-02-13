@@ -5,7 +5,7 @@ import (
 	"regexp"
 
 	"github.com/mattn/go-colorable"
-	"github.com/rancher/rke/cmd"
+	"github.com/zdnscloud/zke/cmd"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )

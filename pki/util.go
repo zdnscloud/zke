@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rancher/rke/hosts"
+	"github.com/zdnscloud/zke/hosts"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/util/cert"

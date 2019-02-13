@@ -3,7 +3,7 @@ package vsphere
 import (
 	"fmt"
 
-	"github.com/rancher/rke/templates"
+	"github.com/zdnscloud/zke/templates"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 )
 

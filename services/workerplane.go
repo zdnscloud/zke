@@ -3,10 +3,10 @@ package services
 import (
 	"context"
 
-	"github.com/rancher/rke/hosts"
-	"github.com/rancher/rke/log"
-	"github.com/rancher/rke/pki"
-	"github.com/rancher/rke/util"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/util"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"golang.org/x/sync/errgroup"
 )

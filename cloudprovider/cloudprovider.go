@@ -1,11 +1,11 @@
 package cloudprovider
 
 import (
-	"github.com/rancher/rke/cloudprovider/aws"
-	"github.com/rancher/rke/cloudprovider/azure"
-	"github.com/rancher/rke/cloudprovider/custom"
-	"github.com/rancher/rke/cloudprovider/openstack"
-	"github.com/rancher/rke/cloudprovider/vsphere"
+	"github.com/zdnscloud/zke/cloudprovider/aws"
+	"github.com/zdnscloud/zke/cloudprovider/azure"
+	"github.com/zdnscloud/zke/cloudprovider/custom"
+	"github.com/zdnscloud/zke/cloudprovider/openstack"
+	"github.com/zdnscloud/zke/cloudprovider/vsphere"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 )
 

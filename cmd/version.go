@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/rancher/rke/cluster"
-	"github.com/rancher/rke/pki"
+	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/pki"
 	"github.com/urfave/cli"
 )
 

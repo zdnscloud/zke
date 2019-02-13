@@ -3,9 +3,9 @@ package services
 import (
 	"context"
 
-	"github.com/rancher/rke/docker"
-	"github.com/rancher/rke/hosts"
-	"github.com/rancher/rke/pki"
+	"github.com/zdnscloud/zke/docker"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/pki"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 )
 

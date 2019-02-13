@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/rancher/rke/hosts"
-	"github.com/rancher/rke/log"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/log"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"k8s.io/client-go/util/cert"
 )

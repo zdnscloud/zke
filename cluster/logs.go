@@ -3,8 +3,8 @@ package cluster
 import (
 	"context"
 
-	"github.com/rancher/rke/hosts"
-	"github.com/rancher/rke/util"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/util"
 	"golang.org/x/sync/errgroup"
 )
 

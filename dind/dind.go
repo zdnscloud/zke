@@ -7,8 +7,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/rancher/rke/docker"
-	"github.com/rancher/rke/util"
+	"github.com/zdnscloud/zke/docker"
+	"github.com/zdnscloud/zke/util"
 	"github.com/sirupsen/logrus"
 )
 

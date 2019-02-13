@@ -10,9 +10,9 @@ import (
 	"net"
 
 	"github.com/docker/docker/client"
-	"github.com/rancher/rke/docker"
-	"github.com/rancher/rke/log"
-	"github.com/rancher/rke/util"
+	"github.com/zdnscloud/zke/docker"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/util"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"

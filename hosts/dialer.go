@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rancher/rke/k8s"
+	"github.com/zdnscloud/zke/k8s"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"golang.org/x/crypto/ssh"
 )

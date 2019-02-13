@@ -1,7 +1,7 @@
 package cluster
 
 import (
-	"github.com/rancher/rke/services"
+	"github.com/zdnscloud/zke/services"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 )
 

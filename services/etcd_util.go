@@ -11,7 +11,7 @@ import (
 	"time"
 
 	etcdclient "github.com/coreos/etcd/client"
-	"github.com/rancher/rke/hosts"
+	"github.com/zdnscloud/zke/hosts"
 	"github.com/sirupsen/logrus"
 )
 

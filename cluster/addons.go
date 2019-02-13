@@ -12,9 +12,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rancher/rke/addons"
-	"github.com/rancher/rke/k8s"
-	"github.com/rancher/rke/log"
+	"github.com/zdnscloud/zke/addons"
+	"github.com/zdnscloud/zke/k8s"
+	"github.com/zdnscloud/zke/log"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )

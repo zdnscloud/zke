@@ -1,6 +1,6 @@
 package addons
 
-import "github.com/rancher/rke/templates"
+import "github.com/zdnscloud/zke/templates"
 
 func GetMetricsServerManifest(MetricsServerConfig interface{}) (string, error) {
 

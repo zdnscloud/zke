@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rancher/rke/hosts"
-	"github.com/rancher/rke/k8s"
-	"github.com/rancher/rke/log"
-	"github.com/rancher/rke/pki"
-	"github.com/rancher/rke/services"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/k8s"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/services"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/util/cert"
 )

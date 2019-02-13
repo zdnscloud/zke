@@ -3,9 +3,9 @@ package authz
 import (
 	"context"
 
-	"github.com/rancher/rke/k8s"
-	"github.com/rancher/rke/log"
-	"github.com/rancher/rke/templates"
+	"github.com/zdnscloud/zke/k8s"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/templates"
 )
 
 func ApplyJobDeployerServiceAccount(ctx context.Context, kubeConfigPath string, k8sWrapTransport k8s.WrapTransport) error {

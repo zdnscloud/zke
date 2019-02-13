@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/rancher/rke/k8s"
-	"github.com/rancher/rke/templates"
+	"github.com/zdnscloud/zke/k8s"
+	"github.com/zdnscloud/zke/templates"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

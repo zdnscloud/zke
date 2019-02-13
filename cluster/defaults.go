@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rancher/rke/cloudprovider"
-	"github.com/rancher/rke/docker"
-	"github.com/rancher/rke/k8s"
-	"github.com/rancher/rke/log"
-	"github.com/rancher/rke/services"
-	"github.com/rancher/rke/templates"
-	"github.com/rancher/rke/util"
+	"github.com/zdnscloud/zke/cloudprovider"
+	"github.com/zdnscloud/zke/docker"
+	"github.com/zdnscloud/zke/k8s"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/services"
+	"github.com/zdnscloud/zke/templates"
+	"github.com/zdnscloud/zke/util"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 )
 
