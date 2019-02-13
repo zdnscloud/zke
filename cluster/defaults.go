@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zdnscloud/zke/cloudprovider"
+	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/templates"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 )
 
 const (
@@ -334,24 +333,6 @@ func d(image, defaultRegistryURL string) string {
 		return image
 	}
 	return fmt.Sprintf("%s/%s", defaultRegistryURL, image)
-}
-
-func (c *Cluster) setCloudProvider() error {
-	p, err := cloudprovider.InitCloudProvider(c.CloudProvider)
-	if err != nil {
-		return fmt.Errorf("Failed to initialize cloud provider: %v", err)
-	}
-	if p != nil {
-		c.CloudConfigFile, err = p.GenerateCloudConfigFile()
-		if err != nil {
-			return fmt.Errorf("Failed to parse cloud config file: %v", err)
-		}
-		c.CloudProvider.Name = p.GetName()
-		if c.CloudProvider.Name == "" {
-			return fmt.Errorf("Name of the cloud provider is not defined for custom provider")
-		}
-	}
-	return nil
 }
 
 func GetExternalFlags(local, updateOnly, disablePortCheck bool, configDir, clusterFilePath string) ExternalFlags {

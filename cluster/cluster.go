@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/authz"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
@@ -17,8 +19,6 @@ import (
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
@@ -175,10 +175,6 @@ func InitClusterObject(ctx context.Context, rkeConfig *v3.RancherKubernetesEngin
 	// extract cluster network configuration
 	c.setNetworkOptions()
 
-	// Register cloud provider
-	if err := c.setCloudProvider(); err != nil {
-		return nil, fmt.Errorf("Failed to register cloud provider: %v", err)
-	}
 	// set hosts groups
 	if err := c.InvertIndexHosts(); err != nil {
 		return nil, fmt.Errorf("Failed to classify hosts from config file: %v", err)

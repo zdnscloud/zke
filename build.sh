@@ -1,2 +1,2 @@
-rm -rf rke && go build && mv rke /home/vagrant/workspace/code/go/bin
+rm -rf zke && go build && mv zke /home/vagrant/workspace/code/go/bin
 

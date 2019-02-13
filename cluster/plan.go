@@ -13,15 +13,14 @@ import (
 
 	ref "github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
-	"github.com/zdnscloud/zke/cloudprovider/aws"
+	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -161,9 +160,7 @@ func (c *Cluster) BuildKubeAPIProcess(host *hosts.Host, prefixPath string) v3.Pr
 		"tls-cert-file":                      pki.GetCertPath(pki.KubeAPICertName),
 		"tls-private-key-file":               pki.GetKeyPath(pki.KubeAPICertName),
 	}
-	if len(c.CloudProvider.Name) > 0 && c.CloudProvider.Name != aws.AWSCloudProviderName {
-		CommandArgs["cloud-config"] = cloudConfigFileName
-	}
+
 	if c.Authentication.Webhook != nil {
 		CommandArgs["authentication-token-webhook-config-file"] = authnWebhookFileName
 		CommandArgs["authentication-token-webhook-cache-ttl"] = c.Authentication.Webhook.CacheTimeout
@@ -306,14 +303,7 @@ func (c *Cluster) BuildKubeControllerProcess(prefixPath string) v3.Process {
 	if c.DinD {
 		CommandArgs["address"] = "0.0.0.0"
 	}
-	if len(c.CloudProvider.Name) > 0 && c.CloudProvider.Name != aws.AWSCloudProviderName {
-		CommandArgs["cloud-config"] = cloudConfigFileName
-	}
-	if len(c.CloudProvider.Name) > 0 {
-		c.Services.KubeController.ExtraEnv = append(
-			c.Services.KubeController.ExtraEnv,
-			fmt.Sprintf("%s=%s", CloudConfigSumEnv, getCloudConfigChecksum(c.CloudConfigFile)))
-	}
+
 	// check if our version has specific options for this component
 	serviceOptions := c.GetKubernetesServicesOptions()
 	if serviceOptions.KubeController != nil {
@@ -413,14 +403,6 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) v3.Pr
 	}
 	if host.Address != host.InternalAddress {
 		CommandArgs["node-ip"] = host.InternalAddress
-	}
-	if len(c.CloudProvider.Name) > 0 && c.CloudProvider.Name != aws.AWSCloudProviderName {
-		CommandArgs["cloud-config"] = cloudConfigFileName
-	}
-	if len(c.CloudProvider.Name) > 0 {
-		c.Services.Kubelet.ExtraEnv = append(
-			c.Services.Kubelet.ExtraEnv,
-			fmt.Sprintf("%s=%s", CloudConfigSumEnv, getCloudConfigChecksum(c.CloudConfigFile)))
 	}
 	if len(c.PrivateRegistriesMap) > 0 {
 		kubeletDockerConfig, _ := docker.GetKubeletDockerConfig(c.PrivateRegistriesMap)
