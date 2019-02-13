@@ -7,14 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/dind"
-	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/log"
-	"github.com/zdnscloud/zke/pki"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pki"
 )
 
 func RemoveCommand() cli.Command {
@@ -32,10 +31,6 @@ func RemoveCommand() cli.Command {
 		cli.BoolFlag{
 			Name:  "local",
 			Usage: "Remove Kubernetes cluster locally",
-		},
-		cli.BoolFlag{
-			Name:  "dind",
-			Usage: "Remove Kubernetes cluster deployed in dind mode",
 		},
 	}
 
@@ -100,9 +95,6 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 			return nil
 		}
 	}
-	if ctx.Bool("dind") {
-		return clusterRemoveDind(ctx)
-	}
 	rkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
@@ -141,31 +133,4 @@ func clusterRemoveLocal(ctx *cli.Context) error {
 	flags := cluster.GetExternalFlags(true, false, false, "", filePath)
 
 	return ClusterRemove(context.Background(), rkeConfig, hosts.DialersOptions{}, flags)
-}
-
-func clusterRemoveDind(ctx *cli.Context) error {
-	clusterFile, filePath, err := resolveClusterFile(ctx)
-	if err != nil {
-		return fmt.Errorf("Failed to resolve cluster file: %v", err)
-	}
-
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
-	if err != nil {
-		return fmt.Errorf("Failed to parse cluster file: %v", err)
-	}
-
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
-	if err != nil {
-		return err
-	}
-
-	for _, node := range rkeConfig.Nodes {
-		if err = dind.RmoveDindContainer(context.Background(), node.Address); err != nil {
-			return err
-		}
-	}
-	localKubeConfigPath := pki.GetLocalKubeConfig(filePath, "")
-	// remove the kube config file
-	pki.RemoveAdminConfig(context.Background(), localKubeConfigPath)
-	return err
 }

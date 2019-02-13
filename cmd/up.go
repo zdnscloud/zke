@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/dind"
-	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/log"
-	"github.com/zdnscloud/zke/pki"
 	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pki"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -31,19 +29,6 @@ func UpCommand() cli.Command {
 		cli.BoolFlag{
 			Name:  "local",
 			Usage: "Deploy Kubernetes cluster locally",
-		},
-		cli.BoolFlag{
-			Name:  "dind",
-			Usage: "Deploy Kubernetes cluster in docker containers (experimental)",
-		},
-		cli.StringFlag{
-			Name:  "dind-storage-driver",
-			Usage: "Storage driver for the docker in docker containers (experimental)",
-		},
-		cli.StringFlag{
-			Name:  "dind-dns-server",
-			Usage: "DNS resolver to be used by docker in docker container. Useful if host is running systemd-resovld",
-			Value: "8.8.8.8",
 		},
 		cli.BoolFlag{
 			Name:  "update-only",
@@ -249,9 +234,7 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	if ctx.Bool("local") {
 		return clusterUpLocal(ctx)
 	}
-	if ctx.Bool("dind") {
-		return clusterUpDind(ctx)
-	}
+
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
@@ -313,75 +296,4 @@ func clusterUpLocal(ctx *cli.Context) error {
 	}
 	_, _, _, _, _, err = ClusterUp(context.Background(), dialers, flags)
 	return err
-}
-
-func clusterUpDind(ctx *cli.Context) error {
-	// get dind config
-	rkeConfig, disablePortCheck, dindStorageDriver, filePath, dindDNS, err := getDindConfig(ctx)
-	if err != nil {
-		return err
-	}
-	// setup dind environment
-	if err = createDINDEnv(context.Background(), rkeConfig, dindStorageDriver, dindDNS); err != nil {
-		return err
-	}
-
-	// setting up the dialers
-	dialers := hosts.GetDialerOptions(hosts.DindConnFactory, hosts.DindHealthcheckConnFactory, nil)
-	// setting up flags
-	flags := cluster.GetExternalFlags(false, false, disablePortCheck, "", filePath)
-	flags.DinD = true
-
-	if ctx.Bool("init") {
-		return ClusterInit(context.Background(), rkeConfig, dialers, flags)
-	}
-	if err := ClusterInit(context.Background(), rkeConfig, dialers, flags); err != nil {
-		return err
-	}
-	// start cluster
-	_, _, _, _, _, err = ClusterUp(context.Background(), dialers, flags)
-	return err
-}
-
-func getDindConfig(ctx *cli.Context) (*v3.RancherKubernetesEngineConfig, bool, string, string, string, error) {
-	disablePortCheck := ctx.Bool("disable-port-check")
-	dindStorageDriver := ctx.String("dind-storage-driver")
-	dindDNS := ctx.String("dind-dns-server")
-
-	clusterFile, filePath, err := resolveClusterFile(ctx)
-	if err != nil {
-		return nil, disablePortCheck, "", "", "", fmt.Errorf("Failed to resolve cluster file: %v", err)
-	}
-
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
-	if err != nil {
-		return nil, disablePortCheck, "", "", "", fmt.Errorf("Failed to parse cluster file: %v", err)
-	}
-
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
-	if err != nil {
-		return nil, disablePortCheck, "", "", "", err
-	}
-	// Setting conntrack max for kubeproxy to 0
-	if rkeConfig.Services.Kubeproxy.ExtraArgs == nil {
-		rkeConfig.Services.Kubeproxy.ExtraArgs = make(map[string]string)
-	}
-	rkeConfig.Services.Kubeproxy.ExtraArgs["conntrack-max-per-core"] = "0"
-
-	return rkeConfig, disablePortCheck, dindStorageDriver, filePath, dindDNS, nil
-}
-
-func createDINDEnv(ctx context.Context, rkeConfig *v3.RancherKubernetesEngineConfig, dindStorageDriver, dindDNS string) error {
-	for i := range rkeConfig.Nodes {
-		address, err := dind.StartUpDindContainer(ctx, rkeConfig.Nodes[i].Address, dind.DINDNetwork, dindStorageDriver, dindDNS)
-		if err != nil {
-			return err
-		}
-		if rkeConfig.Nodes[i].HostnameOverride == "" {
-			rkeConfig.Nodes[i].HostnameOverride = rkeConfig.Nodes[i].Address
-		}
-		rkeConfig.Nodes[i].Address = address
-	}
-	time.Sleep(DINDWaitTime * time.Second)
-	return nil
 }

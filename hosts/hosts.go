@@ -11,10 +11,10 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/docker/docker/client"
+	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 )
