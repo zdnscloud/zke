@@ -34,7 +34,7 @@ const (
 	DefaultAuthnWebhookFile  = templates.AuthnWebhook
 	DefaultAuthnCacheTimeout = "5s"
 
-	DefaultNetworkPlugin        = "canal"
+	DefaultNetworkPlugin        = "flannel"
 	DefaultNetworkCloudProvider = "none"
 
 	DefaultIngressController             = "nginx"
@@ -44,7 +44,6 @@ const (
 	DefaultMonitoringProvider            = "metrics-server"
 	DefaultEtcdBackupConfigIntervalHours = 12
 	DefaultEtcdBackupConfigRetention     = 6
-	DefaultDNSProvider                   = "kubedns"
 
 	DefaultEtcdHeartbeatIntervalName  = "heartbeat-interval"
 	DefaultEtcdHeartbeatIntervalValue = "500"
@@ -147,10 +146,6 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	err := c.setClusterImageDefaults()
 	if err != nil {
 		return err
-	}
-
-	if len(c.DNS.Provider) == 0 {
-		c.DNS.Provider = DefaultDNSProvider
 	}
 
 	c.setClusterServicesDefaults()
@@ -279,7 +274,7 @@ func (c *Cluster) setClusterNetworkDefaults() {
 		}
 	case FlannelNetworkPlugin:
 		networkPluginConfigDefaultsMap = map[string]string{
-			FlannelBackendType: "vxlan",
+			FlannelBackendType: "host-gw",
 		}
 	case CanalNetworkPlugin:
 		networkPluginConfigDefaultsMap = map[string]string{

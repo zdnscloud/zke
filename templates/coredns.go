@@ -85,7 +85,7 @@ metadata:
     k8s-app: kube-dns
     kubernetes.io/name: "CoreDNS"
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -181,78 +181,4 @@ spec:
     protocol: UDP
   - name: dns-tcp
     port: 53
-    protocol: TCP
----
-apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: coredns-autoscaler
-  namespace: kube-system
-  labels:
-    k8s-app: coredns-autoscaler
-spec:
-  template:
-    metadata:
-      labels:
-        k8s-app: coredns-autoscaler
-    spec:
-      serviceAccountName: coredns-autoscaler
-      containers:
-      - name: autoscaler
-        image: {{.CoreDNSAutoScalerImage}}
-        resources:
-            requests:
-                cpu: "20m"
-                memory: "10Mi"
-        command:
-          - /cluster-proportional-autoscaler
-          - --namespace=kube-system
-          - --configmap=coredns-autoscaler
-          - --target=Deployment/coredns
-          # When cluster is using large nodes(with more cores), "coresPerReplica" should dominate.
-          # If using small nodes, "nodesPerReplica" should dominate.
-          - --default-params={"linear":{"coresPerReplica":128,"nodesPerReplica":4,"min":1}}
-          - --logtostderr=true
-          - --v=2
-{{- if eq .RBACConfig "rbac"}}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: coredns-autoscaler
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: system:coredns-autoscaler
-rules:
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["list"]
-  - apiGroups: [""]
-    resources: ["replicationcontrollers/scale"]
-    verbs: ["get", "update"]
-  - apiGroups: ["extensions"]
-    resources: ["deployments/scale", "replicasets/scale"]
-    verbs: ["get", "update"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "create"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: system:coredns-autoscaler
-subjects:
-  - kind: ServiceAccount
-    name: coredns-autoscaler
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: system:coredns-autoscaler
-  apiGroup: rbac.authorization.k8s.io
-{{- end }}`
+    protocol: TCP`
