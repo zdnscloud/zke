@@ -10,16 +10,17 @@ func Mirror(image string) string {
 		return image
 	}
 
-	image = strings.Replace(image, "gcr.io/google_containers", "rancher", 1)
-	image = strings.Replace(image, "quay.io/coreos/", "rancher/coreos-", 1)
-	image = strings.Replace(image, "quay.io/calico/", "rancher/calico-", 1)
-	image = strings.Replace(image, "k8s.gcr.io/", "rancher/nginx-ingress-controller-", 1)
+	image = strings.Replace(image, "gcr.io/google_containers", "zdnscloud", 1)
+	image = strings.Replace(image, "quay.io/coreos/", "zdnscloud/coreos-", 1)
+	image = strings.Replace(image, "quay.io/calico/", "zdnscloud/calico-", 1)
+	image = strings.Replace(image, "k8s.gcr.io/", "zdnscloud/nginx-ingress-controller-", 1)
 	image = strings.Replace(image, "plugins/docker", "rancher/jenkins-plugins-docker", 1)
 	image = strings.Replace(image, "kibana", "rancher/kibana", 1)
 	image = strings.Replace(image, "jenkins/", "rancher/jenkins-", 1)
 	image = strings.Replace(image, "alpine/git", "rancher/alpine-git", 1)
 	image = strings.Replace(image, "prom/", "rancher/prom-", 1)
 	image = strings.Replace(image, "quay.io/pires", "rancher", 1)
+	image = strings.Replace(image, "coredns/", "zdnscloud/", 1)
 
 	Mirrors[image] = orig
 	return image

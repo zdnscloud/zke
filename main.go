@@ -23,20 +23,20 @@ func main() {
 
 func mainErr() error {
 	app := cli.NewApp()
-	app.Name = "rke"
+	app.Name = "zke"
 	app.Version = VERSION
-	app.Usage = "Rancher Kubernetes Engine, an extremely simple, lightning fast Kubernetes installer that works everywhere"
+	app.Usage = "ZDNS Kubernetes Engine, an extremely simple, lightning fast Kubernetes installer that works everywhere"
 	app.Before = func(ctx *cli.Context) error {
 		if ctx.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-		logrus.Debugf("RKE version %s", app.Version)
+		logrus.Debugf("ZKE version %s", app.Version)
 		if released.MatchString(app.Version) {
 			return nil
 		}
 		return nil
 	}
-	app.Author = "Rancher Labs, Inc."
+	app.Author = "ZdnsCloud"
 	app.Email = ""
 	app.Commands = []cli.Command{
 		cmd.UpCommand(),
