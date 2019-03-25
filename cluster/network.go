@@ -48,12 +48,6 @@ const (
 	CalicoNetworkPlugin = "calico"
 	CalicoCloudProvider = "calico_cloud_provider"
 
-	CanalNetworkPlugin      = "canal"
-	CanalIface              = "canal_iface"
-	CanalFlannelBackendType = "canal_flannel_backend_type"
-
-	WeaveNetworkPlugin = "weave"
-	WeavePasswordKey   = "weave_password"
 
 	// List of map keys to be used with network templates
 
@@ -83,15 +77,11 @@ const (
 	CNIImage           = "CNIImage"
 	NodeImage          = "NodeImage"
 	ControllersImage   = "ControllersImage"
-	CanalFlannelImg    = "CanalFlannelImg"
-	WeaveLoopbackImage = "WeaveLoopbackImage"
 
 	Calicoctl = "Calicoctl"
 
 	FlannelInterface = "FlannelInterface"
 	FlannelBackend   = "FlannelBackend"
-	CanalInterface   = "CanalInterface"
-	WeavePassword    = "WeavePassword"
 	RBACConfig       = "RBACConfig"
 	ClusterVersion   = "ClusterVersion"
 )
@@ -120,10 +110,6 @@ func (c *Cluster) deployNetworkPlugin(ctx context.Context) error {
 		return c.doFlannelDeploy(ctx)
 	case CalicoNetworkPlugin:
 		return c.doCalicoDeploy(ctx)
-	case CanalNetworkPlugin:
-		return c.doCanalDeploy(ctx)
-	case WeaveNetworkPlugin:
-		return c.doWeaveDeploy(ctx)
 	case NoNetworkPlugin:
 		log.Infof(ctx, "[network] Not deploying a cluster network, expecting custom CNI")
 		return nil
@@ -169,46 +155,6 @@ func (c *Cluster) doCalicoDeploy(ctx context.Context) error {
 	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
 
-func (c *Cluster) doCanalDeploy(ctx context.Context) error {
-	clientConfig := pki.GetConfigPath(pki.KubeNodeCertName)
-	canalConfig := map[string]interface{}{
-		ClientCertPath:  pki.GetCertPath(pki.KubeNodeCertName),
-		APIRoot:         "https://127.0.0.1:6443",
-		ClientKeyPath:   pki.GetKeyPath(pki.KubeNodeCertName),
-		ClientCAPath:    pki.GetCertPath(pki.CACertName),
-		KubeCfg:         clientConfig,
-		ClusterCIDR:     c.ClusterCIDR,
-		NodeImage:       c.SystemImages.CanalNode,
-		CNIImage:        c.SystemImages.CanalCNI,
-		CanalFlannelImg: c.SystemImages.CanalFlannel,
-		RBACConfig:      c.Authorization.Mode,
-		CanalInterface:  c.Network.Options[CanalIface],
-		FlannelBackend: map[string]interface{}{
-			"Type": c.Network.Options[CanalFlannelBackendType],
-		},
-	}
-	pluginYaml, err := c.getNetworkPluginManifest(canalConfig)
-	if err != nil {
-		return err
-	}
-	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
-}
-
-func (c *Cluster) doWeaveDeploy(ctx context.Context) error {
-	weaveConfig := map[string]interface{}{
-		ClusterCIDR:        c.ClusterCIDR,
-		WeavePassword:      c.Network.Options[WeavePasswordKey],
-		Image:              c.SystemImages.WeaveNode,
-		CNIImage:           c.SystemImages.WeaveCNI,
-		WeaveLoopbackImage: c.SystemImages.Alpine,
-		RBACConfig:         c.Authorization.Mode,
-	}
-	pluginYaml, err := c.getNetworkPluginManifest(weaveConfig)
-	if err != nil {
-		return err
-	}
-	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
-}
 
 func (c *Cluster) getNetworkPluginManifest(pluginConfig map[string]interface{}) (string, error) {
 	switch c.Network.Plugin {
@@ -216,10 +162,6 @@ func (c *Cluster) getNetworkPluginManifest(pluginConfig map[string]interface{}) 
 		return templates.CompileTemplateFromMap(templates.FlannelTemplate, pluginConfig)
 	case CalicoNetworkPlugin:
 		return templates.CompileTemplateFromMap(templates.GetVersionedTemplates(CalicoNetworkPlugin, c.Version), pluginConfig)
-	case CanalNetworkPlugin:
-		return templates.CompileTemplateFromMap(templates.GetVersionedTemplates(CanalNetworkPlugin, c.Version), pluginConfig)
-	case WeaveNetworkPlugin:
-		return templates.CompileTemplateFromMap(templates.WeaveTemplate, pluginConfig)
 	default:
 		return "", fmt.Errorf("[network] Unsupported network plugin: %s", c.Network.Plugin)
 	}

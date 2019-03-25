@@ -241,11 +241,6 @@ func (c *Cluster) setClusterImageDefaults() error {
 		&c.SystemImages.CalicoNode:                d(imageDefaults.CalicoNode, privRegURL),
 		&c.SystemImages.CalicoCNI:                 d(imageDefaults.CalicoCNI, privRegURL),
 		&c.SystemImages.CalicoCtl:                 d(imageDefaults.CalicoCtl, privRegURL),
-		&c.SystemImages.CanalNode:                 d(imageDefaults.CanalNode, privRegURL),
-		&c.SystemImages.CanalCNI:                  d(imageDefaults.CanalCNI, privRegURL),
-		&c.SystemImages.CanalFlannel:              d(imageDefaults.CanalFlannel, privRegURL),
-		&c.SystemImages.WeaveNode:                 d(imageDefaults.WeaveNode, privRegURL),
-		&c.SystemImages.WeaveCNI:                  d(imageDefaults.WeaveCNI, privRegURL),
 		&c.SystemImages.Ingress:                   d(imageDefaults.Ingress, privRegURL),
 		&c.SystemImages.IngressBackend:            d(imageDefaults.IngressBackend, privRegURL),
 		&c.SystemImages.MetricsServer:             d(imageDefaults.MetricsServer, privRegURL),
@@ -276,10 +271,6 @@ func (c *Cluster) setClusterNetworkDefaults() {
 		networkPluginConfigDefaultsMap = map[string]string{
 			FlannelBackendType: "host-gw",
 		}
-	case CanalNetworkPlugin:
-		networkPluginConfigDefaultsMap = map[string]string{
-			CanalFlannelBackendType: "vxlan",
-		}
 	}
 	if c.Network.CalicoNetworkProvider != nil {
 		setDefaultIfEmpty(&c.Network.CalicoNetworkProvider.CloudProvider, DefaultNetworkCloudProvider)
@@ -288,12 +279,6 @@ func (c *Cluster) setClusterNetworkDefaults() {
 	if c.Network.FlannelNetworkProvider != nil {
 		networkPluginConfigDefaultsMap[FlannelIface] = c.Network.FlannelNetworkProvider.Iface
 
-	}
-	if c.Network.CanalNetworkProvider != nil {
-		networkPluginConfigDefaultsMap[CanalIface] = c.Network.CanalNetworkProvider.Iface
-	}
-	if c.Network.WeaveNetworkProvider != nil {
-		networkPluginConfigDefaultsMap[WeavePassword] = c.Network.WeaveNetworkProvider.Password
 	}
 	for k, v := range networkPluginConfigDefaultsMap {
 		setDefaultIfEmptyMapValue(c.Network.Options, k, v)
