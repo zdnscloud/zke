@@ -5,9 +5,9 @@ import (
 	"regexp"
 
 	"github.com/mattn/go-colorable"
+	"github.com/zdnscloud/zke/cmd"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"github.com/zdnscloud/zke/cmd"
 )
 
 var VERSION = "v0.0.12-dev"
@@ -34,6 +34,7 @@ func mainErr() error {
 		if released.MatchString(app.Version) {
 			return nil
 		}
+		logrus.Warnf("This is not an officially supported version (%s) of RKE. Please download the latest official release at https://github.com/rancher/rke/releases/latest", app.Version)
 		return nil
 	}
 	app.Author = "Rancher Labs, Inc."
