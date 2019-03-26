@@ -37,6 +37,8 @@ const (
 	DefaultNetworkPlugin        = "flannel"
 	DefaultNetworkCloudProvider = "none"
 
+	DefaultDNSProvider   = "coredns"
+
 	DefaultIngressController             = "nginx"
 	DefaultEtcdBackupCreationPeriod      = "12h"
 	DefaultEtcdBackupRetentionPeriod     = "72h"
@@ -122,6 +124,9 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	}
 	if len(c.Ingress.Provider) == 0 {
 		c.Ingress.Provider = DefaultIngressController
+	}
+	if len(c.DNS.Provider) == 0 {
+		c.DNS.Provider = DefaultDNSProvider
 	}
 	if len(c.ClusterName) == 0 {
 		c.ClusterName = DefaultClusterName
