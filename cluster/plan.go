@@ -397,9 +397,7 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) v3.Pr
 	if host.IsControl && !host.IsWorker {
 		CommandArgs["register-with-taints"] = unschedulableControlTaint
 	}
-	if host.Address != host.InternalAddress {
-		CommandArgs["node-ip"] = host.InternalAddress
-	}
+	CommandArgs["node-ip"] = host.InternalAddress
 	if len(c.PrivateRegistriesMap) > 0 {
 		kubeletDockerConfig, _ := docker.GetKubeletDockerConfig(c.PrivateRegistriesMap)
 		c.Services.Kubelet.ExtraEnv = append(
