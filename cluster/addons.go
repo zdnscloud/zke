@@ -208,7 +208,8 @@ func (c *Cluster) deployCoreDNS(ctx context.Context) error {
 		UpstreamNameservers:    c.DNS.UpstreamNameservers,
 		ReverseCIDRs:           c.DNS.ReverseCIDRs,
 	}
-	coreDNSYaml, err := addons.GetCoreDNSManifest(CoreDNSConfig)
+	// coreDNSYaml, err := addons.GetCoreDNSManifest(CoreDNSConfig)
+	coreDNSYaml, err := addons.GetManifest(CoreDNSConfig, c.DNS.Provider)
 	if err != nil {
 		return err
 	}
@@ -247,7 +248,8 @@ func (c *Cluster) deployMetricServer(ctx context.Context) error {
 		Options:            c.Monitoring.Options,
 		Version:            getTagMajorVersion(versionTag),
 	}
-	metricsYaml, err := addons.GetMetricsServerManifest(MetricsServerConfig)
+	// metricsYaml, err := addons.GetMetricsServerManifest(MetricsServerConfig)
+	metricsYaml, err := addons.GetManifest(MetricsServerConfig, c.Monitoring.Provider)
 	if err != nil {
 		return err
 	}
@@ -407,7 +409,8 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 	}
 
 	// Currently only deploying nginx ingress controller
-	ingressYaml, err := addons.GetNginxIngressManifest(ingressConfig)
+	// ingressYaml, err := addons.GetNginxIngressManifest(ingressConfig)
+	ingressYaml, err := addons.GetManifest(ingressConfig, c.Ingress.Provider)
 	if err != nil {
 		return err
 	}
