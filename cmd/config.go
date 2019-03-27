@@ -171,16 +171,6 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Services = *serviceConfig
-        /*
-	//Get addon manifests
-	addonsInclude, err := getAddonManifests(reader)
-	if err != nil {
-		return err
-	}
-
-	if len(addonsInclude) > 0 {
-		cluster.AddonsInclude = append(cluster.AddonsInclude, addonsInclude...)
-	}*/
 
 	return writeConfig(&cluster, configFile, print)
 }
@@ -357,49 +347,38 @@ func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
 func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 	networkConfig := types.NetworkConfig{}
 
+
 	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico)", cluster.DefaultNetworkPlugin)
 	if err != nil {
 		return nil, err
 	}
 	networkConfig.Plugin = networkPlugin
+	if networkPlugin == cluster.DefaultNetworkPlugin {
+	       FlannelIface, err := getConfig(reader, "Flannel Network Interface", "")
+	       if err != nil {
+	               return nil, err
+               }
+	       networkConfig.Options = make(map[string]string)
+               networkConfig.Options["flannel_iface"] = FlannelIface
+	       FlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", cluster.DefaultFlannelBackendType)
+	       if err != nil {
+	               return nil, err
+               }
+	       networkConfig.Options["flannel_backend_type"] = FlannelBackendType
+	       if FlannelBackendType == cluster.DefaultFlannelBackendType {
+	               FlannelBackendDirectrouting, err := getConfig(reader, "Flannel Backend Vxlan Enable Directrouting", "y")
+	               if err != nil {
+			       return nil, err
+		       }
+		       if FlannelBackendDirectrouting == "y" || FlannelBackendDirectrouting == "Y" {
+			       networkConfig.Options["flannel_vxlan_directrouting"] = "true"
+		       }else {
+			       networkConfig.Options["flannel_vxlan_directrouting"] = "false"
+		       }
+	       }
+	}
 	return &networkConfig, nil
 }
-/*
-func getAddonManifests(reader *bufio.Reader) ([]string, error) {
-	var addonSlice []string
-	var resume = true
-
-	includeAddons, err := getConfig(reader, "Add addon manifest URLs or YAML files", "no")
-
-	if err != nil {
-		return nil, err
-	}
-
-	if strings.ContainsAny(includeAddons, "Yes YES Y yes y") {
-		for resume {
-			addonPath, err := getConfig(reader, "Enter the Path or URL for the manifest", "")
-			if err != nil {
-				return nil, err
-			}
-
-			addonSlice = append(addonSlice, addonPath)
-
-			cont, err := getConfig(reader, "Add another addon", "no")
-			if err != nil {
-				return nil, err
-			}
-
-			if strings.ContainsAny(cont, "Yes y Y yes YES") {
-				resume = true
-			} else {
-				resume = false
-			}
-
-		}
-	}
-
-	return addonSlice, nil
-}*/
 
 func generateSystemImagesList(version string, all bool) error {
 	allVersions := []string{}

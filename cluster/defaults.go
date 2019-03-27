@@ -34,7 +34,9 @@ const (
 	DefaultAuthnWebhookFile  = templates.AuthnWebhook
 	DefaultAuthnCacheTimeout = "5s"
 
-	DefaultNetworkPlugin        = "flannel"
+	DefaultNetworkPlugin               = "flannel"
+	DefaultFlannelBackendType          = "vxlan"
+
 	DefaultNetworkCloudProvider = "none"
 
 	DefaultDNSProvider   = "coredns"
@@ -274,7 +276,9 @@ func (c *Cluster) setClusterNetworkDefaults() {
 		}
 	case FlannelNetworkPlugin:
 		networkPluginConfigDefaultsMap = map[string]string{
-			FlannelBackendType: "host-gw",
+			FlannelIface:                c.Network.Options[FlannelIface],
+			FlannelBackendType:          c.Network.Options[FlannelBackendType],
+			FlannelBackendDirectrouting: c.Network.Options[FlannelBackendDirectrouting],
 		}
 	}
 	if c.Network.CalicoNetworkProvider != nil {

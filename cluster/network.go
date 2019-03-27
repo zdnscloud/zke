@@ -44,6 +44,7 @@ const (
 	FlannelNetworkPlugin = "flannel"
 	FlannelIface         = "flannel_iface"
 	FlannelBackendType   = "flannel_backend_type"
+	FlannelBackendDirectrouting = "flannel_vxlan_directrouting"
 
 	CalicoNetworkPlugin = "calico"
 	CalicoCloudProvider = "calico_cloud_provider"
@@ -126,6 +127,7 @@ func (c *Cluster) doFlannelDeploy(ctx context.Context) error {
 		FlannelInterface: c.Network.Options[FlannelIface],
 		FlannelBackend: map[string]interface{}{
 			"Type": c.Network.Options[FlannelBackendType],
+			"Directrouting": c.Network.Options[FlannelBackendDirectrouting],
 		},
 		RBACConfig:     c.Authorization.Mode,
 		ClusterVersion: getTagMajorVersion(c.Version),

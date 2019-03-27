@@ -109,7 +109,7 @@ func (c *Cluster) deployDNS(ctx context.Context) error {
 	if err := c.doAddonDeploy(ctx, coreDNSYaml, getAddonResourceName(c.DNS.Provider), false); err != nil {
 		return err
 	}
-	log.Infof(ctx, "[DNS] DNS provider %s deployed successfully..", c.DNS.Provider)
+	log.Infof(ctx, "[DNS] DNS provider %s deployed successfully", c.DNS.Provider)
 	return nil
 }
 
