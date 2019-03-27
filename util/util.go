@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 )
 
 const (
@@ -76,7 +76,7 @@ func ValidateVersion(version string) error {
 		return fmt.Errorf("%s is not valid semver", version)
 	}
 	currentVersionsList := []*semver.Version{}
-	for _, ver := range v3.K8sVersionsCurrent {
+	for _, ver := range types.K8sVersionsCurrent {
 		v, err := StrToSemVer(ver)
 		if err != nil {
 			return fmt.Errorf("%s in Current Versions list is not valid semver", ver)
@@ -96,12 +96,12 @@ func ValidateVersion(version string) error {
 		}
 	}
 	// Make sure Target version is in the AllK8sVersions list.
-	_, ok := v3.AllK8sVersions[version]
+	_, ok := types.AllK8sVersions[version]
 	if !ok {
 		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'rke config --system-images --all' for versions supported with this release", version)
 	}
 	// Make sure Target version is not "bad".
-	_, ok = v3.K8sBadVersions[version]
+	_, ok = types.K8sBadVersions[version]
 	if ok {
 		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'rke config --system-images --all' for versions supported with this release", version)
 	}

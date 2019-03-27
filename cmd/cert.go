@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/urfave/cli"
+	"github.com/zdnscloud/zke/types"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -87,7 +87,7 @@ func rotateRKECertificatesFromCli(ctx *cli.Context) error {
 	// setting up the flags
 	externalFlags := cluster.GetExternalFlags(false, false, false, "", filePath)
 	// setting up rotate flags
-	rkeConfig.RotateCertificates = &v3.RotateCertificates{
+	rkeConfig.RotateCertificates = &types.RotateCertificates{
 		CACertificates: rotateCACerts,
 		Services:       k8sComponents,
 	}
@@ -207,7 +207,7 @@ func rotateRKECertificates(ctx context.Context, kubeCluster *cluster.Cluster, fl
 	return rkeFullState, nil
 }
 
-func GenerateRKECSRs(ctx context.Context, rkeConfig *v3.RancherKubernetesEngineConfig, flags cluster.ExternalFlags) error {
+func GenerateRKECSRs(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, flags cluster.ExternalFlags) error {
 	log.Infof(ctx, "Generating Kubernetes cluster CSR certificates")
 	if len(flags.CertificateDir) == 0 {
 		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)

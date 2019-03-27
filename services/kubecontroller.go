@@ -5,10 +5,10 @@ import (
 
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 )
 
-func runKubeController(ctx context.Context, host *hosts.Host, df hosts.DialerFactory, prsMap map[string]v3.PrivateRegistry, controllerProcess v3.Process, alpineImage string) error {
+func runKubeController(ctx context.Context, host *hosts.Host, df hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, controllerProcess types.Process, alpineImage string) error {
 	imageCfg, hostCfg, healthCheckURL := GetProcessConfig(controllerProcess)
 	if err := docker.DoRunContainer(ctx, host.DClient, imageCfg, hostCfg, KubeControllerContainerName, host.Address, ControlRole, prsMap); err != nil {
 		return err

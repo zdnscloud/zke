@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/zdnscloud/zke/k8s"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -221,7 +221,7 @@ func (d *dialer) getBastionHostTunnelConn() (*ssh.Client, error) {
 	return ssh.NewClient(newClientConn, channels, sshRequest), nil
 }
 
-func BastionHostWrapTransport(bastionHost v3.BastionHost) (k8s.WrapTransport, error) {
+func BastionHostWrapTransport(bastionHost types.BastionHost) (k8s.WrapTransport, error) {
 
 	bastionDialer := &dialer{
 		sshAddress:      fmt.Sprintf("%s:%s", bastionHost.Address, bastionHost.Port),

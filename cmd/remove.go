@@ -7,13 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/types"
 )
 
 func RemoveCommand() cli.Command {
@@ -46,7 +46,7 @@ func RemoveCommand() cli.Command {
 
 func ClusterRemove(
 	ctx context.Context,
-	rkeConfig *v3.RancherKubernetesEngineConfig,
+	rkeConfig *types.RancherKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags) error {
 
@@ -112,7 +112,7 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 }
 
 func clusterRemoveLocal(ctx *cli.Context) error {
-	var rkeConfig *v3.RancherKubernetesEngineConfig
+	var rkeConfig *types.RancherKubernetesEngineConfig
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		log.Warnf(context.Background(), "Failed to resolve cluster file, using default cluster instead")
@@ -122,7 +122,7 @@ func clusterRemoveLocal(ctx *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Failed to parse cluster file: %v", err)
 		}
-		rkeConfig.Nodes = []v3.RKEConfigNode{*cluster.GetLocalRKENodeConfig()}
+		rkeConfig.Nodes = []types.RKEConfigNode{*cluster.GetLocalRKENodeConfig()}
 	}
 
 	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)

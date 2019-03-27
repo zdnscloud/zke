@@ -5,7 +5,7 @@ import (
 
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 	NginxProxyEnvName = "CP_HOSTS"
 )
 
-func runNginxProxy(ctx context.Context, host *hosts.Host, prsMap map[string]v3.PrivateRegistry, proxyProcess v3.Process, alpineImage string) error {
+func runNginxProxy(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, proxyProcess types.Process, alpineImage string) error {
 	imageCfg, hostCfg, _ := GetProcessConfig(proxyProcess)
 	if err := docker.DoRunContainer(ctx, host.DClient, imageCfg, hostCfg, NginxProxyContainerName, host.Address, WorkerRole, prsMap); err != nil {
 		return err

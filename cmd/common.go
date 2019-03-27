@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/urfave/cli"
+	"github.com/zdnscloud/zke/types"
 )
 
 var commonFlags = []cli.Flag{
@@ -44,7 +44,7 @@ func resolveClusterFile(ctx *cli.Context) (string, string, error) {
 	return clusterFileBuff, clusterFile, nil
 }
 
-func setOptionsFromCLI(c *cli.Context, rkeConfig *v3.RancherKubernetesEngineConfig) (*v3.RancherKubernetesEngineConfig, error) {
+func setOptionsFromCLI(c *cli.Context, rkeConfig *types.RancherKubernetesEngineConfig) (*types.RancherKubernetesEngineConfig, error) {
 	// If true... override the file.. else let file value go through
 	if c.Bool("ssh-agent-auth") {
 		rkeConfig.SSHAgentAuth = c.Bool("ssh-agent-auth")
@@ -56,14 +56,14 @@ func setOptionsFromCLI(c *cli.Context, rkeConfig *v3.RancherKubernetesEngineConf
 
 	if c.Bool("s3") {
 		if rkeConfig.Services.Etcd.BackupConfig == nil {
-			rkeConfig.Services.Etcd.BackupConfig = &v3.BackupConfig{}
+			rkeConfig.Services.Etcd.BackupConfig = &types.BackupConfig{}
 		}
 		rkeConfig.Services.Etcd.BackupConfig.S3BackupConfig = setS3OptionsFromCLI(c)
 	}
 	return rkeConfig, nil
 }
 
-func ClusterInit(ctx context.Context, rkeConfig *v3.RancherKubernetesEngineConfig, dialersOptions hosts.DialersOptions, flags cluster.ExternalFlags) error {
+func ClusterInit(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, dialersOptions hosts.DialersOptions, flags cluster.ExternalFlags) error {
 	log.Infof(ctx, "Initiating Kubernetes cluster")
 	var fullState *cluster.FullState
 	stateFilePath := cluster.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir)
@@ -102,13 +102,13 @@ func ClusterInit(ctx context.Context, rkeConfig *v3.RancherKubernetesEngineConfi
 	return rkeState.WriteStateFile(ctx, stateFilePath)
 }
 
-func setS3OptionsFromCLI(c *cli.Context) *v3.S3BackupConfig {
+func setS3OptionsFromCLI(c *cli.Context) *types.S3BackupConfig {
 	endpoint := c.String("s3-endpoint")
 	bucketName := c.String("bucket-name")
 	region := c.String("region")
 	accessKey := c.String("access-key")
 	secretKey := c.String("secret-key")
-	var s3BackupBackend = &v3.S3BackupConfig{}
+	var s3BackupBackend = &types.S3BackupConfig{}
 	if len(endpoint) != 0 {
 		s3BackupBackend.Endpoint = endpoint
 	}

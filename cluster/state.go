@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
+	"github.com/zdnscloud/zke/types"
 	"gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 )
@@ -31,8 +31,8 @@ type FullState struct {
 }
 
 type State struct {
-	RancherKubernetesEngineConfig *v3.RancherKubernetesEngineConfig `json:"rkeConfig,omitempty"`
-	CertificatesBundle            map[string]pki.CertificatePKI     `json:"certificatesBundle,omitempty"`
+	RancherKubernetesEngineConfig *types.RancherKubernetesEngineConfig `json:"rkeConfig,omitempty"`
+	CertificatesBundle            map[string]pki.CertificatePKI        `json:"certificatesBundle,omitempty"`
 }
 
 func (c *Cluster) UpdateClusterCurrentState(ctx context.Context, fullState *FullState) error {
@@ -144,7 +144,7 @@ func GetK8sVersion(localConfigPath string, k8sWrapTransport k8s.WrapTransport) (
 	return fmt.Sprintf("%#v", *serverVersion), nil
 }
 
-func RebuildState(ctx context.Context, rkeConfig *v3.RancherKubernetesEngineConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
+func RebuildState(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
 	newState := &FullState{
 		DesiredState: State{
 			RancherKubernetesEngineConfig: rkeConfig.DeepCopy(),

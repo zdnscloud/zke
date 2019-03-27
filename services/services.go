@@ -6,12 +6,12 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -50,7 +50,7 @@ const (
 
 type RestartFunc func(context.Context, *hosts.Host) error
 
-func runSidekick(ctx context.Context, host *hosts.Host, prsMap map[string]v3.PrivateRegistry, sidecarProcess v3.Process) error {
+func runSidekick(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, sidecarProcess types.Process) error {
 	isRunning, err := docker.IsContainerRunning(ctx, host.DClient, host.Address, SidekickContainerName, true)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func removeSidekick(ctx context.Context, host *hosts.Host) error {
 	return docker.DoRemoveContainer(ctx, host.DClient, SidekickContainerName, host.Address)
 }
 
-func GetProcessConfig(process v3.Process) (*container.Config, *container.HostConfig, string) {
+func GetProcessConfig(process types.Process) (*container.Config, *container.HostConfig, string) {
 	imageCfg := &container.Config{
 		Entrypoint: process.Command,
 		Cmd:        process.Args,
@@ -119,7 +119,7 @@ func GetHealthCheckURL(useTLS bool, port int) string {
 	return fmt.Sprintf("%s%s:%d%s", HTTPProtoPrefix, HealthzAddress, port, HealthzEndpoint)
 }
 
-func createLogLink(ctx context.Context, host *hosts.Host, containerName, plane, image string, prsMap map[string]v3.PrivateRegistry) error {
+func createLogLink(ctx context.Context, host *hosts.Host, containerName, plane, image string, prsMap map[string]types.PrivateRegistry) error {
 	logrus.Debugf("[%s] Creating log link for Container [%s] on host [%s]", plane, containerName, host.Address)
 	containerInspect, err := docker.InspectContainer(ctx, host.DClient, host.Address, containerName)
 	if err != nil {

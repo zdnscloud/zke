@@ -15,13 +15,13 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	ref "github.com/docker/distribution/reference"
-	"github.com/docker/docker/api/types"
+	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/zdnscloud/zke/log"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
+	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -46,9 +46,9 @@ type dockerConfig struct {
 	Auths map[string]authConfig `json:"auths,omitempty"`
 }
 
-type authConfig types.AuthConfig
+type authConfig dockertypes.AuthConfig
 
-func DoRunContainer(ctx context.Context, dClient *client.Client, imageCfg *container.Config, hostCfg *container.HostConfig, containerName string, hostname string, plane string, prsMap map[string]v3.PrivateRegistry) error {
+func DoRunContainer(ctx context.Context, dClient *client.Client, imageCfg *container.Config, hostCfg *container.HostConfig, containerName string, hostname string, plane string, prsMap map[string]types.PrivateRegistry) error {
 	if dClient == nil {
 		return fmt.Errorf("[%s] Failed to run container: docker client is nil for container [%s] on host [%s]", plane, containerName, hostname)
 	}
@@ -64,7 +64,7 @@ func DoRunContainer(ctx context.Context, dClient *client.Client, imageCfg *conta
 		if err != nil {
 			return fmt.Errorf("Failed to create [%s] container on host [%s]: %v", containerName, hostname, err)
 		}
-		if err := dClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		if err := dClient.ContainerStart(ctx, resp.ID, dockertypes.ContainerStartOptions{}); err != nil {
 			return fmt.Errorf("Failed to start [%s] container on host [%s]: %v", containerName, hostname, err)
 		}
 		log.Infof(ctx, "[%s] Successfully started [%s] container on host [%s]", plane, containerName, hostname)
@@ -93,14 +93,14 @@ func DoRunContainer(ctx context.Context, dClient *client.Client, imageCfg *conta
 
 	// start if not running
 	logrus.Debugf("[%s] Starting stopped container [%s] on host [%s]", plane, containerName, hostname)
-	if err := dClient.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
+	if err := dClient.ContainerStart(ctx, container.ID, dockertypes.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("Failed to start [%s] container on host [%s]: %v", containerName, hostname, err)
 	}
 	log.Infof(ctx, "[%s] Successfully started [%s] container on host [%s]", plane, containerName, hostname)
 	return nil
 }
 
-func DoRollingUpdateContainer(ctx context.Context, dClient *client.Client, imageCfg *container.Config, hostCfg *container.HostConfig, containerName, hostname, plane string, prsMap map[string]v3.PrivateRegistry) error {
+func DoRollingUpdateContainer(ctx context.Context, dClient *client.Client, imageCfg *container.Config, hostCfg *container.HostConfig, containerName, hostname, plane string, prsMap map[string]types.PrivateRegistry) error {
 	if dClient == nil {
 		return fmt.Errorf("[%s] Failed rolling update of container: docker client is nil for container [%s] on host [%s]", plane, containerName, hostname)
 	}
@@ -164,7 +164,7 @@ func IsContainerRunning(ctx context.Context, dClient *client.Client, hostname st
 		return false, fmt.Errorf("Failed to check if container is running: docker client is nil for container [%s] on host [%s]", containerName, hostname)
 	}
 	logrus.Debugf("Checking if container [%s] is running on host [%s]", containerName, hostname)
-	containers, err := dClient.ContainerList(ctx, types.ContainerListOptions{All: all})
+	containers, err := dClient.ContainerList(ctx, dockertypes.ContainerListOptions{All: all})
 	if err != nil {
 		return false, fmt.Errorf("Can't get Docker containers for host [%s]: %v", hostname, err)
 
@@ -191,8 +191,8 @@ func localImageExists(ctx context.Context, dClient *client.Client, hostname stri
 	return true, nil
 }
 
-func pullImage(ctx context.Context, dClient *client.Client, hostname string, containerImage string, prsMap map[string]v3.PrivateRegistry) error {
-	pullOptions := types.ImagePullOptions{}
+func pullImage(ctx context.Context, dClient *client.Client, hostname string, containerImage string, prsMap map[string]types.PrivateRegistry) error {
+	pullOptions := dockertypes.ImagePullOptions{}
 
 	regAuth, prURL, err := GetImageRegistryConfig(containerImage, prsMap)
 	if err != nil {
@@ -217,7 +217,7 @@ func pullImage(ctx context.Context, dClient *client.Client, hostname string, con
 	return nil
 }
 
-func UseLocalOrPull(ctx context.Context, dClient *client.Client, hostname string, containerImage string, plane string, prsMap map[string]v3.PrivateRegistry) error {
+func UseLocalOrPull(ctx context.Context, dClient *client.Client, hostname string, containerImage string, plane string, prsMap map[string]types.PrivateRegistry) error {
 	if dClient == nil {
 		return fmt.Errorf("[%s] Failed to use local image or pull: docker client is nil for container [%s] on host [%s]", plane, containerImage, hostname)
 	}
@@ -242,7 +242,7 @@ func RemoveContainer(ctx context.Context, dClient *client.Client, hostname strin
 	if dClient == nil {
 		return fmt.Errorf("Failed to remove container: docker client is nil for container [%s] on host [%s]", containerName, hostname)
 	}
-	err := dClient.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{Force: true, RemoveVolumes: true})
+	err := dClient.ContainerRemove(ctx, containerName, dockertypes.ContainerRemoveOptions{Force: true, RemoveVolumes: true})
 	if err != nil {
 		return fmt.Errorf("Can't remove Docker container [%s] for host [%s]: %v", containerName, hostname, err)
 	}
@@ -288,7 +288,7 @@ func StartContainer(ctx context.Context, dClient *client.Client, hostname string
 	if dClient == nil {
 		return fmt.Errorf("Failed to start container: docker client is nil for container [%s] on host [%s]", containerName, hostname)
 	}
-	if err := dClient.ContainerStart(ctx, containerName, types.ContainerStartOptions{}); err != nil {
+	if err := dClient.ContainerStart(ctx, containerName, dockertypes.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("Failed to start [%s] container on host [%s]: %v", containerName, hostname, err)
 	}
 	return nil
@@ -305,13 +305,13 @@ func CreateContainer(ctx context.Context, dClient *client.Client, hostname strin
 	return created, nil
 }
 
-func InspectContainer(ctx context.Context, dClient *client.Client, hostname string, containerName string) (types.ContainerJSON, error) {
+func InspectContainer(ctx context.Context, dClient *client.Client, hostname string, containerName string) (dockertypes.ContainerJSON, error) {
 	if dClient == nil {
-		return types.ContainerJSON{}, fmt.Errorf("Failed to inspect container: docker client is nil for container [%s] on host [%s]", containerName, hostname)
+		return dockertypes.ContainerJSON{}, fmt.Errorf("Failed to inspect container: docker client is nil for container [%s] on host [%s]", containerName, hostname)
 	}
 	inspection, err := dClient.ContainerInspect(ctx, containerName)
 	if err != nil {
-		return types.ContainerJSON{}, fmt.Errorf("Failed to inspect [%s] container on host [%s]: %v", containerName, hostname, err)
+		return dockertypes.ContainerJSON{}, fmt.Errorf("Failed to inspect [%s] container on host [%s]: %v", containerName, hostname, err)
 	}
 	return inspection, nil
 }
@@ -395,7 +395,7 @@ func sliceEqualsIgnoreOrder(left, right []string) bool {
 	return sets.NewString(left...).Equal(sets.NewString(right...))
 }
 
-func IsSupportedDockerVersion(info types.Info, K8sVersion string) (bool, error) {
+func IsSupportedDockerVersion(info dockertypes.Info, K8sVersion string) (bool, error) {
 	dockerVersion, err := semver.NewVersion(info.ServerVersion)
 	if err != nil {
 		return false, err
@@ -437,7 +437,7 @@ func ReadContainerLogs(ctx context.Context, dClient *client.Client, containerNam
 	if dClient == nil {
 		return nil, fmt.Errorf("Failed reading container logs: docker client is nil for container [%s]", containerName)
 	}
-	return dClient.ContainerLogs(ctx, containerName, types.ContainerLogsOptions{Follow: follow, ShowStdout: true, ShowStderr: true, Timestamps: false, Tail: tail})
+	return dClient.ContainerLogs(ctx, containerName, dockertypes.ContainerLogsOptions{Follow: follow, ShowStdout: true, ShowStderr: true, Timestamps: false, Tail: tail})
 }
 
 func GetContainerLogsStdoutStderr(ctx context.Context, dClient *client.Client, containerName, tail string, follow bool) (string, string, error) {
@@ -459,14 +459,14 @@ func GetContainerLogsStdoutStderr(ctx context.Context, dClient *client.Client, c
 	return containerErrLog, containerStdLog, nil
 }
 
-func tryRegistryAuth(pr v3.PrivateRegistry) types.RequestPrivilegeFunc {
+func tryRegistryAuth(pr types.PrivateRegistry) dockertypes.RequestPrivilegeFunc {
 	return func() (string, error) {
 		return getRegistryAuth(pr)
 	}
 }
 
-func getRegistryAuth(pr v3.PrivateRegistry) (string, error) {
-	authConfig := types.AuthConfig{
+func getRegistryAuth(pr types.PrivateRegistry) (string, error) {
+	authConfig := dockertypes.AuthConfig{
 		Username: pr.User,
 		Password: pr.Password,
 	}
@@ -477,7 +477,7 @@ func getRegistryAuth(pr v3.PrivateRegistry) (string, error) {
 	return base64.URLEncoding.EncodeToString(encodedJSON), nil
 }
 
-func GetImageRegistryConfig(image string, prsMap map[string]v3.PrivateRegistry) (string, string, error) {
+func GetImageRegistryConfig(image string, prsMap map[string]types.PrivateRegistry) (string, string, error) {
 	namedImage, err := ref.ParseNormalizedNamed(image)
 	if err != nil {
 		return "", "", err
@@ -506,7 +506,7 @@ func isContainerEnvChanged(containerEnv, imageConfigEnv, dockerfileEnv []string)
 	return sliceEqualsIgnoreOrder(allImageEnv, containerEnv)
 }
 
-func GetKubeletDockerConfig(prsMap map[string]v3.PrivateRegistry) (string, error) {
+func GetKubeletDockerConfig(prsMap map[string]types.PrivateRegistry) (string, error) {
 	auths := map[string]authConfig{}
 
 	for url, pr := range prsMap {

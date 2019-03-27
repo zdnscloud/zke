@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	dockertypes "github.com/docker/docker/api/types"
 	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/authz"
 	"github.com/zdnscloud/zke/docker"
@@ -18,6 +17,7 @@ import (
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
@@ -28,31 +28,31 @@ import (
 )
 
 type Cluster struct {
-	AuthnStrategies                  map[string]bool
-	ConfigPath                       string
-	ConfigDir                        string
-	CloudConfigFile                  string
-	ControlPlaneHosts                []*hosts.Host
-	Certificates                     map[string]pki.CertificatePKI
-	CertificateDir                   string
-	ClusterDomain                    string
-	ClusterCIDR                      string
-	ClusterDNSServer                 string
-	DockerDialerFactory              hosts.DialerFactory
-	EtcdHosts                        []*hosts.Host
-	EtcdReadyHosts                   []*hosts.Host
-	InactiveHosts                    []*hosts.Host
-	K8sWrapTransport                 k8s.WrapTransport
-	KubeClient                       *kubernetes.Clientset
-	KubernetesServiceIP              net.IP
-	LocalKubeConfigPath              string
-	LocalConnDialerFactory           hosts.DialerFactory
-	PrivateRegistriesMap             map[string]v3.PrivateRegistry
-	StateFilePath                    string
-	UpdateWorkersOnly                bool
-	UseKubectlDeploy                 bool
-	v3.RancherKubernetesEngineConfig `yaml:",inline"`
-	WorkerHosts                      []*hosts.Host
+	AuthnStrategies                     map[string]bool
+	ConfigPath                          string
+	ConfigDir                           string
+	CloudConfigFile                     string
+	ControlPlaneHosts                   []*hosts.Host
+	Certificates                        map[string]pki.CertificatePKI
+	CertificateDir                      string
+	ClusterDomain                       string
+	ClusterCIDR                         string
+	ClusterDNSServer                    string
+	DockerDialerFactory                 hosts.DialerFactory
+	EtcdHosts                           []*hosts.Host
+	EtcdReadyHosts                      []*hosts.Host
+	InactiveHosts                       []*hosts.Host
+	K8sWrapTransport                    k8s.WrapTransport
+	KubeClient                          *kubernetes.Clientset
+	KubernetesServiceIP                 net.IP
+	LocalKubeConfigPath                 string
+	LocalConnDialerFactory              hosts.DialerFactory
+	PrivateRegistriesMap                map[string]types.PrivateRegistry
+	StateFilePath                       string
+	UpdateWorkersOnly                   bool
+	UseKubectlDeploy                    bool
+	types.RancherKubernetesEngineConfig `yaml:",inline"`
+	WorkerHosts                         []*hosts.Host
 }
 
 const (
@@ -82,7 +82,7 @@ const (
 
 func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	// Deploy Etcd Plane
-	etcdNodePlanMap := make(map[string]v3.RKEConfigNodePlan)
+	etcdNodePlanMap := make(map[string]types.RKEConfigNodePlan)
 	// Build etcd node plan map
 	for _, etcdHost := range c.EtcdHosts {
 		etcdNodePlanMap[etcdHost.Address] = BuildRKEConfigNodePlan(ctx, c, etcdHost, etcdHost.DockerInfo)
@@ -97,7 +97,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	}
 
 	// Deploy Control plane
-	cpNodePlanMap := make(map[string]v3.RKEConfigNodePlan)
+	cpNodePlanMap := make(map[string]types.RKEConfigNodePlan)
 	// Build cp node plan map
 	for _, cpHost := range c.ControlPlaneHosts {
 		cpNodePlanMap[cpHost.Address] = BuildRKEConfigNodePlan(ctx, c, cpHost, cpHost.DockerInfo)
@@ -117,7 +117,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 
 func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 	// Deploy Worker plane
-	workerNodePlanMap := make(map[string]v3.RKEConfigNodePlan)
+	workerNodePlanMap := make(map[string]types.RKEConfigNodePlan)
 	// Build cp node plan map
 	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
 	for _, workerHost := range allHosts {
@@ -135,16 +135,16 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 	return nil
 }
 
-func ParseConfig(clusterFile string) (*v3.RancherKubernetesEngineConfig, error) {
+func ParseConfig(clusterFile string) (*types.RancherKubernetesEngineConfig, error) {
 	logrus.Debugf("Parsing cluster file [%v]", clusterFile)
-	var rkeConfig v3.RancherKubernetesEngineConfig
+	var rkeConfig types.RancherKubernetesEngineConfig
 	if err := yaml.Unmarshal([]byte(clusterFile), &rkeConfig); err != nil {
 		return nil, err
 	}
 	return &rkeConfig, nil
 }
 
-func InitClusterObject(ctx context.Context, rkeConfig *v3.RancherKubernetesEngineConfig, flags ExternalFlags) (*Cluster, error) {
+func InitClusterObject(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, flags ExternalFlags) (*Cluster, error) {
 	// basic cluster object from rkeConfig
 	c := &Cluster{
 		AuthnStrategies:               make(map[string]bool),
@@ -153,7 +153,7 @@ func InitClusterObject(ctx context.Context, rkeConfig *v3.RancherKubernetesEngin
 		ConfigDir:                     flags.ConfigDir,
 		CertificateDir:                flags.CertificateDir,
 		StateFilePath:                 GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir),
-		PrivateRegistriesMap:          make(map[string]v3.PrivateRegistry),
+		PrivateRegistriesMap:          make(map[string]types.PrivateRegistry),
 	}
 	if len(c.ConfigPath) == 0 {
 		c.ConfigPath = pki.ClusterConfig
@@ -281,7 +281,7 @@ func getLocalAdminConfigWithNewAddress(localConfigPath, cpAddress string, cluste
 		string(config.KeyData))
 }
 
-func ApplyAuthzResources(ctx context.Context, rkeConfig v3.RancherKubernetesEngineConfig, flags ExternalFlags, dailersOptions hosts.DialersOptions) error {
+func ApplyAuthzResources(ctx context.Context, rkeConfig types.RancherKubernetesEngineConfig, flags ExternalFlags, dailersOptions hosts.DialersOptions) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
 	kubeCluster, err := InitClusterObject(ctx, &rkeConfig, flags)
 	if err != nil {
@@ -440,7 +440,7 @@ func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 
 func ConfigureCluster(
 	ctx context.Context,
-	rkeConfig v3.RancherKubernetesEngineConfig,
+	rkeConfig types.RancherKubernetesEngineConfig,
 	crtBundle map[string]pki.CertificatePKI,
 	flags ExternalFlags,
 	dailersOptions hosts.DialersOptions,
@@ -512,8 +512,8 @@ func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 	return nil
 }
 
-func (c *Cluster) GetHostInfoMap() map[string]types.Info {
-	hostsInfoMap := make(map[string]types.Info)
+func (c *Cluster) GetHostInfoMap() map[string]dockertypes.Info {
+	hostsInfoMap := make(map[string]dockertypes.Info)
 	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
 	for _, host := range allHosts {
 		hostsInfoMap[host.Address] = host.DockerInfo
