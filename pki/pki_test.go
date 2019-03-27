@@ -7,7 +7,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 )
 
 const (
@@ -16,20 +16,20 @@ const (
 )
 
 func TestPKI(t *testing.T) {
-	rkeConfig := v3.RancherKubernetesEngineConfig{
-		Nodes: []v3.RKEConfigNode{
-			v3.RKEConfigNode{
+	rkeConfig := types.RancherKubernetesEngineConfig{
+		Nodes: []types.RKEConfigNode{
+			types.RKEConfigNode{
 				Address:          "1.1.1.1",
 				InternalAddress:  "192.168.1.5",
 				Role:             []string{"controlplane"},
 				HostnameOverride: "server1",
 			},
 		},
-		Services: v3.RKEConfigServices{
-			KubeAPI: v3.KubeAPIService{
+		Services: types.RKEConfigServices{
+			KubeAPI: types.KubeAPIService{
 				ServiceClusterIPRange: FakeClusterCidr,
 			},
-			Kubelet: v3.KubeletService{
+			Kubelet: types.KubeletService{
 				ClusterDomain: FakeClusterDomain,
 			},
 		},

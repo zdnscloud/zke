@@ -14,7 +14,7 @@ import (
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 )
 
 type CertificatePKI struct {
@@ -36,8 +36,8 @@ type CertificatePKI struct {
 	ConfigPath     string                   `json:"configPath"`
 }
 
-type GenFunc func(context.Context, map[string]CertificatePKI, v3.RancherKubernetesEngineConfig, string, string, bool) error
-type CSRFunc func(context.Context, map[string]CertificatePKI, v3.RancherKubernetesEngineConfig) error
+type GenFunc func(context.Context, map[string]CertificatePKI, types.RancherKubernetesEngineConfig, string, string, bool) error
+type CSRFunc func(context.Context, map[string]CertificatePKI, types.RancherKubernetesEngineConfig) error
 
 const (
 	etcdRole            = "etcd"
@@ -46,7 +46,7 @@ const (
 	BundleCertContainer = "rke-bundle-cert"
 )
 
-func GenerateRKECerts(ctx context.Context, rkeConfig v3.RancherKubernetesEngineConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
+func GenerateRKECerts(ctx context.Context, rkeConfig types.RancherKubernetesEngineConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
 	certs := make(map[string]CertificatePKI)
 	// generate RKE CA certificates
 	if err := GenerateRKECACerts(ctx, certs, configPath, configDir); err != nil {
@@ -59,7 +59,7 @@ func GenerateRKECerts(ctx context.Context, rkeConfig v3.RancherKubernetesEngineC
 	return certs, nil
 }
 
-func GenerateRKENodeCerts(ctx context.Context, rkeConfig v3.RancherKubernetesEngineConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
+func GenerateRKENodeCerts(ctx context.Context, rkeConfig types.RancherKubernetesEngineConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
 	crtMap := make(map[string]CertificatePKI)
 	crtKeys := []string{}
 	removeCAKey := true
@@ -118,7 +118,7 @@ func RegenerateEtcdCertificate(
 	return crtMap, nil
 }
 
-func SaveBackupBundleOnHost(ctx context.Context, host *hosts.Host, alpineSystemImage, etcdSnapshotPath string, prsMap map[string]v3.PrivateRegistry) error {
+func SaveBackupBundleOnHost(ctx context.Context, host *hosts.Host, alpineSystemImage, etcdSnapshotPath string, prsMap map[string]types.PrivateRegistry) error {
 	imageCfg := &container.Config{
 		Cmd: []string{
 			"sh",
@@ -149,7 +149,7 @@ func SaveBackupBundleOnHost(ctx context.Context, host *hosts.Host, alpineSystemI
 	return docker.RemoveContainer(ctx, host.DClient, host.Address, BundleCertContainer)
 }
 
-func ExtractBackupBundleOnHost(ctx context.Context, host *hosts.Host, alpineSystemImage, etcdSnapshotPath string, prsMap map[string]v3.PrivateRegistry) error {
+func ExtractBackupBundleOnHost(ctx context.Context, host *hosts.Host, alpineSystemImage, etcdSnapshotPath string, prsMap map[string]types.PrivateRegistry) error {
 	imageCfg := &container.Config{
 		Cmd: []string{
 			"sh",

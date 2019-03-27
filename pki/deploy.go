@@ -8,20 +8,20 @@ import (
 	"path"
 	"time"
 
-	"github.com/docker/docker/api/types"
+	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
+	"github.com/zdnscloud/zke/types"
 )
 
 const (
 	StateDeployerContainerName = "cluster-state-deployer"
 )
 
-func DeployCertificatesOnPlaneHost(ctx context.Context, host *hosts.Host, rkeConfig v3.RancherKubernetesEngineConfig, crtMap map[string]CertificatePKI, certDownloaderImage string, prsMap map[string]v3.PrivateRegistry, forceDeploy bool) error {
+func DeployCertificatesOnPlaneHost(ctx context.Context, host *hosts.Host, rkeConfig types.RancherKubernetesEngineConfig, crtMap map[string]CertificatePKI, certDownloaderImage string, prsMap map[string]types.PrivateRegistry, forceDeploy bool) error {
 	crtBundle := GenerateRKENodeCerts(ctx, rkeConfig, host.Address, crtMap)
 	env := []string{}
 	for _, crt := range crtBundle {
@@ -33,7 +33,7 @@ func DeployCertificatesOnPlaneHost(ctx context.Context, host *hosts.Host, rkeCon
 	return doRunDeployer(ctx, host, env, certDownloaderImage, prsMap)
 }
 
-func DeployStateOnPlaneHost(ctx context.Context, host *hosts.Host, stateDownloaderImage string, prsMap map[string]v3.PrivateRegistry, clusterState string) error {
+func DeployStateOnPlaneHost(ctx context.Context, host *hosts.Host, stateDownloaderImage string, prsMap map[string]types.PrivateRegistry, clusterState string) error {
 	// remove existing container. Only way it's still here is if previous deployment failed
 	if err := docker.DoRemoveContainer(ctx, host.DClient, StateDeployerContainerName, host.Address); err != nil {
 		return err
@@ -65,7 +65,7 @@ func DeployStateOnPlaneHost(ctx context.Context, host *hosts.Host, stateDownload
 	return nil
 }
 
-func doRunDeployer(ctx context.Context, host *hosts.Host, containerEnv []string, certDownloaderImage string, prsMap map[string]v3.PrivateRegistry) error {
+func doRunDeployer(ctx context.Context, host *hosts.Host, containerEnv []string, certDownloaderImage string, prsMap map[string]types.PrivateRegistry) error {
 	// remove existing container. Only way it's still here is if previous deployment failed
 	isRunning := false
 	isRunning, err := docker.IsContainerRunning(ctx, host.DClient, host.Address, CrtDownloaderContainer, true)
@@ -96,7 +96,7 @@ func doRunDeployer(ctx context.Context, host *hosts.Host, containerEnv []string,
 		return fmt.Errorf("Failed to create Certificates deployer container on host [%s]: %v", host.Address, err)
 	}
 
-	if err := host.DClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := host.DClient.ContainerStart(ctx, resp.ID, dockertypes.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("Failed to start Certificates deployer container on host [%s]: %v", host.Address, err)
 	}
 	logrus.Debugf("[certificates] Successfully started Certificate deployer container: %s", resp.ID)
@@ -109,7 +109,7 @@ func doRunDeployer(ctx context.Context, host *hosts.Host, containerEnv []string,
 			time.Sleep(5 * time.Second)
 			continue
 		}
-		if err := host.DClient.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{RemoveVolumes: true}); err != nil {
+		if err := host.DClient.ContainerRemove(ctx, resp.ID, dockertypes.ContainerRemoveOptions{RemoveVolumes: true}); err != nil {
 			return fmt.Errorf("Failed to delete Certificates deployer container on host [%s]: %v", host.Address, err)
 		}
 		return nil
@@ -138,7 +138,7 @@ func RemoveAdminConfig(ctx context.Context, localConfigPath string) {
 	log.Infof(ctx, "Local admin Kubeconfig removed successfully")
 }
 
-func DeployCertificatesOnHost(ctx context.Context, host *hosts.Host, crtMap map[string]CertificatePKI, certDownloaderImage, certPath string, prsMap map[string]v3.PrivateRegistry) error {
+func DeployCertificatesOnHost(ctx context.Context, host *hosts.Host, crtMap map[string]CertificatePKI, certDownloaderImage, certPath string, prsMap map[string]types.PrivateRegistry) error {
 	env := []string{
 		"CRTS_DEPLOY_PATH=" + certPath,
 	}

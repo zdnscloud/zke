@@ -8,14 +8,14 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/templates"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -454,7 +454,7 @@ func (c *Cluster) runServicePortChecks(ctx context.Context) error {
 	return errgrp.Wait()
 }
 
-func checkPlaneTCPPortsFromHost(ctx context.Context, host *hosts.Host, portList []string, planeHosts []*hosts.Host, image string, prsMap map[string]v3.PrivateRegistry) error {
+func checkPlaneTCPPortsFromHost(ctx context.Context, host *hosts.Host, portList []string, planeHosts []*hosts.Host, image string, prsMap map[string]types.PrivateRegistry) error {
 	var hosts []string
 
 	for _, host := range planeHosts {

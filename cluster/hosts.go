@@ -6,14 +6,14 @@ import (
 
 	"context"
 
-	"github.com/docker/docker/api/types"
+	dockertypes "github.com/docker/docker/api/types"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -74,7 +74,7 @@ func (c *Cluster) InvertIndexHosts() error {
 			ToDelLabels:   map[string]string{},
 			ToAddTaints:   []string{},
 			ToDelTaints:   []string{},
-			DockerInfo: types.Info{
+			DockerInfo: dockertypes.Info{
 				DockerRootDir: "/var/lib/docker",
 			},
 		}
@@ -185,7 +185,7 @@ func removeFromHosts(hostToRemove *hosts.Host, hostList []*hosts.Host) []*hosts.
 	return hostList
 }
 
-func removeFromRKENodes(nodeToRemove v3.RKEConfigNode, nodeList []v3.RKEConfigNode) []v3.RKEConfigNode {
+func removeFromRKENodes(nodeToRemove types.RKEConfigNode, nodeList []types.RKEConfigNode) []types.RKEConfigNode {
 	for i := range nodeList {
 		if nodeToRemove.Address == nodeList[i].Address {
 			return append(nodeList[:i], nodeList[i+1:]...)

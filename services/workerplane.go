@@ -6,8 +6,8 @@ import (
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -16,7 +16,7 @@ const (
 	unschedulableControlTaint = "node-role.kubernetes.io/controlplane=true:NoSchedule"
 )
 
-func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]v3.PrivateRegistry, workerNodePlanMap map[string]v3.RKEConfigNodePlan, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
+func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.RKEConfigNodePlan, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
 	log.Infof(ctx, "[%s] Building up Worker Plane..", WorkerRole)
 	var errgrp errgroup.Group
 
@@ -42,7 +42,7 @@ func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, localConnDialer
 	return nil
 }
 
-func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]v3.PrivateRegistry, processMap map[string]v3.Process, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
+func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
 	if updateWorkersOnly {
 		if !host.UpdateWorker {
 			return nil
@@ -132,7 +132,7 @@ func RestartWorkerPlane(ctx context.Context, workerHosts []*hosts.Host) error {
 
 func doDeployWorkerPlane(ctx context.Context, host *hosts.Host,
 	localConnDialerFactory hosts.DialerFactory,
-	prsMap map[string]v3.PrivateRegistry, processMap map[string]v3.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
+	prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
 	// run nginx proxy
 	if !host.IsControl {
 		if err := runNginxProxy(ctx, host, prsMap, processMap[NginxProxyContainerName], alpineImage); err != nil {
@@ -150,8 +150,8 @@ func doDeployWorkerPlane(ctx context.Context, host *hosts.Host,
 	return runKubeproxy(ctx, host, localConnDialerFactory, prsMap, processMap[KubeproxyContainerName], alpineImage)
 }
 
-func copyProcessMap(m map[string]v3.Process) map[string]v3.Process {
-	c := make(map[string]v3.Process)
+func copyProcessMap(m map[string]types.Process) map[string]types.Process {
+	c := make(map[string]types.Process)
 	for k, v := range m {
 		c[k] = v
 	}

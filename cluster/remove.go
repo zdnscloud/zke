@@ -8,8 +8,8 @@ import (
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -21,7 +21,7 @@ func (c *Cluster) ClusterRemove(ctx context.Context) error {
 	return nil
 }
 
-func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts []*hosts.Host, cleanerImage string, prsMap map[string]v3.PrivateRegistry, externalEtcd bool) error {
+func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
 
 	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts)
 

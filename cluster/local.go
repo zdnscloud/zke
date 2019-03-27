@@ -2,30 +2,30 @@ package cluster
 
 import (
 	"github.com/zdnscloud/zke/services"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 )
 
-func GetLocalRKEConfig() *v3.RancherKubernetesEngineConfig {
+func GetLocalRKEConfig() *types.RancherKubernetesEngineConfig {
 	rkeLocalNode := GetLocalRKENodeConfig()
-	imageDefaults := v3.K8sVersionToRKESystemImages[DefaultK8sVersion]
+	imageDefaults := types.K8sVersionToRKESystemImages[DefaultK8sVersion]
 
-	rkeServices := v3.RKEConfigServices{
-		Kubelet: v3.KubeletService{
-			BaseService: v3.BaseService{
+	rkeServices := types.RKEConfigServices{
+		Kubelet: types.KubeletService{
+			BaseService: types.BaseService{
 				Image:     imageDefaults.Kubernetes,
 				ExtraArgs: map[string]string{"fail-swap-on": "false"},
 			},
 		},
 	}
-	return &v3.RancherKubernetesEngineConfig{
-		Nodes:    []v3.RKEConfigNode{*rkeLocalNode},
+	return &types.RancherKubernetesEngineConfig{
+		Nodes:    []types.RKEConfigNode{*rkeLocalNode},
 		Services: rkeServices,
 	}
 
 }
 
-func GetLocalRKENodeConfig() *v3.RKEConfigNode {
-	rkeLocalNode := &v3.RKEConfigNode{
+func GetLocalRKENodeConfig() *types.RKEConfigNode {
+	rkeLocalNode := &types.RKEConfigNode{
 		Address:          LocalNodeAddress,
 		HostnameOverride: LocalNodeHostname,
 		User:             LocalNodeUser,

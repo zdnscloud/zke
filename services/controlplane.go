@@ -6,12 +6,12 @@ import (
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"golang.org/x/sync/errgroup"
 )
 
-func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]v3.PrivateRegistry, cpNodePlanMap map[string]v3.RKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
+func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.RKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
 	if updateWorkersOnly {
 		return nil
 	}
@@ -118,7 +118,7 @@ func RestartControlPlane(ctx context.Context, controlHosts []*hosts.Host) error 
 	return nil
 }
 
-func doDeployControlHost(ctx context.Context, host *hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]v3.PrivateRegistry, processMap map[string]v3.Process, alpineImage string, certMap map[string]pki.CertificatePKI) error {
+func doDeployControlHost(ctx context.Context, host *hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, alpineImage string, certMap map[string]pki.CertificatePKI) error {
 	if host.IsWorker {
 		if err := removeNginxProxy(ctx, host); err != nil {
 			return err

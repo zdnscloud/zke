@@ -6,13 +6,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/types"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -268,7 +268,7 @@ func clusterUpFromCli(ctx *cli.Context) error {
 }
 
 func clusterUpLocal(ctx *cli.Context) error {
-	var rkeConfig *v3.RancherKubernetesEngineConfig
+	var rkeConfig *types.RancherKubernetesEngineConfig
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		log.Infof(context.Background(), "Failed to resolve cluster file, using default cluster instead")
@@ -278,7 +278,7 @@ func clusterUpLocal(ctx *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Failed to parse cluster file: %v", err)
 		}
-		rkeConfig.Nodes = []v3.RKEConfigNode{*cluster.GetLocalRKENodeConfig()}
+		rkeConfig.Nodes = []types.RKEConfigNode{*cluster.GetLocalRKENodeConfig()}
 	}
 
 	rkeConfig.IgnoreDockerVersion = ctx.Bool("ignore-docker-version")

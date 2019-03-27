@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
+	"github.com/zdnscloud/zke/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/cert"
 )
@@ -121,7 +121,7 @@ func reconcileControl(ctx context.Context, currentCluster, kubeCluster *Cluster,
 	return nil
 }
 
-func reconcileHost(ctx context.Context, toDeleteHost *hosts.Host, worker, etcd bool, cleanerImage string, dialerFactory hosts.DialerFactory, prsMap map[string]v3.PrivateRegistry, clusterPrefixPath string, clusterVersion string) error {
+func reconcileHost(ctx context.Context, toDeleteHost *hosts.Host, worker, etcd bool, cleanerImage string, dialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, clusterPrefixPath string, clusterVersion string) error {
 	if err := toDeleteHost.TunnelUp(ctx, dialerFactory, clusterPrefixPath, clusterVersion); err != nil {
 		return fmt.Errorf("Not able to reach the host: %v", err)
 	}
@@ -192,7 +192,7 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 		etcdHost.ToAddEtcdMember = false
 		kubeCluster.setReadyEtcdHosts()
 
-		etcdNodePlanMap := make(map[string]v3.RKEConfigNodePlan)
+		etcdNodePlanMap := make(map[string]types.RKEConfigNodePlan)
 		for _, etcdReadyHost := range kubeCluster.EtcdReadyHosts {
 			etcdNodePlanMap[etcdReadyHost.Address] = BuildRKEConfigNodePlan(ctx, kubeCluster, etcdReadyHost, etcdReadyHost.DockerInfo)
 		}

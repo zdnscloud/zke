@@ -6,21 +6,21 @@ import (
 	"path"
 	"strings"
 
-	"github.com/docker/docker/api/types"
+	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/sirupsen/logrus"
 
 	"github.com/docker/docker/client"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 )
 
 type Host struct {
-	v3.RKEConfigNode
+	types.RKEConfigNode
 	DClient             *client.Client
 	LocalConnPort       int
 	IsControl           bool
@@ -34,10 +34,10 @@ type Host struct {
 	ToDelLabels         map[string]string
 	ToAddTaints         []string
 	ToDelTaints         []string
-	DockerInfo          types.Info
+	DockerInfo          dockertypes.Info
 	UpdateWorker        bool
 	PrefixPath          string
-	BastionHost         v3.BastionHost
+	BastionHost         types.BastionHost
 }
 
 const (
@@ -60,7 +60,7 @@ const (
 	CoreOSPrefixPath = "/opt/rke"
 )
 
-func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]v3.PrivateRegistry, externalEtcd bool) error {
+func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
 	toCleanPaths := []string{
 		path.Join(h.PrefixPath, ToCleanSSLDir),
@@ -77,7 +77,7 @@ func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[s
 	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
-func (h *Host) CleanUpWorkerHost(ctx context.Context, cleanerImage string, prsMap map[string]v3.PrivateRegistry) error {
+func (h *Host) CleanUpWorkerHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
 	if h.IsControl || h.IsEtcd {
 		log.Infof(ctx, "[hosts] Host [%s] is already a controlplane or etcd host, skipping cleanup.", h.Address)
 		return nil
@@ -92,7 +92,7 @@ func (h *Host) CleanUpWorkerHost(ctx context.Context, cleanerImage string, prsMa
 	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
-func (h *Host) CleanUpControlHost(ctx context.Context, cleanerImage string, prsMap map[string]v3.PrivateRegistry) error {
+func (h *Host) CleanUpControlHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
 	if h.IsWorker || h.IsEtcd {
 		log.Infof(ctx, "[hosts] Host [%s] is already a worker or etcd host, skipping cleanup.", h.Address)
 		return nil
@@ -107,7 +107,7 @@ func (h *Host) CleanUpControlHost(ctx context.Context, cleanerImage string, prsM
 	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
-func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap map[string]v3.PrivateRegistry) error {
+func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
 	toCleanPaths := []string{
 		path.Join(h.PrefixPath, ToCleanEtcdDir),
 		path.Join(h.PrefixPath, ToCleanSSLDir),
@@ -121,7 +121,7 @@ func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap 
 	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
-func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]v3.PrivateRegistry) error {
+func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
 	imageCfg, hostCfg := buildCleanerConfig(h, toCleanPaths, cleanerImage)
 	log.Infof(ctx, "[hosts] Running cleaner container on host [%s]", h.Address)
@@ -266,7 +266,7 @@ func buildCleanerConfig(host *Host, toCleanDirs []string, cleanerImage string) (
 	return imageCfg, hostCfg
 }
 
-func NodesToHosts(rkeNodes []v3.RKEConfigNode, nodeRole string) []*Host {
+func NodesToHosts(rkeNodes []types.RKEConfigNode, nodeRole string) []*Host {
 	hostList := make([]*Host, 0)
 	for _, node := range rkeNodes {
 		for _, role := range node.Role {
@@ -316,7 +316,7 @@ func GetPrefixPath(osType, ClusterPrefixPath string) string {
 	return prefixPath
 }
 
-func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap map[string]v3.PrivateRegistry) error {
+func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap map[string]types.PrivateRegistry) error {
 	logrus.Debugf("[cleanup] Starting log link cleanup on host [%s]", host.Address)
 	imageCfg := &container.Config{
 		Image: alpineImage,

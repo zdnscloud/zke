@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/zdnscloud/zke/types"
 )
 
 const s3Endpoint = "s3.amazonaws.com"
@@ -78,7 +78,7 @@ func EtcdCommand() cli.Command {
 
 func SnapshotSaveEtcdHosts(
 	ctx context.Context,
-	rkeConfig *v3.RancherKubernetesEngineConfig,
+	rkeConfig *types.RancherKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
 
@@ -105,7 +105,7 @@ func SnapshotSaveEtcdHosts(
 
 func RestoreEtcdSnapshot(
 	ctx context.Context,
-	rkeConfig *v3.RancherKubernetesEngineConfig,
+	rkeConfig *types.RancherKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
 

@@ -6,10 +6,10 @@ import (
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
+	"github.com/zdnscloud/zke/types"
 )
 
-func runKubelet(ctx context.Context, host *hosts.Host, df hosts.DialerFactory, prsMap map[string]v3.PrivateRegistry, kubeletProcess v3.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
+func runKubelet(ctx context.Context, host *hosts.Host, df hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, kubeletProcess types.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
 	imageCfg, hostCfg, healthCheckURL := GetProcessConfig(kubeletProcess)
 	if err := docker.DoRunContainer(ctx, host.DClient, imageCfg, hostCfg, KubeletContainerName, host.Address, WorkerRole, prsMap); err != nil {
 		return err

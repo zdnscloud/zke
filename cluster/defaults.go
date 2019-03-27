@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rancher/types/apis/management.cattle.io/v3"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/templates"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
 )
 
@@ -23,7 +23,7 @@ const (
 	DefaultClusterName           = "local"
 	DefaultClusterSSHKeyPath     = "~/.ssh/id_rsa"
 
-	DefaultK8sVersion = v3.DefaultK8s
+	DefaultK8sVersion = types.DefaultK8s
 
 	DefaultSSHPort        = "22"
 	DefaultDockerSockPath = "/var/run/docker.sock"
@@ -214,7 +214,7 @@ func (c *Cluster) setClusterImageDefaults() error {
 		return err
 	}
 
-	imageDefaults := v3.AllK8sVersions[c.Version]
+	imageDefaults := types.AllK8sVersions[c.Version]
 
 	for _, privReg := range c.PrivateRegistries {
 		if privReg.IsDefault {
@@ -309,7 +309,7 @@ func (c *Cluster) setClusterAuthnDefaults() {
 	}
 
 	if c.AuthnStrategies[AuthnWebhookProvider] && c.Authentication.Webhook == nil {
-		c.Authentication.Webhook = &v3.AuthWebhookConfig{}
+		c.Authentication.Webhook = &types.AuthWebhookConfig{}
 	}
 	if c.Authentication.Webhook != nil {
 		webhookConfigDefaultsMap := map[*string]string{

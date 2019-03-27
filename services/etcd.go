@@ -11,13 +11,13 @@ import (
 	etcdclient "github.com/coreos/etcd/client"
 	"github.com/docker/docker/api/types/container"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
-	"github.com/rancher/types/apis/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/util/cert"
 )
@@ -33,12 +33,12 @@ const (
 func RunEtcdPlane(
 	ctx context.Context,
 	etcdHosts []*hosts.Host,
-	etcdNodePlanMap map[string]v3.RKEConfigNodePlan,
+	etcdNodePlanMap map[string]types.RKEConfigNodePlan,
 	localConnDialerFactory hosts.DialerFactory,
-	prsMap map[string]v3.PrivateRegistry,
+	prsMap map[string]types.PrivateRegistry,
 	updateWorkersOnly bool,
 	alpineImage string,
-	es v3.ETCDService,
+	es types.ETCDService,
 	certMap map[string]pki.CertificatePKI) error {
 	log.Infof(ctx, "[%s] Building up etcd plane..", ETCDRole)
 	for _, host := range etcdHosts {
@@ -209,7 +209,7 @@ func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*ho
 	return nil
 }
 
-func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHost *hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte, prsMap map[string]v3.PrivateRegistry, etcdNodePlanMap map[string]v3.RKEConfigNodePlan, alpineImage string) error {
+func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHost *hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte, prsMap map[string]types.PrivateRegistry, etcdNodePlanMap map[string]types.RKEConfigNodePlan, alpineImage string) error {
 	imageCfg, hostCfg, _ := GetProcessConfig(etcdNodePlanMap[newHost.Address].Processes[EtcdContainerName])
 	if err := docker.DoRunContainer(ctx, newHost.DClient, imageCfg, hostCfg, EtcdContainerName, newHost.Address, ETCDRole, prsMap); err != nil {
 		return err
@@ -267,7 +267,7 @@ func IsEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*hosts.
 	return false, nil
 }
 
-func RunEtcdSnapshotSave(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]v3.PrivateRegistry, etcdSnapshotImage string, name string, once bool, es v3.ETCDService) error {
+func RunEtcdSnapshotSave(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdSnapshotImage string, name string, once bool, es types.ETCDService) error {
 	log.Infof(ctx, "[etcd] Saving snapshot [%s] on host [%s]", name, etcdHost.Address)
 	imageCfg := &container.Config{
 		Cmd: []string{
@@ -335,7 +335,7 @@ func RunEtcdSnapshotSave(ctx context.Context, etcdHost *hosts.Host, prsMap map[s
 	return nil
 }
 
-func DownloadEtcdSnapshotFromS3(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]v3.PrivateRegistry, etcdSnapshotImage string, name string, es v3.ETCDService) error {
+func DownloadEtcdSnapshotFromS3(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdSnapshotImage string, name string, es types.ETCDService) error {
 
 	log.Infof(ctx, "[etcd] Get snapshot [%s] on host [%s]", name, etcdHost.Address)
 	s3Backend := es.BackupConfig.S3BackupConfig
@@ -383,7 +383,7 @@ func DownloadEtcdSnapshotFromS3(ctx context.Context, etcdHost *hosts.Host, prsMa
 	return docker.RemoveContainer(ctx, etcdHost.DClient, etcdHost.Address, EtcdDownloadBackupContainerName)
 }
 
-func RestoreEtcdSnapshot(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]v3.PrivateRegistry, etcdRestoreImage, snapshotName, initCluster string) error {
+func RestoreEtcdSnapshot(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdRestoreImage, snapshotName, initCluster string) error {
 	log.Infof(ctx, "[etcd] Restoring [%s] snapshot on etcd host [%s]", snapshotName, etcdHost.Address)
 	nodeName := pki.GetEtcdCrtName(etcdHost.InternalAddress)
 	snapshotPath := fmt.Sprintf("%s%s", EtcdSnapshotPath, snapshotName)
@@ -439,7 +439,7 @@ func RestoreEtcdSnapshot(ctx context.Context, etcdHost *hosts.Host, prsMap map[s
 	return docker.RemoveContainer(ctx, etcdHost.DClient, etcdHost.Address, EtcdRestoreContainerName)
 }
 
-func GetEtcdSnapshotChecksum(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]v3.PrivateRegistry, alpineImage, snapshotName string) (string, error) {
+func GetEtcdSnapshotChecksum(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, alpineImage, snapshotName string) (string, error) {
 	var checksum string
 	var err error
 
@@ -473,7 +473,7 @@ func GetEtcdSnapshotChecksum(ctx context.Context, etcdHost *hosts.Host, prsMap m
 	return checksum, nil
 }
 
-func configS3BackupImgCmd(ctx context.Context, imageCfg *container.Config, bc *v3.BackupConfig) *container.Config {
+func configS3BackupImgCmd(ctx context.Context, imageCfg *container.Config, bc *types.BackupConfig) *container.Config {
 	cmd := []string{
 		"--creation=" + fmt.Sprintf("%dh", bc.IntervalHours),
 		"--retention=" + fmt.Sprintf("%dh", bc.Retention*bc.IntervalHours),
@@ -493,7 +493,7 @@ func configS3BackupImgCmd(ctx context.Context, imageCfg *container.Config, bc *v
 	return imageCfg
 }
 
-func StartBackupServer(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]v3.PrivateRegistry, etcdSnapshotImage string, name string) error {
+func StartBackupServer(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdSnapshotImage string, name string) error {
 	log.Infof(ctx, "[etcd] starting backup server on host [%s]", etcdHost.Address)
 
 	imageCfg := &container.Config{
@@ -518,7 +518,7 @@ func StartBackupServer(ctx context.Context, etcdHost *hosts.Host, prsMap map[str
 	return docker.DoRunContainer(ctx, etcdHost.DClient, imageCfg, hostCfg, EtcdServeBackupContainerName, etcdHost.Address, ETCDRole, prsMap)
 }
 
-func DownloadEtcdSnapshotFromBackupServer(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]v3.PrivateRegistry, etcdSnapshotImage, name string, backupServer *hosts.Host) error {
+func DownloadEtcdSnapshotFromBackupServer(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdSnapshotImage, name string, backupServer *hosts.Host) error {
 	log.Infof(ctx, "[etcd] Get snapshot [%s] on host [%s]", name, etcdHost.Address)
 	imageCfg := &container.Config{
 		Cmd: []string{
