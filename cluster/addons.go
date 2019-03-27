@@ -1,22 +1,15 @@
 package cluster
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"os"
-	"os/exec"
 	"time"
 
-	"io/ioutil"
-	"net/http"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/addons"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -24,11 +17,12 @@ const (
 	IngressAddonResourceName      = "rke-ingress-controller"
 	UserAddonsIncludeResourceName = "rke-user-includes-addons"
 
+	DNSAddonResourceName           = "rke-coredns-addon"
 	IngressAddonJobName            = "rke-ingress-controller-deploy-job"
 	MetricsServerAddonJobName      = "rke-metrics-addon-deploy-job"
 	MetricsServerAddonResourceName = "rke-metrics-addon"
 	NginxIngressAddonAppName       = "ingress-nginx"
-	KubeDNSAddonAppName            = "kube-dns"
+	CoreDNSAddonAppName            = "coredns"
 )
 
 type ingressOptions struct {
@@ -78,7 +72,7 @@ func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
 		if err, ok := err.(*addonError); ok && err.isCritical {
 			return err
 		}
-		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider %s: %v", c.DNS.Provider, err)
+		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider %s: %v", DNSAddonResourceName, err)
 
 	}
 	if err := c.deployMetricServer(ctx); err != nil {
@@ -97,108 +91,8 @@ func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) deployUserAddOns(ctx context.Context) error {
-	log.Infof(ctx, "[addons] Setting up user addons")
-	if c.Addons != "" {
-		if err := c.doAddonDeploy(ctx, c.Addons, UserAddonResourceName, false); err != nil {
-			return err
-		}
-	}
-	if len(c.AddonsInclude) > 0 {
-		if err := c.deployAddonsInclude(ctx); err != nil {
-			return err
-		}
-	}
-	if c.Addons == "" && len(c.AddonsInclude) == 0 {
-		log.Infof(ctx, "[addons] no user addons defined")
-	} else {
-		log.Infof(ctx, "[addons] User addons deployed successfully")
-	}
-	return nil
-}
-
-func (c *Cluster) deployAddonsInclude(ctx context.Context) error {
-	var manifests []byte
-	log.Infof(ctx, "[addons] Checking for included user addons")
-
-	if len(c.AddonsInclude) == 0 {
-		log.Infof(ctx, "[addons] No included addon paths or urls")
-		return nil
-	}
-	for _, addon := range c.AddonsInclude {
-		if strings.HasPrefix(addon, "http") {
-			addonYAML, err := getAddonFromURL(addon)
-			if err != nil {
-				return err
-			}
-			log.Infof(ctx, "[addons] Adding addon from url %s", addon)
-			logrus.Debugf("URL Yaml: %s", addonYAML)
-
-			if err := validateUserAddonYAML(addonYAML); err != nil {
-				return err
-			}
-			manifests = append(manifests, addonYAML...)
-		} else if isFilePath(addon) {
-			addonYAML, err := ioutil.ReadFile(addon)
-			if err != nil {
-				return err
-			}
-			log.Infof(ctx, "[addons] Adding addon from %s", addon)
-			logrus.Debugf("FilePath Yaml: %s", string(addonYAML))
-
-			// make sure we properly separated manifests
-			addonYAMLStr := string(addonYAML)
-			if !strings.HasPrefix(addonYAMLStr, "---") {
-				addonYAML = []byte(fmt.Sprintf("%s\n%s", "---", addonYAMLStr))
-			}
-			if err := validateUserAddonYAML(addonYAML); err != nil {
-				return err
-			}
-			manifests = append(manifests, addonYAML...)
-		} else {
-			log.Warnf(ctx, "[addons] Unable to determine if %s is a file path or url, skipping", addon)
-		}
-	}
-	log.Infof(ctx, "[addons] Deploying %s", UserAddonsIncludeResourceName)
-	logrus.Debugf("[addons] Compiled addons yaml: %s", string(manifests))
-
-	return c.doAddonDeploy(ctx, string(manifests), UserAddonsIncludeResourceName, false)
-}
-
-func validateUserAddonYAML(addon []byte) error {
-	yamlContents := make(map[string]interface{})
-
-	return yaml.Unmarshal(addon, &yamlContents)
-}
-
-func isFilePath(addonPath string) bool {
-	if _, err := os.Stat(addonPath); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-func getAddonFromURL(yamlURL string) ([]byte, error) {
-	resp, err := http.Get(yamlURL)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	addonYaml, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return addonYaml, nil
-
-}
-
-func (c *Cluster) deployCoreDNS(ctx context.Context) error {
-	log.Infof(ctx, "[addons] Setting up %s", c.DNS.Provider)
+func (c *Cluster) deployDNS(ctx context.Context) error {
+	log.Infof(ctx, "[DNS] Setting up DNS provider %s", c.DNS.Provider)
 	CoreDNSConfig := CoreDNSOptions{
 		CoreDNSImage:           c.SystemImages.CoreDNS,
 		CoreDNSAutoScalerImage: c.SystemImages.CoreDNSAutoscaler,
@@ -208,36 +102,19 @@ func (c *Cluster) deployCoreDNS(ctx context.Context) error {
 		UpstreamNameservers:    c.DNS.UpstreamNameservers,
 		ReverseCIDRs:           c.DNS.ReverseCIDRs,
 	}
-	coreDNSYaml, err := addons.GetCoreDNSManifest(CoreDNSConfig)
+	coreDNSYaml, err := addons.GetManifest(CoreDNSConfig, c.DNS.Provider)
 	if err != nil {
 		return err
 	}
 	if err := c.doAddonDeploy(ctx, coreDNSYaml, getAddonResourceName(c.DNS.Provider), false); err != nil {
 		return err
 	}
-	log.Infof(ctx, "[addons] CoreDNS deployed successfully..")
+	log.Infof(ctx, "[DNS] DNS provider %s deployed successfully..", c.DNS.Provider)
 	return nil
 }
 
 func (c *Cluster) deployMetricServer(ctx context.Context) error {
-	if c.Monitoring.Provider == "none" {
-		addonJobExists, err := addons.AddonJobExists(MetricsServerAddonJobName, c.LocalKubeConfigPath, c.K8sWrapTransport)
-		if err != nil {
-			return nil
-		}
-		if addonJobExists {
-			log.Infof(ctx, "[ingress] Removing installed metrics server")
-			if err := c.doAddonDelete(ctx, MetricsServerAddonResourceName, false); err != nil {
-				return err
-			}
-
-			log.Infof(ctx, "[ingress] Metrics server removed successfully")
-		} else {
-			log.Infof(ctx, "[ingress] Metrics Server is disabled, skipping Metrics server installation")
-		}
-		return nil
-	}
-	log.Infof(ctx, "[addons] Setting up Metrics Server")
+	log.Infof(ctx, "[addons] Setting up %s", c.Monitoring.Provider)
 	s := strings.Split(c.SystemImages.MetricsServer, ":")
 	versionTag := s[len(s)-1]
 
@@ -247,33 +124,18 @@ func (c *Cluster) deployMetricServer(ctx context.Context) error {
 		Options:            c.Monitoring.Options,
 		Version:            getTagMajorVersion(versionTag),
 	}
-	metricsYaml, err := addons.GetMetricsServerManifest(MetricsServerConfig)
+	metricsYaml, err := addons.GetManifest(MetricsServerConfig, c.Monitoring.Provider)
 	if err != nil {
 		return err
 	}
 	if err := c.doAddonDeploy(ctx, metricsYaml, MetricsServerAddonResourceName, false); err != nil {
 		return err
 	}
-	log.Infof(ctx, "[addons] Metrics Server deployed successfully")
+	log.Infof(ctx, "[addons] %s deployed successfully", c.Monitoring.Provider)
 	return nil
 }
 
-func (c *Cluster) deployWithKubectl(ctx context.Context, addonYaml string) error {
-	buf := bytes.NewBufferString(addonYaml)
-	cmd := exec.Command("kubectl", "--kubeconfig", c.LocalKubeConfigPath, "apply", "-f", "-")
-	cmd.Stdin = buf
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
 func (c *Cluster) doAddonDeploy(ctx context.Context, addonYaml, resourceName string, isCritical bool) error {
-	if c.UseKubectlDeploy {
-		if err := c.deployWithKubectl(ctx, addonYaml); err != nil {
-			return &addonError{fmt.Sprintf("%v", err), isCritical}
-		}
-	}
-
 	addonUpdated, err := c.StoreAddonConfigMap(ctx, addonYaml, resourceName)
 	if err != nil {
 		return &addonError{fmt.Sprintf("Failed to save addon ConfigMap: %v", err), isCritical}
@@ -298,39 +160,6 @@ func (c *Cluster) doAddonDeploy(ctx context.Context, addonYaml, resourceName str
 		return &addonError{fmt.Sprintf("%v", err), isCritical}
 	}
 	return nil
-}
-
-func (c *Cluster) doAddonDelete(ctx context.Context, resourceName string, isCritical bool) error {
-	k8sClient, err := k8s.NewClient(c.LocalKubeConfigPath, c.K8sWrapTransport)
-	if err != nil {
-		return &addonError{fmt.Sprintf("%v", err), isCritical}
-	}
-	node, err := k8s.GetNode(k8sClient, c.ControlPlaneHosts[0].HostnameOverride)
-	if err != nil {
-		return &addonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].HostnameOverride, err), isCritical}
-	}
-	deleteJob, err := addons.GetAddonsDeleteJob(resourceName, node.Name, c.Services.KubeAPI.Image)
-	if err != nil {
-		return &addonError{fmt.Sprintf("Failed to generate addon delete job: %v", err), isCritical}
-	}
-	if err := k8s.ApplyK8sSystemJob(deleteJob, c.LocalKubeConfigPath, c.K8sWrapTransport, c.AddonJobTimeout*2, false); err != nil {
-		return &addonError{fmt.Sprintf("%v", err), isCritical}
-	}
-	// At this point, the addon should be deleted. We need to clean up by deleting the deploy and delete jobs.
-	tmpJobYaml, err := addons.GetAddonsExecuteJob(resourceName, node.Name, c.Services.KubeAPI.Image)
-	if err != nil {
-		return err
-	}
-	if err := k8s.DeleteK8sSystemJob(tmpJobYaml, k8sClient, c.AddonJobTimeout); err != nil {
-		return err
-	}
-
-	if err := k8s.DeleteK8sSystemJob(deleteJob, k8sClient, c.AddonJobTimeout); err != nil {
-		return err
-	}
-
-	return nil
-
 }
 
 func (c *Cluster) StoreAddonConfigMap(ctx context.Context, addonYaml string, addonName string) (bool, error) {
@@ -370,23 +199,6 @@ func (c *Cluster) ApplySystemAddonExecuteJob(addonJob string, addonUpdated bool)
 }
 
 func (c *Cluster) deployIngress(ctx context.Context) error {
-	if c.Ingress.Provider == "none" {
-		addonJobExists, err := addons.AddonJobExists(IngressAddonJobName, c.LocalKubeConfigPath, c.K8sWrapTransport)
-		if err != nil {
-			return nil
-		}
-		if addonJobExists {
-			log.Infof(ctx, "[ingress] removing installed ingress controller")
-			if err := c.doAddonDelete(ctx, IngressAddonResourceName, false); err != nil {
-				return err
-			}
-
-			log.Infof(ctx, "[ingress] ingress controller removed successfully")
-		} else {
-			log.Infof(ctx, "[ingress] ingress controller is disabled, skipping ingress controller")
-		}
-		return nil
-	}
 	log.Infof(ctx, "[ingress] Setting up %s ingress controller", c.Ingress.Provider)
 	ingressConfig := ingressOptions{
 		RBACConfig:     c.Authorization.Mode,
@@ -407,7 +219,7 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 	}
 
 	// Currently only deploying nginx ingress controller
-	ingressYaml, err := addons.GetNginxIngressManifest(ingressConfig)
+	ingressYaml, err := addons.GetManifest(ingressConfig, c.Ingress.Provider)
 	if err != nil {
 		return err
 	}
@@ -415,16 +227,5 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 		return err
 	}
 	log.Infof(ctx, "[ingress] ingress controller %s deployed successfully", c.Ingress.Provider)
-	return nil
-}
-
-func (c *Cluster) deployDNS(ctx context.Context) error {
-	if err := c.deployCoreDNS(ctx); err != nil {
-		if err, ok := err.(*addonError); ok && err.isCritical {
-			return err
-		}
-		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", getAddonResourceName(c.DNS.Provider), err)
-	}
-	log.Infof(ctx, "[dns] DNS provider %s deployed successfully", c.DNS.Provider)
 	return nil
 }

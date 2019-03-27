@@ -171,7 +171,7 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Services = *serviceConfig
-
+        /*
 	//Get addon manifests
 	addonsInclude, err := getAddonManifests(reader)
 	if err != nil {
@@ -180,7 +180,7 @@ func clusterConfig(ctx *cli.Context) error {
 
 	if len(addonsInclude) > 0 {
 		cluster.AddonsInclude = append(cluster.AddonsInclude, addonsInclude...)
-	}
+	}*/
 
 	return writeConfig(&cluster, configFile, print)
 }
@@ -357,14 +357,14 @@ func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
 func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 	networkConfig := types.NetworkConfig{}
 
-	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico, weave, canal)", cluster.DefaultNetworkPlugin)
+	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico)", cluster.DefaultNetworkPlugin)
 	if err != nil {
 		return nil, err
 	}
 	networkConfig.Plugin = networkPlugin
 	return &networkConfig, nil
 }
-
+/*
 func getAddonManifests(reader *bufio.Reader) ([]string, error) {
 	var addonSlice []string
 	var resume = true
@@ -399,7 +399,7 @@ func getAddonManifests(reader *bufio.Reader) ([]string, error) {
 	}
 
 	return addonSlice, nil
-}
+}*/
 
 func generateSystemImagesList(version string, all bool) error {
 	allVersions := []string{}

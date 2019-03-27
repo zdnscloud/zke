@@ -319,13 +319,14 @@ func (c *Cluster) deployAddons(ctx context.Context) error {
 	if err := c.deployK8sAddOns(ctx); err != nil {
 		return err
 	}
+	/*
 	if err := c.deployUserAddOns(ctx); err != nil {
 		if err, ok := err.(*addonError); ok && err.isCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", UserAddonsIncludeResourceName, err)
 
-	}
+	}*/
 	return nil
 }
 
@@ -479,11 +480,9 @@ func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 	labelsList := []string{
 		fmt.Sprintf("%s=%s", KubeAppLabel, CalicoNetworkPlugin),
 		fmt.Sprintf("%s=%s", KubeAppLabel, FlannelNetworkPlugin),
-		fmt.Sprintf("%s=%s", KubeAppLabel, CanalNetworkPlugin),
-		fmt.Sprintf("%s=%s", NameLabel, WeaveNetworkPlugin),
 		fmt.Sprintf("%s=%s", AppLabel, NginxIngressAddonAppName),
 		fmt.Sprintf("%s=%s", KubeAppLabel, DefaultMonitoringProvider),
-		fmt.Sprintf("%s=%s", KubeAppLabel, KubeDNSAddonAppName),
+		fmt.Sprintf("%s=%s", KubeAppLabel, CoreDNSAddonAppName),
 	}
 	var errgrp errgroup.Group
 	labelQueue := util.GetObjectQueue(labelsList)
