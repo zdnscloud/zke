@@ -22,6 +22,9 @@ import (
 const (
 	comments = `# If you intened to deploy Kubernetes in an air-gapped environment,
 # please consult the documentation on how to configure custom RKE images.`
+	FlannelIface                = "flannel_iface"
+	FlannelBackendType          = "flannel_backend_type"
+	FlannelBackendDirectrouting = "flannel_vxlan_directrouting"
 )
 
 func ConfigCommand() cli.Command {
@@ -354,27 +357,21 @@ func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 	}
 	networkConfig.Plugin = networkPlugin
 	if networkPlugin == cluster.DefaultNetworkPlugin {
-	       FlannelIface, err := getConfig(reader, "Flannel Network Interface", "")
+	       networkFlannelIface, err := getConfig(reader, "Flannel Network Interface", "")
 	       if err != nil {
 	               return nil, err
                }
 	       networkConfig.Options = make(map[string]string)
-               networkConfig.Options["flannel_iface"] = FlannelIface
-	       FlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", cluster.DefaultFlannelBackendType)
+               networkConfig.Options[FlannelIface] = networkFlannelIface
+	       networkFlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", cluster.DefaultFlannelBackendType)
 	       if err != nil {
 	               return nil, err
                }
-	       networkConfig.Options["flannel_backend_type"] = FlannelBackendType
-	       if FlannelBackendType == cluster.DefaultFlannelBackendType {
-	               FlannelBackendDirectrouting, err := getConfig(reader, "Flannel Backend Vxlan Enable Directrouting", "y")
-	               if err != nil {
-			       return nil, err
-		       }
-		       if FlannelBackendDirectrouting == "y" || FlannelBackendDirectrouting == "Y" {
-			       networkConfig.Options["flannel_vxlan_directrouting"] = "true"
-		       }else {
-			       networkConfig.Options["flannel_vxlan_directrouting"] = "false"
-		       }
+	       networkConfig.Options[FlannelBackendType] = networkFlannelBackendType
+	       if networkFlannelBackendType == cluster.DefaultFlannelBackendType {
+	               networkConfig.Options[FlannelBackendDirectrouting] = "true"
+	       }else {
+	               networkConfig.Options[FlannelBackendDirectrouting] = "false"
 	       }
 	}
 	return &networkConfig, nil

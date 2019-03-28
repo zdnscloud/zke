@@ -10,6 +10,7 @@ import (
 	"github.com/zdnscloud/zke/addons"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
+        "github.com/zdnscloud/zke/templates"
 )
 
 const (
@@ -24,6 +25,12 @@ const (
 	NginxIngressAddonAppName       = "ingress-nginx"
 	CoreDNSAddonAppName            = "coredns"
 )
+
+var tmpltMap map[string]string = map[string]string{
+	"coredns":        templates.CoreDNSTemplate,
+	"nginx":          templates.NginxIngressTemplate,
+	"metrics-server": templates.MetricsServerTemplate,
+}
 
 type ingressOptions struct {
 	RBACConfig     string
@@ -102,7 +109,7 @@ func (c *Cluster) deployDNS(ctx context.Context) error {
 		UpstreamNameservers:    c.DNS.UpstreamNameservers,
 		ReverseCIDRs:           c.DNS.ReverseCIDRs,
 	}
-	coreDNSYaml, err := addons.GetManifest(CoreDNSConfig, c.DNS.Provider)
+	coreDNSYaml, err := c.GetManifest(CoreDNSConfig, c.DNS.Provider)
 	if err != nil {
 		return err
 	}
@@ -124,7 +131,7 @@ func (c *Cluster) deployMetricServer(ctx context.Context) error {
 		Options:            c.Monitoring.Options,
 		Version:            getTagMajorVersion(versionTag),
 	}
-	metricsYaml, err := addons.GetManifest(MetricsServerConfig, c.Monitoring.Provider)
+	metricsYaml, err := c.GetManifest(MetricsServerConfig, c.Monitoring.Provider)
 	if err != nil {
 		return err
 	}
@@ -219,7 +226,7 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 	}
 
 	// Currently only deploying nginx ingress controller
-	ingressYaml, err := addons.GetManifest(ingressConfig, c.Ingress.Provider)
+	ingressYaml, err := c.GetManifest(ingressConfig, c.Ingress.Provider)
 	if err != nil {
 		return err
 	}
@@ -228,4 +235,13 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 	}
 	log.Infof(ctx, "[ingress] ingress controller %s deployed successfully", c.Ingress.Provider)
 	return nil
+}
+
+func (c *Cluster) GetManifest(Config interface{}, addonName string) (string, error) {
+       tmplt, ok := tmpltMap[addonName]
+       if ok{
+               return templates.CompileTemplateFromMap(tmplt, Config)
+       } else {
+	       return "", fmt.Errorf("[addon] Unknown addon %s", addonName)
+       }
 }
