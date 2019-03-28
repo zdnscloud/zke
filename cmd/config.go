@@ -25,7 +25,20 @@ const (
 	FlannelIface                = "flannel_iface"
 	FlannelBackendType          = "flannel_backend_type"
 	FlannelBackendDirectrouting = "flannel_vxlan_directrouting"
+
+	DefaultClusterSSHKeyPath     = "~/.ssh/id_rsa"
+	DefaultClusterSSHKey     = ""
+        DefaultClusterSSHPort = "22"
+        DefaultClusterSSHUser = "ubuntu"
+        DefaultClusterDockerSockPath = "/var/run/docker.sock"
 )
+
+type clusterCommonCfg struct{
+        sshPort		string
+	sshKeyPath	string
+	sshUser		string
+	dockerSocket	string
+}
 
 func ConfigCommand() cli.Command {
 	return cli.Command{
@@ -114,11 +127,31 @@ func clusterConfig(ctx *cli.Context) error {
 		return writeConfig(&cluster, configFile, print)
 	}
 
-	sshKeyPath, err := getConfig(reader, "Cluster Level SSH Private Key Path", "~/.ssh/id_rsa")
+	sshKeyPath, err := getConfig(reader, "Cluster Level SSH Private Key Path", DefaultClusterSSHKeyPath)
 	if err != nil {
 		return err
 	}
 	cluster.SSHKeyPath = sshKeyPath
+
+	sshPort, err := getConfig(reader, "Cluster Level SSH Port of all host", DefaultClusterSSHPort)
+	if err != nil {
+		return err
+	}
+	cluster.SSHPort = sshPort
+
+	sshUser, err := getConfig(reader, "Cluster Level SSH User of all host", DefaultClusterSSHUser)
+	if err != nil {
+		return err
+	}
+        cluster.SSHUser = sshUser
+
+	dockerSocketPath, err := getConfig(reader, "Cluster Level Docker socket path on all host", DefaultClusterDockerSockPath)
+	if err != nil {
+		return err
+	}
+	cluster.DockerSocket = dockerSocketPath
+
+	hostCommonCfg := clusterCommonCfg{sshPort, sshKeyPath, sshUser, dockerSocketPath}
 
 	// Get number of hosts
 	numberOfHostsString, err := getConfig(reader, "Number of Hosts", "1")
@@ -133,7 +166,7 @@ func clusterConfig(ctx *cli.Context) error {
 	// Get Hosts config
 	cluster.Nodes = make([]types.RKEConfigNode, 0)
 	for i := 0; i < numberOfHostsInt; i++ {
-		hostCfg, err := getHostConfig(reader, i, cluster.SSHKeyPath)
+		hostCfg, err := getHostConfig(reader, i, hostCommonCfg)
 		if err != nil {
 			return err
 		}
@@ -178,7 +211,7 @@ func clusterConfig(ctx *cli.Context) error {
 	return writeConfig(&cluster, configFile, print)
 }
 
-func getHostConfig(reader *bufio.Reader, index int, clusterSSHKeyPath string) (*types.RKEConfigNode, error) {
+func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonCfg) (*types.RKEConfigNode, error) {
 	host := types.RKEConfigNode{}
 
 	address, err := getConfig(reader, fmt.Sprintf("SSH Address of host (%d)", index+1), "")
@@ -187,37 +220,11 @@ func getHostConfig(reader *bufio.Reader, index int, clusterSSHKeyPath string) (*
 	}
 	host.Address = address
 
-	port, err := getConfig(reader, fmt.Sprintf("SSH Port of host (%d)", index+1), cluster.DefaultSSHPort)
-	if err != nil {
-		return nil, err
-	}
-	host.Port = port
-
-	sshKeyPath, err := getConfig(reader, fmt.Sprintf("SSH Private Key Path of host (%s)", address), "")
-	if err != nil {
-		return nil, err
-	}
-	if len(sshKeyPath) == 0 {
-		fmt.Printf("[-] You have entered empty SSH key path, trying fetch from SSH key parameter\n")
-		sshKey, err := getConfig(reader, fmt.Sprintf("SSH Private Key of host (%s)", address), "")
-		if err != nil {
-			return nil, err
-		}
-		if len(sshKey) == 0 {
-			fmt.Printf("[-] You have entered empty SSH key, defaulting to cluster level SSH key: %s\n", clusterSSHKeyPath)
-			host.SSHKeyPath = clusterSSHKeyPath
-		} else {
-			host.SSHKey = sshKey
-		}
-	} else {
-		host.SSHKeyPath = sshKeyPath
-	}
-
-	sshUser, err := getConfig(reader, fmt.Sprintf("SSH User of host (%s)", address), "ubuntu")
-	if err != nil {
-		return nil, err
-	}
-	host.User = sshUser
+	host.Port = hostCommonCfg.sshPort
+	host.User = hostCommonCfg.sshUser
+	host.SSHKey = DefaultClusterSSHKey
+	host.SSHKeyPath = hostCommonCfg.sshKeyPath
+	host.DockerSocket = hostCommonCfg.dockerSocket
 
 	isControlHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) a Control Plane host (y/n)?", address), "y")
 	if err != nil {
@@ -255,11 +262,6 @@ func getHostConfig(reader *bufio.Reader, index int, clusterSSHKeyPath string) (*
 	}
 	host.InternalAddress = internalAddress
 
-	dockerSocketPath, err := getConfig(reader, fmt.Sprintf("Docker socket path on host (%s)", address), cluster.DefaultDockerSockPath)
-	if err != nil {
-		return nil, err
-	}
-	host.DockerSocket = dockerSocketPath
 	return &host, nil
 }
 

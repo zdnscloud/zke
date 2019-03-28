@@ -17,6 +17,9 @@ type RancherKubernetesEngineConfig struct {
 	SystemImages RKESystemImages `yaml:"system_images" json:"systemImages,omitempty"`
 	// SSH Private Key Path
 	SSHKeyPath string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
+	SSHPort string `yaml:"port" json:"sshPort,omitempty"`
+	SSHUser string `yaml:"user" json:"sshUser,omitempty"`
+	DockerSocket string `yaml:"docker_socket" json:"dockerSocket,omitempty"`
 	// SSH Certificate Path
 	SSHCertPath string `yaml:"ssh_cert_path" json:"sshCertPath,omitempty"`
 	// SSH Agent Auth enable
