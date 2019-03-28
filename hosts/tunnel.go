@@ -107,7 +107,6 @@ func getSSHConfig(username, sshPrivateKeyString string, sshCertificateString str
 			return config, nil
 		}
 	}
-
 	signer, err := parsePrivateKey(sshPrivateKeyString)
 	if err != nil {
 		return config, err
