@@ -42,7 +42,7 @@ var (
 	}
 
 	// K8sVersionToRKESystemImages is dynamically populated on init() with the latest versions
-	K8sVersionToRKESystemImages map[string]ZKESystemImages
+	K8sVersionToZKESystemImages map[string]ZKESystemImages
 
 	// K8sVersionServiceOptions - service options per k8s version
 	K8sVersionServiceOptions = map[string]KubernetesServicesOptions{
@@ -90,11 +90,11 @@ var (
 )
 
 func init() {
-	if K8sVersionToRKESystemImages != nil {
+	if K8sVersionToZKESystemImages != nil {
 		panic("Do not initialize or add values to K8sVersionToRKESystemImages")
 	}
 
-	K8sVersionToRKESystemImages = map[string]ZKESystemImages{}
+	K8sVersionToZKESystemImages = map[string]ZKESystemImages{}
 
 	for version, images := range AllK8sVersions {
 		if K8sBadVersions[version] {
@@ -112,10 +112,10 @@ func init() {
 		if !ok {
 			panic("K8s version " + " is not found in AllK8sVersions map")
 		}
-		K8sVersionToRKESystemImages[latest] = images
+		K8sVersionToZKESystemImages[latest] = images
 	}
 
-	if _, ok := K8sVersionToRKESystemImages[DefaultK8s]; !ok {
+	if _, ok := K8sVersionToZKESystemImages[DefaultK8s]; !ok {
 		panic("Default K8s version " + DefaultK8s + " is not found in k8sVersionsCurrent list")
 	}
 }

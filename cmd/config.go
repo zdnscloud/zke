@@ -264,14 +264,14 @@ func getHostConfig(reader *bufio.Reader, index int, clusterSSHKeyPath string) (*
 }
 
 func getSystemImagesConfig(reader *bufio.Reader) (*types.ZKESystemImages, error) {
-	imageDefaults := types.K8sVersionToRKESystemImages[cluster.DefaultK8sVersion]
+	imageDefaults := types.K8sVersionToZKESystemImages[cluster.DefaultK8sVersion]
 
 	kubeImage, err := getConfig(reader, "Kubernetes Docker image", imageDefaults.Kubernetes)
 	if err != nil {
 		return nil, err
 	}
 
-	systemImages, ok := types.K8sVersionToRKESystemImages[kubeImage]
+	systemImages, ok := types.K8sVersionToZKESystemImages[kubeImage]
 	if ok {
 		return &systemImages, nil
 	}

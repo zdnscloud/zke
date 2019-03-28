@@ -7,7 +7,7 @@ import (
 
 func GetLocalRKEConfig() *types.ZcloudKubernetesEngineConfig {
 	rkeLocalNode := GetLocalRKENodeConfig()
-	imageDefaults := types.K8sVersionToRKESystemImages[DefaultK8sVersion]
+	imageDefaults := types.K8sVersionToZKESystemImages[DefaultK8sVersion]
 
 	rkeServices := types.ZKEConfigServices{
 		Kubelet: types.KubeletService{
