@@ -31,25 +31,25 @@ type FullState struct {
 }
 
 type State struct {
-	RancherKubernetesEngineConfig *types.RancherKubernetesEngineConfig `json:"rkeConfig,omitempty"`
-	CertificatesBundle            map[string]pki.CertificatePKI        `json:"certificatesBundle,omitempty"`
+	ZcloudKubernetesEngineConfig *types.ZcloudKubernetesEngineConfig `json:"rkeConfig,omitempty"`
+	CertificatesBundle           map[string]pki.CertificatePKI       `json:"certificatesBundle,omitempty"`
 }
 
 func (c *Cluster) UpdateClusterCurrentState(ctx context.Context, fullState *FullState) error {
-	fullState.CurrentState.RancherKubernetesEngineConfig = c.RancherKubernetesEngineConfig.DeepCopy()
+	fullState.CurrentState.ZcloudKubernetesEngineConfig = c.ZcloudKubernetesEngineConfig.DeepCopy()
 	fullState.CurrentState.CertificatesBundle = c.Certificates
 	return fullState.WriteStateFile(ctx, c.StateFilePath)
 }
 
 func (c *Cluster) GetClusterState(ctx context.Context, fullState *FullState) (*Cluster, error) {
 	var err error
-	if fullState.CurrentState.RancherKubernetesEngineConfig == nil {
+	if fullState.CurrentState.ZcloudKubernetesEngineConfig == nil {
 		return nil, nil
 	}
 
 	// resetup external flags
 	flags := GetExternalFlags(false, false, false, c.ConfigDir, c.ConfigPath)
-	currentCluster, err := InitClusterObject(ctx, fullState.CurrentState.RancherKubernetesEngineConfig, flags)
+	currentCluster, err := InitClusterObject(ctx, fullState.CurrentState.ZcloudKubernetesEngineConfig, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -144,10 +144,10 @@ func GetK8sVersion(localConfigPath string, k8sWrapTransport k8s.WrapTransport) (
 	return fmt.Sprintf("%#v", *serverVersion), nil
 }
 
-func RebuildState(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
+func RebuildState(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
 	newState := &FullState{
 		DesiredState: State{
-			RancherKubernetesEngineConfig: rkeConfig.DeepCopy(),
+			ZcloudKubernetesEngineConfig: rkeConfig.DeepCopy(),
 		},
 	}
 

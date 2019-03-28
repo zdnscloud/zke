@@ -36,8 +36,8 @@ type CertificatePKI struct {
 	ConfigPath     string                   `json:"configPath"`
 }
 
-type GenFunc func(context.Context, map[string]CertificatePKI, types.RancherKubernetesEngineConfig, string, string, bool) error
-type CSRFunc func(context.Context, map[string]CertificatePKI, types.RancherKubernetesEngineConfig) error
+type GenFunc func(context.Context, map[string]CertificatePKI, types.ZcloudKubernetesEngineConfig, string, string, bool) error
+type CSRFunc func(context.Context, map[string]CertificatePKI, types.ZcloudKubernetesEngineConfig) error
 
 const (
 	etcdRole            = "etcd"
@@ -46,7 +46,7 @@ const (
 	BundleCertContainer = "rke-bundle-cert"
 )
 
-func GenerateRKECerts(ctx context.Context, rkeConfig types.RancherKubernetesEngineConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
+func GenerateRKECerts(ctx context.Context, rkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
 	certs := make(map[string]CertificatePKI)
 	// generate RKE CA certificates
 	if err := GenerateRKECACerts(ctx, certs, configPath, configDir); err != nil {
@@ -59,7 +59,7 @@ func GenerateRKECerts(ctx context.Context, rkeConfig types.RancherKubernetesEngi
 	return certs, nil
 }
 
-func GenerateRKENodeCerts(ctx context.Context, rkeConfig types.RancherKubernetesEngineConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
+func GenerateRKENodeCerts(ctx context.Context, rkeConfig types.ZcloudKubernetesEngineConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
 	crtMap := make(map[string]CertificatePKI)
 	crtKeys := []string{}
 	removeCAKey := true

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
-	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -161,7 +161,7 @@ func RotateRKECertificates(ctx context.Context, c *Cluster, flags ExternalFlags,
 		services.KubeletContainerName:        pki.GenerateKubeNodeCertificate,
 		services.EtcdContainerName:           pki.GenerateEtcdCertificates,
 	}
-	rotateFlags := c.RancherKubernetesEngineConfig.RotateCertificates
+	rotateFlags := c.ZcloudKubernetesEngineConfig.RotateCertificates
 	if rotateFlags.CACertificates {
 		// rotate CA cert and RequestHeader CA cert
 		if err := pki.GenerateRKECACerts(ctx, c.Certificates, flags.ClusterFilePath, flags.ConfigDir); err != nil {
@@ -172,7 +172,7 @@ func RotateRKECertificates(ctx context.Context, c *Cluster, flags ExternalFlags,
 	for _, k8sComponent := range rotateFlags.Services {
 		genFunc := componentsCertsFuncMap[k8sComponent]
 		if genFunc != nil {
-			if err := genFunc(ctx, c.Certificates, c.RancherKubernetesEngineConfig, flags.ClusterFilePath, flags.ConfigDir, true); err != nil {
+			if err := genFunc(ctx, c.Certificates, c.ZcloudKubernetesEngineConfig, flags.ClusterFilePath, flags.ConfigDir, true); err != nil {
 				return err
 			}
 		}
@@ -183,7 +183,7 @@ func RotateRKECertificates(ctx context.Context, c *Cluster, flags ExternalFlags,
 		if c.Certificates[pki.ServiceAccountTokenKeyName].Key != nil {
 			serviceAccountTokenKey = string(cert.EncodePrivateKeyPEM(c.Certificates[pki.ServiceAccountTokenKeyName].Key))
 		}
-		if err := pki.GenerateRKEServicesCerts(ctx, c.Certificates, c.RancherKubernetesEngineConfig, flags.ClusterFilePath, flags.ConfigDir, true); err != nil {
+		if err := pki.GenerateRKEServicesCerts(ctx, c.Certificates, c.ZcloudKubernetesEngineConfig, flags.ClusterFilePath, flags.ConfigDir, true); err != nil {
 			return err
 		}
 		if serviceAccountTokenKey != "" {
@@ -200,6 +200,6 @@ func RotateRKECertificates(ctx context.Context, c *Cluster, flags ExternalFlags,
 		}
 	}
 	clusterState.DesiredState.CertificatesBundle = c.Certificates
-	clusterState.DesiredState.RancherKubernetesEngineConfig = &c.RancherKubernetesEngineConfig
+	clusterState.DesiredState.ZcloudKubernetesEngineConfig = &c.ZcloudKubernetesEngineConfig
 	return nil
 }

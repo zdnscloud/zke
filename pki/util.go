@@ -318,7 +318,7 @@ func getWorkerCertKeys() []string {
 	}
 }
 
-func getEtcdCertKeys(rkeNodes []types.RKEConfigNode, etcdRole string) []string {
+func getEtcdCertKeys(rkeNodes []types.ZKEConfigNode, etcdRole string) []string {
 	certList := []string{
 		CACertName,
 		KubeProxyCertName,
@@ -663,7 +663,7 @@ func WriteCertificates(certDirPath string, certBundle map[string]CertificatePKI)
 	return nil
 }
 
-func ValidateBundleContent(rkeConfig *types.RancherKubernetesEngineConfig, certBundle map[string]CertificatePKI, configPath, configDir string) error {
+func ValidateBundleContent(rkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI, configPath, configDir string) error {
 	// ensure all needed certs exists
 	// make sure all CA Certs exist
 	if certBundle[CACertName].Certificate == nil {
@@ -714,7 +714,7 @@ func ValidateBundleContent(rkeConfig *types.RancherKubernetesEngineConfig, certB
 	return validateCAIssuer(rkeConfig, certBundle)
 }
 
-func validateCAIssuer(rkeConfig *types.RancherKubernetesEngineConfig, certBundle map[string]CertificatePKI) error {
+func validateCAIssuer(rkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI) error {
 	// make sure all certs are signed by CA cert
 	caCert := certBundle[CACertName].Certificate
 	ComponentsCerts := []string{

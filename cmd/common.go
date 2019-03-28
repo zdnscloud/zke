@@ -44,7 +44,7 @@ func resolveClusterFile(ctx *cli.Context) (string, string, error) {
 	return clusterFileBuff, clusterFile, nil
 }
 
-func setOptionsFromCLI(c *cli.Context, rkeConfig *types.RancherKubernetesEngineConfig) (*types.RancherKubernetesEngineConfig, error) {
+func setOptionsFromCLI(c *cli.Context, rkeConfig *types.ZcloudKubernetesEngineConfig) (*types.ZcloudKubernetesEngineConfig, error) {
 	// If true... override the file.. else let file value go through
 	if c.Bool("ssh-agent-auth") {
 		rkeConfig.SSHAgentAuth = c.Bool("ssh-agent-auth")
@@ -63,7 +63,7 @@ func setOptionsFromCLI(c *cli.Context, rkeConfig *types.RancherKubernetesEngineC
 	return rkeConfig, nil
 }
 
-func ClusterInit(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, dialersOptions hosts.DialersOptions, flags cluster.ExternalFlags) error {
+func ClusterInit(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineConfig, dialersOptions hosts.DialersOptions, flags cluster.ExternalFlags) error {
 	log.Infof(ctx, "Initiating Kubernetes cluster")
 	var fullState *cluster.FullState
 	stateFilePath := cluster.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir)
@@ -86,10 +86,10 @@ func ClusterInit(ctx context.Context, rkeConfig *types.RancherKubernetesEngineCo
 		log.Warnf(ctx, "[state] can't fetch legacy cluster state from Kubernetes")
 	}
 	// check if certificate rotate or normal init
-	if kubeCluster.RancherKubernetesEngineConfig.RotateCertificates != nil {
+	if kubeCluster.ZcloudKubernetesEngineConfig.RotateCertificates != nil {
 		fullState, err = rotateRKECertificates(ctx, kubeCluster, flags, rkeFullState)
 	} else {
-		fullState, err = cluster.RebuildState(ctx, &kubeCluster.RancherKubernetesEngineConfig, rkeFullState, flags)
+		fullState, err = cluster.RebuildState(ctx, &kubeCluster.ZcloudKubernetesEngineConfig, rkeFullState, flags)
 	}
 	if err != nil {
 		return err

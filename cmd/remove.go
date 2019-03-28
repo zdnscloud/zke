@@ -46,7 +46,7 @@ func RemoveCommand() cli.Command {
 
 func ClusterRemove(
 	ctx context.Context,
-	rkeConfig *types.RancherKubernetesEngineConfig,
+	rkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags) error {
 
@@ -112,7 +112,7 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 }
 
 func clusterRemoveLocal(ctx *cli.Context) error {
-	var rkeConfig *types.RancherKubernetesEngineConfig
+	var rkeConfig *types.ZcloudKubernetesEngineConfig
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		log.Warnf(context.Background(), "Failed to resolve cluster file, using default cluster instead")
@@ -122,7 +122,7 @@ func clusterRemoveLocal(ctx *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Failed to parse cluster file: %v", err)
 		}
-		rkeConfig.Nodes = []types.RKEConfigNode{*cluster.GetLocalRKENodeConfig()}
+		rkeConfig.Nodes = []types.ZKEConfigNode{*cluster.GetLocalRKENodeConfig()}
 	}
 
 	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)

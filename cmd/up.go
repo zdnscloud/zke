@@ -89,7 +89,7 @@ func doUpgradeLegacyCluster(ctx context.Context, kubeCluster *cluster.Cluster, f
 		if err != nil {
 			return err
 		}
-		fullState.CurrentState.RancherKubernetesEngineConfig = recoveredCluster.RancherKubernetesEngineConfig.DeepCopy()
+		fullState.CurrentState.ZcloudKubernetesEngineConfig = recoveredCluster.ZcloudKubernetesEngineConfig.DeepCopy()
 		fullState.CurrentState.CertificatesBundle = recoveredCerts
 
 		// we don't want to regenerate certificates
@@ -108,12 +108,12 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
 
-	kubeCluster, err := cluster.InitClusterObject(ctx, clusterState.DesiredState.RancherKubernetesEngineConfig.DeepCopy(), flags)
+	kubeCluster, err := cluster.InitClusterObject(ctx, clusterState.DesiredState.ZcloudKubernetesEngineConfig.DeepCopy(), flags)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
 	// check if rotate certificates is triggered
-	if kubeCluster.RancherKubernetesEngineConfig.RotateCertificates != nil {
+	if kubeCluster.ZcloudKubernetesEngineConfig.RotateCertificates != nil {
 		return rebuildClusterWithRotatedCertificates(ctx, dialersOptions, flags)
 	}
 
@@ -175,7 +175,7 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	}
 
 	// Apply Authz configuration after deploying controlplane
-	err = cluster.ApplyAuthzResources(ctx, kubeCluster.RancherKubernetesEngineConfig, flags, dialersOptions)
+	err = cluster.ApplyAuthzResources(ctx, kubeCluster.ZcloudKubernetesEngineConfig, flags, dialersOptions)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -204,7 +204,7 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
 
-	err = cluster.ConfigureCluster(ctx, kubeCluster.RancherKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions, false)
+	err = cluster.ConfigureCluster(ctx, kubeCluster.ZcloudKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions, false)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -268,7 +268,7 @@ func clusterUpFromCli(ctx *cli.Context) error {
 }
 
 func clusterUpLocal(ctx *cli.Context) error {
-	var rkeConfig *types.RancherKubernetesEngineConfig
+	var rkeConfig *types.ZcloudKubernetesEngineConfig
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		log.Infof(context.Background(), "Failed to resolve cluster file, using default cluster instead")
@@ -278,7 +278,7 @@ func clusterUpLocal(ctx *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Failed to parse cluster file: %v", err)
 		}
-		rkeConfig.Nodes = []types.RKEConfigNode{*cluster.GetLocalRKENodeConfig()}
+		rkeConfig.Nodes = []types.ZKEConfigNode{*cluster.GetLocalRKENodeConfig()}
 	}
 
 	rkeConfig.IgnoreDockerVersion = ctx.Bool("ignore-docker-version")

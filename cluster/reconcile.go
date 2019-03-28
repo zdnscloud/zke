@@ -192,7 +192,7 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 		etcdHost.ToAddEtcdMember = false
 		kubeCluster.setReadyEtcdHosts()
 
-		etcdNodePlanMap := make(map[string]types.RKEConfigNodePlan)
+		etcdNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
 		for _, etcdReadyHost := range kubeCluster.EtcdReadyHosts {
 			etcdNodePlanMap[etcdReadyHost.Address] = BuildRKEConfigNodePlan(ctx, kubeCluster, etcdReadyHost, etcdReadyHost.DockerInfo)
 		}

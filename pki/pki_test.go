@@ -16,16 +16,16 @@ const (
 )
 
 func TestPKI(t *testing.T) {
-	rkeConfig := types.RancherKubernetesEngineConfig{
-		Nodes: []types.RKEConfigNode{
-			types.RKEConfigNode{
+	rkeConfig := types.ZcloudKubernetesEngineConfig{
+		Nodes: []types.ZKEConfigNode{
+			types.ZKEConfigNode{
 				Address:          "1.1.1.1",
 				InternalAddress:  "192.168.1.5",
 				Role:             []string{"controlplane"},
 				HostnameOverride: "server1",
 			},
 		},
-		Services: types.RKEConfigServices{
+		Services: types.ZKEConfigServices{
 			KubeAPI: types.KubeAPIService{
 				ServiceClusterIPRange: FakeClusterCidr,
 			},

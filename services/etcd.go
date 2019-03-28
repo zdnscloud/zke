@@ -33,7 +33,7 @@ const (
 func RunEtcdPlane(
 	ctx context.Context,
 	etcdHosts []*hosts.Host,
-	etcdNodePlanMap map[string]types.RKEConfigNodePlan,
+	etcdNodePlanMap map[string]types.ZKEConfigNodePlan,
 	localConnDialerFactory hosts.DialerFactory,
 	prsMap map[string]types.PrivateRegistry,
 	updateWorkersOnly bool,
@@ -209,7 +209,7 @@ func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*ho
 	return nil
 }
 
-func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHost *hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte, prsMap map[string]types.PrivateRegistry, etcdNodePlanMap map[string]types.RKEConfigNodePlan, alpineImage string) error {
+func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHost *hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte, prsMap map[string]types.PrivateRegistry, etcdNodePlanMap map[string]types.ZKEConfigNodePlan, alpineImage string) error {
 	imageCfg, hostCfg, _ := GetProcessConfig(etcdNodePlanMap[newHost.Address].Processes[EtcdContainerName])
 	if err := docker.DoRunContainer(ctx, newHost.DClient, imageCfg, hostCfg, EtcdContainerName, newHost.Address, ETCDRole, prsMap); err != nil {
 		return err

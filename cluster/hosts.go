@@ -57,7 +57,7 @@ func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 		c.EtcdHosts = removeFromHosts(host, c.EtcdHosts)
 		c.ControlPlaneHosts = removeFromHosts(host, c.ControlPlaneHosts)
 		c.WorkerHosts = removeFromHosts(host, c.WorkerHosts)
-		c.RancherKubernetesEngineConfig.Nodes = removeFromRKENodes(host.RKEConfigNode, c.RancherKubernetesEngineConfig.Nodes)
+		c.ZcloudKubernetesEngineConfig.Nodes = removeFromRKENodes(host.ZKEConfigNode, c.ZcloudKubernetesEngineConfig.Nodes)
 	}
 	return ValidateHostCount(c)
 
@@ -69,7 +69,7 @@ func (c *Cluster) InvertIndexHosts() error {
 	c.ControlPlaneHosts = make([]*hosts.Host, 0)
 	for _, host := range c.Nodes {
 		newHost := hosts.Host{
-			RKEConfigNode: host,
+			ZKEConfigNode: host,
 			ToAddLabels:   map[string]string{},
 			ToDelLabels:   map[string]string{},
 			ToAddTaints:   []string{},
@@ -122,7 +122,7 @@ func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
 	if c.AuthnStrategies[AuthnX509Provider] {
 		log.Infof(ctx, "[certificates] Deploying kubernetes certificates to Cluster nodes")
 		forceDeploy := false
-		if flags.CustomCerts || c.RancherKubernetesEngineConfig.RotateCertificates != nil {
+		if flags.CustomCerts || c.ZcloudKubernetesEngineConfig.RotateCertificates != nil {
 			forceDeploy = true
 		}
 		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
@@ -133,7 +133,7 @@ func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
 			errgrp.Go(func() error {
 				var errList []error
 				for host := range hostsQueue {
-					err := pki.DeployCertificatesOnPlaneHost(ctx, host.(*hosts.Host), c.RancherKubernetesEngineConfig, c.Certificates, c.SystemImages.CertDownloader, c.PrivateRegistriesMap, forceDeploy)
+					err := pki.DeployCertificatesOnPlaneHost(ctx, host.(*hosts.Host), c.ZcloudKubernetesEngineConfig, c.Certificates, c.SystemImages.CertDownloader, c.PrivateRegistriesMap, forceDeploy)
 					if err != nil {
 						errList = append(errList, err)
 					}
@@ -185,7 +185,7 @@ func removeFromHosts(hostToRemove *hosts.Host, hostList []*hosts.Host) []*hosts.
 	return hostList
 }
 
-func removeFromRKENodes(nodeToRemove types.RKEConfigNode, nodeList []types.RKEConfigNode) []types.RKEConfigNode {
+func removeFromRKENodes(nodeToRemove types.ZKEConfigNode, nodeList []types.ZKEConfigNode) []types.ZKEConfigNode {
 	for i := range nodeList {
 		if nodeToRemove.Address == nodeList[i].Address {
 			return append(nodeList[:i], nodeList[i+1:]...)

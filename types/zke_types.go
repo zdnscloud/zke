@@ -1,10 +1,10 @@
 package types
 
-type RancherKubernetesEngineConfig struct {
+type ZcloudKubernetesEngineConfig struct {
 	// Kubernetes nodes
-	Nodes []RKEConfigNode `yaml:"nodes" json:"nodes,omitempty"`
+	Nodes []ZKEConfigNode `yaml:"nodes" json:"nodes,omitempty"`
 	// Kubernetes components
-	Services RKEConfigServices `yaml:"services" json:"services,omitempty"`
+	Services ZKEConfigServices `yaml:"services" json:"services,omitempty"`
 	// Network configuration used in the kubernetes cluster (flannel, calico)
 	Network NetworkConfig `yaml:"network" json:"network,omitempty"`
 	// Authentication configuration used in the cluster (default: x509)
@@ -14,7 +14,7 @@ type RancherKubernetesEngineConfig struct {
 	// List of urls or paths for addons
 	AddonsInclude []string `yaml:"addons_include" json:"addonsInclude,omitempty"`
 	// List of images used internally for proxy, cert downlaod and kubedns
-	SystemImages RKESystemImages `yaml:"system_images" json:"systemImages,omitempty"`
+	SystemImages ZKESystemImages `yaml:"system_images" json:"systemImages,omitempty"`
 	// SSH Private Key Path
 	SSHKeyPath string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
 	// SSH Certificate Path
@@ -81,16 +81,16 @@ type PrivateRegistry struct {
 	IsDefault bool `yaml:"is_default" json:"isDefault,omitempty"`
 }
 
-type RKESystemImages struct {
+type ZKESystemImages struct {
 	// etcd image
 	Etcd string `yaml:"etcd" json:"etcd,omitempty"`
 	// Alpine image
 	Alpine string `yaml:"alpine" json:"alpine,omitempty"`
-	// rke-nginx-proxy image
+	// zke-nginx-proxy image
 	NginxProxy string `yaml:"nginx_proxy" json:"nginxProxy,omitempty"`
-	// rke-cert-deployer image
+	// zke-cert-deployer image
 	CertDownloader string `yaml:"cert_downloader" json:"certDownloader,omitempty"`
-	// rke-service-sidekick image
+	// zke-service-sidekick image
 	KubernetesServicesSidecar string `yaml:"kubernetes_services_sidecar" json:"kubernetesServicesSidecar,omitempty"`
 	// KubeDNS image
 	KubeDNS string `yaml:"kubedns" json:"kubedns,omitempty"`
@@ -138,7 +138,7 @@ type RKESystemImages struct {
 	MetricsServer string `yaml:"metrics_server" json:"metricsServer,omitempty"`
 }
 
-type RKEConfigNode struct {
+type ZKEConfigNode struct {
 	// Name of the host provisioned via docker machine
 	NodeName string `yaml:"nodeName,omitempty" json:"nodeName,omitempty" norman:"type=reference[node]"`
 	// IP or FQDN that is fully resolvable and used for SSH communication
@@ -151,7 +151,7 @@ type RKEConfigNode struct {
 	Role []string `yaml:"role" json:"role,omitempty" norman:"type=array[enum],options=etcd|worker|controlplane"`
 	// Optional - Hostname of the node
 	HostnameOverride string `yaml:"hostname_override" json:"hostnameOverride,omitempty"`
-	// SSH usesr that will be used by RKE
+	// SSH usesr that will be used by ZKE
 	User string `yaml:"user" json:"user,omitempty"`
 	// Optional - Docker socket on the node that will be used in tunneling
 	DockerSocket string `yaml:"docker_socket" json:"dockerSocket,omitempty"`
@@ -169,7 +169,7 @@ type RKEConfigNode struct {
 	Labels map[string]string `yaml:"labels" json:"labels,omitempty"`
 }
 
-type RKEConfigServices struct {
+type ZKEConfigServices struct {
 	// Etcd Service
 	Etcd ETCDService `yaml:"etcd" json:"etcd,omitempty"`
 	// KubeAPI Service
@@ -203,7 +203,7 @@ type ETCDService struct {
 	Retention string `yaml:"retention" json:"retention,omitempty" norman:"default=72h"`
 	// Etcd snapshot Creation period
 	Creation string `yaml:"creation" json:"creation,omitempty" norman:"default=12h"`
-	// Backup backend for etcd snapshots, used by rke only
+	// Backup backend for etcd snapshots, used by zke only
 	BackupConfig *BackupConfig `yaml:"backup_config" json:"backupConfig,omitempty"`
 }
 
@@ -312,12 +312,12 @@ type IngressConfig struct {
 	ExtraArgs map[string]string `yaml:"extra_args" json:"extraArgs,omitempty"`
 }
 
-type RKEPlan struct {
+type ZKEPlan struct {
 	// List of node Plans
-	Nodes []RKEConfigNodePlan `json:"nodes,omitempty"`
+	Nodes []ZKEConfigNodePlan `json:"nodes,omitempty"`
 }
 
-type RKEConfigNodePlan struct {
+type ZKEConfigNodePlan struct {
 	// Node address
 	Address string `json:"address,omitempty"`
 	// map of named processes that should run on the node

@@ -78,7 +78,7 @@ func EtcdCommand() cli.Command {
 
 func SnapshotSaveEtcdHosts(
 	ctx context.Context,
-	rkeConfig *types.RancherKubernetesEngineConfig,
+	rkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
 
@@ -105,7 +105,7 @@ func SnapshotSaveEtcdHosts(
 
 func RestoreEtcdSnapshot(
 	ctx context.Context,
-	rkeConfig *types.RancherKubernetesEngineConfig,
+	rkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
 

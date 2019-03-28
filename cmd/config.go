@@ -82,7 +82,7 @@ func getConfig(reader *bufio.Reader, text, def string) (string, error) {
 	}
 }
 
-func writeConfig(cluster *types.RancherKubernetesEngineConfig, configFile string, print bool) error {
+func writeConfig(cluster *types.ZcloudKubernetesEngineConfig, configFile string, print bool) error {
 	yamlConfig, err := yaml.Marshal(*cluster)
 	if err != nil {
 		return err
@@ -103,14 +103,14 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 	configFile := ctx.String("name")
 	print := ctx.Bool("print")
-	cluster := types.RancherKubernetesEngineConfig{}
+	cluster := types.ZcloudKubernetesEngineConfig{}
 
 	// Get cluster config from user
 	reader := bufio.NewReader(os.Stdin)
 
 	// Generate empty configuration file
 	if ctx.Bool("empty") {
-		cluster.Nodes = make([]types.RKEConfigNode, 1)
+		cluster.Nodes = make([]types.ZKEConfigNode, 1)
 		return writeConfig(&cluster, configFile, print)
 	}
 
@@ -131,7 +131,7 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 
 	// Get Hosts config
-	cluster.Nodes = make([]types.RKEConfigNode, 0)
+	cluster.Nodes = make([]types.ZKEConfigNode, 0)
 	for i := 0; i < numberOfHostsInt; i++ {
 		hostCfg, err := getHostConfig(reader, i, cluster.SSHKeyPath)
 		if err != nil {
@@ -178,8 +178,8 @@ func clusterConfig(ctx *cli.Context) error {
 	return writeConfig(&cluster, configFile, print)
 }
 
-func getHostConfig(reader *bufio.Reader, index int, clusterSSHKeyPath string) (*types.RKEConfigNode, error) {
-	host := types.RKEConfigNode{}
+func getHostConfig(reader *bufio.Reader, index int, clusterSSHKeyPath string) (*types.ZKEConfigNode, error) {
+	host := types.ZKEConfigNode{}
 
 	address, err := getConfig(reader, fmt.Sprintf("SSH Address of host (%d)", index+1), "")
 	if err != nil {
@@ -263,7 +263,7 @@ func getHostConfig(reader *bufio.Reader, index int, clusterSSHKeyPath string) (*
 	return &host, nil
 }
 
-func getSystemImagesConfig(reader *bufio.Reader) (*types.RKESystemImages, error) {
+func getSystemImagesConfig(reader *bufio.Reader) (*types.ZKESystemImages, error) {
 	imageDefaults := types.K8sVersionToRKESystemImages[cluster.DefaultK8sVersion]
 
 	kubeImage, err := getConfig(reader, "Kubernetes Docker image", imageDefaults.Kubernetes)
@@ -279,8 +279,8 @@ func getSystemImagesConfig(reader *bufio.Reader) (*types.RKESystemImages, error)
 	return &imageDefaults, nil
 }
 
-func getServiceConfig(reader *bufio.Reader) (*types.RKEConfigServices, error) {
-	servicesConfig := types.RKEConfigServices{}
+func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {
+	servicesConfig := types.ZKEConfigServices{}
 	servicesConfig.Etcd = types.ETCDService{}
 	servicesConfig.KubeAPI = types.KubeAPIService{}
 	servicesConfig.KubeController = types.KubeControllerService{}
@@ -350,36 +350,35 @@ func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
 func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 	networkConfig := types.NetworkConfig{}
 
-
 	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico)", cluster.DefaultNetworkPlugin)
 	if err != nil {
 		return nil, err
 	}
 	networkConfig.Plugin = networkPlugin
 	if networkPlugin == cluster.DefaultNetworkPlugin {
-	       networkFlannelIface, err := getConfig(reader, "Flannel Network Interface", "")
-	       if err != nil {
-	               return nil, err
-               }
-	       networkConfig.Options = make(map[string]string)
-               networkConfig.Options[FlannelIface] = networkFlannelIface
-	       networkFlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", cluster.DefaultFlannelBackendType)
-	       if err != nil {
-	               return nil, err
-               }
-	       networkConfig.Options[FlannelBackendType] = networkFlannelBackendType
-	       if networkFlannelBackendType == cluster.DefaultFlannelBackendType {
-	               networkConfig.Options[FlannelBackendDirectrouting] = "true"
-	       }else {
-	               networkConfig.Options[FlannelBackendDirectrouting] = "false"
-	       }
+		networkFlannelIface, err := getConfig(reader, "Flannel Network Interface", "")
+		if err != nil {
+			return nil, err
+		}
+		networkConfig.Options = make(map[string]string)
+		networkConfig.Options[FlannelIface] = networkFlannelIface
+		networkFlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", cluster.DefaultFlannelBackendType)
+		if err != nil {
+			return nil, err
+		}
+		networkConfig.Options[FlannelBackendType] = networkFlannelBackendType
+		if networkFlannelBackendType == cluster.DefaultFlannelBackendType {
+			networkConfig.Options[FlannelBackendDirectrouting] = "true"
+		} else {
+			networkConfig.Options[FlannelBackendDirectrouting] = "false"
+		}
 	}
 	return &networkConfig, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {
 	allVersions := []string{}
-	currentVersionImages := make(map[string]types.RKESystemImages)
+	currentVersionImages := make(map[string]types.ZKESystemImages)
 	for version := range types.AllK8sVersions {
 		err := util.ValidateVersion(version)
 		if err != nil {
@@ -410,7 +409,7 @@ func generateSystemImagesList(version string, all bool) error {
 		version = types.DefaultK8s
 	}
 	rkeSystemImages := types.AllK8sVersions[version]
-	if rkeSystemImages == (types.RKESystemImages{}) {
+	if rkeSystemImages == (types.ZKESystemImages{}) {
 		return fmt.Errorf("k8s version is not supported, supported versions are: %v", allVersions)
 	}
 	logrus.Infof("Generating images list for version [%s]:", version)
@@ -424,7 +423,7 @@ func generateSystemImagesList(version string, all bool) error {
 	return nil
 }
 
-func getUniqueSystemImageList(rkeSystemImages types.RKESystemImages) []string {
+func getUniqueSystemImageList(rkeSystemImages types.ZKESystemImages) []string {
 	imagesReflect := reflect.ValueOf(rkeSystemImages)
 	images := make([]string, imagesReflect.NumField())
 	for i := 0; i < imagesReflect.NumField(); i++ {

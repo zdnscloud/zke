@@ -20,7 +20,7 @@ import (
 )
 
 type Host struct {
-	types.RKEConfigNode
+	types.ZKEConfigNode
 	DClient             *client.Client
 	LocalConnPort       int
 	IsControl           bool
@@ -266,13 +266,13 @@ func buildCleanerConfig(host *Host, toCleanDirs []string, cleanerImage string) (
 	return imageCfg, hostCfg
 }
 
-func NodesToHosts(rkeNodes []types.RKEConfigNode, nodeRole string) []*Host {
+func NodesToHosts(rkeNodes []types.ZKEConfigNode, nodeRole string) []*Host {
 	hostList := make([]*Host, 0)
 	for _, node := range rkeNodes {
 		for _, role := range node.Role {
 			if role == nodeRole {
 				newHost := Host{
-					RKEConfigNode: node,
+					ZKEConfigNode: node,
 				}
 				hostList = append(hostList, &newHost)
 				break

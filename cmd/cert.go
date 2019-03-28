@@ -134,7 +134,7 @@ func rebuildClusterWithRotatedCertificates(ctx context.Context,
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
 
-	kubeCluster, err := cluster.InitClusterObject(ctx, clusterState.DesiredState.RancherKubernetesEngineConfig.DeepCopy(), flags)
+	kubeCluster, err := cluster.InitClusterObject(ctx, clusterState.DesiredState.ZcloudKubernetesEngineConfig.DeepCopy(), flags)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -207,7 +207,7 @@ func rotateRKECertificates(ctx context.Context, kubeCluster *cluster.Cluster, fl
 	return rkeFullState, nil
 }
 
-func GenerateRKECSRs(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, flags cluster.ExternalFlags) error {
+func GenerateRKECSRs(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineConfig, flags cluster.ExternalFlags) error {
 	log.Infof(ctx, "Generating Kubernetes cluster CSR certificates")
 	if len(flags.CertificateDir) == 0 {
 		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
@@ -225,7 +225,7 @@ func GenerateRKECSRs(ctx context.Context, rkeConfig *types.RancherKubernetesEngi
 	}
 
 	// Generating csrs for kubernetes components
-	if err := pki.GenerateRKEServicesCSRs(ctx, certBundle, kubeCluster.RancherKubernetesEngineConfig); err != nil {
+	if err := pki.GenerateRKEServicesCSRs(ctx, certBundle, kubeCluster.ZcloudKubernetesEngineConfig); err != nil {
 		return err
 	}
 	return pki.WriteCertificates(kubeCluster.CertificateDir, certBundle)

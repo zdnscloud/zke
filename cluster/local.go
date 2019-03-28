@@ -5,11 +5,11 @@ import (
 	"github.com/zdnscloud/zke/types"
 )
 
-func GetLocalRKEConfig() *types.RancherKubernetesEngineConfig {
+func GetLocalRKEConfig() *types.ZcloudKubernetesEngineConfig {
 	rkeLocalNode := GetLocalRKENodeConfig()
 	imageDefaults := types.K8sVersionToRKESystemImages[DefaultK8sVersion]
 
-	rkeServices := types.RKEConfigServices{
+	rkeServices := types.ZKEConfigServices{
 		Kubelet: types.KubeletService{
 			BaseService: types.BaseService{
 				Image:     imageDefaults.Kubernetes,
@@ -17,15 +17,15 @@ func GetLocalRKEConfig() *types.RancherKubernetesEngineConfig {
 			},
 		},
 	}
-	return &types.RancherKubernetesEngineConfig{
-		Nodes:    []types.RKEConfigNode{*rkeLocalNode},
+	return &types.ZcloudKubernetesEngineConfig{
+		Nodes:    []types.ZKEConfigNode{*rkeLocalNode},
 		Services: rkeServices,
 	}
 
 }
 
-func GetLocalRKENodeConfig() *types.RKEConfigNode {
-	rkeLocalNode := &types.RKEConfigNode{
+func GetLocalRKENodeConfig() *types.ZKEConfigNode {
+	rkeLocalNode := &types.ZKEConfigNode{
 		Address:          LocalNodeAddress,
 		HostnameOverride: LocalNodeHostname,
 		User:             LocalNodeUser,

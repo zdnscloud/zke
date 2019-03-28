@@ -39,8 +39,8 @@ const (
 
 var admissionControlOptionNames = []string{"enable-admission-plugins", "admission-control"}
 
-func GeneratePlan(ctx context.Context, rkeConfig *types.RancherKubernetesEngineConfig, hostsInfoMap map[string]dockertypes.Info) (types.RKEPlan, error) {
-	clusterPlan := types.RKEPlan{}
+func GeneratePlan(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineConfig, hostsInfoMap map[string]dockertypes.Info) (types.ZKEPlan, error) {
+	clusterPlan := types.ZKEPlan{}
 	myCluster, err := InitClusterObject(ctx, rkeConfig, ExternalFlags{})
 	if err != nil {
 		return clusterPlan, err
@@ -54,7 +54,7 @@ func GeneratePlan(ctx context.Context, rkeConfig *types.RancherKubernetesEngineC
 	return clusterPlan, nil
 }
 
-func BuildRKEConfigNodePlan(ctx context.Context, myCluster *Cluster, host *hosts.Host, hostDockerInfo dockertypes.Info) types.RKEConfigNodePlan {
+func BuildRKEConfigNodePlan(ctx context.Context, myCluster *Cluster, host *hosts.Host, hostDockerInfo dockertypes.Info) types.ZKEConfigNodePlan {
 	prefixPath := hosts.GetPrefixPath(hostDockerInfo.OperatingSystem, myCluster.PrefixPath)
 	processes := map[string]types.Process{}
 	portChecks := []types.PortCheck{}
@@ -84,7 +84,7 @@ func BuildRKEConfigNodePlan(ctx context.Context, myCluster *Cluster, host *hosts
 		Name:     cloudConfigFileName,
 		Contents: b64.StdEncoding.EncodeToString([]byte(myCluster.CloudConfigFile)),
 	}
-	return types.RKEConfigNodePlan{
+	return types.ZKEConfigNodePlan{
 		Address:    host.Address,
 		Processes:  processes,
 		PortChecks: portChecks,
