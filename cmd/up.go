@@ -12,7 +12,6 @@ import (
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/types"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -25,10 +24,6 @@ func UpCommand() cli.Command {
 			Usage:  "Specify an alternate cluster YAML file",
 			Value:  pki.ClusterConfig,
 			EnvVar: "RKE_CONFIG",
-		},
-		cli.BoolFlag{
-			Name:  "local",
-			Usage: "Deploy Kubernetes cluster locally",
 		},
 		cli.BoolFlag{
 			Name:  "update-only",
@@ -231,10 +226,6 @@ func checkAllIncluded(cluster *cluster.Cluster) error {
 }
 
 func clusterUpFromCli(ctx *cli.Context) error {
-	if ctx.Bool("local") {
-		return clusterUpLocal(ctx)
-	}
-
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
@@ -264,36 +255,5 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	}
 
 	_, _, _, _, _, err = ClusterUp(context.Background(), hosts.DialersOptions{}, flags)
-	return err
-}
-
-func clusterUpLocal(ctx *cli.Context) error {
-	var rkeConfig *types.ZcloudKubernetesEngineConfig
-	clusterFile, filePath, err := resolveClusterFile(ctx)
-	if err != nil {
-		log.Infof(context.Background(), "Failed to resolve cluster file, using default cluster instead")
-		rkeConfig = cluster.GetLocalRKEConfig()
-	} else {
-		rkeConfig, err = cluster.ParseConfig(clusterFile)
-		if err != nil {
-			return fmt.Errorf("Failed to parse cluster file: %v", err)
-		}
-		rkeConfig.Nodes = []types.ZKEConfigNode{*cluster.GetLocalRKENodeConfig()}
-	}
-
-	rkeConfig.IgnoreDockerVersion = ctx.Bool("ignore-docker-version")
-
-	// setting up the dialers
-	dialers := hosts.GetDialerOptions(nil, hosts.LocalHealthcheckFactory, nil)
-	// setting up the flags
-	flags := cluster.GetExternalFlags(true, false, false, "", filePath)
-
-	if ctx.Bool("init") {
-		return ClusterInit(context.Background(), rkeConfig, dialers, flags)
-	}
-	if err := ClusterInit(context.Background(), rkeConfig, dialers, flags); err != nil {
-		return err
-	}
-	_, _, _, _, _, err = ClusterUp(context.Background(), dialers, flags)
 	return err
 }
