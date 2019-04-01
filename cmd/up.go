@@ -238,6 +238,9 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	// Custom certificates and certificate dir flags
 	flags.CertificateDir = ctx.String("cert-dir")
 	flags.CustomCerts = ctx.Bool("custom-certs")
+	if err := ClusterInit(context.Background(), rkeConfig, hosts.DialersOptions{}, flags); err != nil {
+		return err
+	}
 	_, _, _, _, _, err = ClusterUp(context.Background(), hosts.DialersOptions{}, flags)
 	return err
 }
