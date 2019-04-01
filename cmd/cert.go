@@ -85,7 +85,7 @@ func rotateRKECertificatesFromCli(ctx *cli.Context) error {
 		return err
 	}
 	// setting up the flags
-	externalFlags := cluster.GetExternalFlags(false, false, false, "", filePath)
+	externalFlags := cluster.GetExternalFlags(false, "", filePath)
 	// setting up rotate flags
 	rkeConfig.RotateCertificates = &types.RotateCertificates{
 		CACertificates: rotateCACerts,
@@ -113,7 +113,7 @@ func generateCSRFromCli(ctx *cli.Context) error {
 		return err
 	}
 	// setting up the flags
-	externalFlags := cluster.GetExternalFlags(false, false, false, "", filePath)
+	externalFlags := cluster.GetExternalFlags(false, "", filePath)
 	externalFlags.CertificateDir = ctx.String("cert-dir")
 	externalFlags.CustomCerts = ctx.Bool("custom-certs")
 

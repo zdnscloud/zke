@@ -34,12 +34,12 @@ const (
 	DefaultAuthnWebhookFile  = templates.AuthnWebhook
 	DefaultAuthnCacheTimeout = "5s"
 
-	DefaultNetworkPlugin               = "flannel"
-	DefaultFlannelBackendType          = "vxlan"
+	DefaultNetworkPlugin      = "flannel"
+	DefaultFlannelBackendType = "vxlan"
 
 	DefaultNetworkCloudProvider = "none"
 
-	DefaultDNSProvider   = "coredns"
+	DefaultDNSProvider = "coredns"
 
 	DefaultIngressController             = "nginx"
 	DefaultEtcdBackupCreationPeriod      = "12h"
@@ -323,10 +323,8 @@ func d(image, defaultRegistryURL string) string {
 	return fmt.Sprintf("%s/%s", defaultRegistryURL, image)
 }
 
-func GetExternalFlags(local, updateOnly, disablePortCheck bool, configDir, clusterFilePath string) ExternalFlags {
+func GetExternalFlags(disablePortCheck bool, configDir, clusterFilePath string) ExternalFlags {
 	return ExternalFlags{
-		Local:            local,
-		UpdateOnly:       updateOnly,
 		DisablePortCheck: disablePortCheck,
 		ConfigDir:        configDir,
 		ClusterFilePath:  clusterFilePath,

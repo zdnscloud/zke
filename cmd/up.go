@@ -26,10 +26,6 @@ func UpCommand() cli.Command {
 			EnvVar: "RKE_CONFIG",
 		},
 		cli.BoolFlag{
-			Name:  "update-only",
-			Usage: "Skip idempotent deployment of control and etcd plane",
-		},
-		cli.BoolFlag{
 			Name:  "disable-port-check",
 			Usage: "Disable port check validation between nodes",
 		},
@@ -240,10 +236,9 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	updateOnly := ctx.Bool("update-only")
 	disablePortCheck := ctx.Bool("disable-port-check")
 	// setting up the flags
-	flags := cluster.GetExternalFlags(false, updateOnly, disablePortCheck, "", filePath)
+	flags := cluster.GetExternalFlags(disablePortCheck, "", filePath)
 	// Custom certificates and certificate dir flags
 	flags.CertificateDir = ctx.String("cert-dir")
 	flags.CustomCerts = ctx.Bool("custom-certs")

@@ -48,7 +48,7 @@ func (c *Cluster) GetClusterState(ctx context.Context, fullState *FullState) (*C
 	}
 
 	// resetup external flags
-	flags := GetExternalFlags(false, false, false, c.ConfigDir, c.ConfigPath)
+	flags := GetExternalFlags(false, c.ConfigDir, c.ConfigPath)
 	currentCluster, err := InitClusterObject(ctx, fullState.CurrentState.ZcloudKubernetesEngineConfig, flags)
 	if err != nil {
 		return nil, err

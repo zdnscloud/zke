@@ -28,10 +28,6 @@ func RemoveCommand() cli.Command {
 			Name:  "force",
 			Usage: "Force removal of the cluster",
 		},
-		cli.BoolFlag{
-			Name:  "local",
-			Usage: "Remove Kubernetes cluster locally",
-		},
 	}
 
 	removeFlags = append(removeFlags, commonFlags...)
@@ -75,9 +71,6 @@ func ClusterRemove(
 }
 
 func clusterRemoveFromCli(ctx *cli.Context) error {
-	if ctx.Bool("local") {
-		return clusterRemoveLocal(ctx)
-	}
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
@@ -106,7 +99,7 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 	}
 
 	// setting up the flags
-	flags := cluster.GetExternalFlags(false, false, false, "", filePath)
+	flags := cluster.GetExternalFlags(false, "", filePath)
 
 	return ClusterRemove(context.Background(), rkeConfig, hosts.DialersOptions{}, flags)
 }
@@ -130,7 +123,7 @@ func clusterRemoveLocal(ctx *cli.Context) error {
 		return err
 	}
 	// setting up the flags
-	flags := cluster.GetExternalFlags(true, false, false, "", filePath)
+	flags := cluster.GetExternalFlags(false, "", filePath)
 
 	return ClusterRemove(context.Background(), rkeConfig, hosts.DialersOptions{}, flags)
 }
