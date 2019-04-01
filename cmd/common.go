@@ -85,12 +85,7 @@ func ClusterInit(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineCon
 	if err != nil {
 		log.Warnf(ctx, "[state] can't fetch legacy cluster state from Kubernetes")
 	}
-	// check if certificate rotate or normal init
-	if kubeCluster.ZcloudKubernetesEngineConfig.RotateCertificates != nil {
-		fullState, err = rotateRKECertificates(ctx, kubeCluster, flags, rkeFullState)
-	} else {
-		fullState, err = cluster.RebuildState(ctx, &kubeCluster.ZcloudKubernetesEngineConfig, rkeFullState, flags)
-	}
+	fullState, err = cluster.RebuildState(ctx, &kubeCluster.ZcloudKubernetesEngineConfig, rkeFullState, flags)
 	if err != nil {
 		return err
 	}

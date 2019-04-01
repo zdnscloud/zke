@@ -20,34 +20,6 @@ func CertificateCommand() cli.Command {
 		Usage: "Certificates management for RKE cluster",
 		Subcommands: cli.Commands{
 			cli.Command{
-				Name:   "rotate",
-				Usage:  "Rotate RKE cluster certificates",
-				Action: rotateRKECertificatesFromCli,
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:   "config",
-						Usage:  "Specify an alternate cluster YAML file",
-						Value:  pki.ClusterConfig,
-						EnvVar: "RKE_CONFIG",
-					},
-					cli.StringSliceFlag{
-						Name: "service",
-						Usage: fmt.Sprintf("Specify a k8s service to rotate certs, (allowed values: %s, %s, %s, %s, %s, %s)",
-							services.KubeAPIContainerName,
-							services.KubeControllerContainerName,
-							services.SchedulerContainerName,
-							services.KubeletContainerName,
-							services.KubeproxyContainerName,
-							services.EtcdContainerName,
-						),
-					},
-					cli.BoolFlag{
-						Name:  "rotate-ca",
-						Usage: "Rotate all certificates including CA certs",
-					},
-				},
-			},
-			cli.Command{
 				Name:   "generate-csr",
 				Usage:  "Generate certificate sign requests for k8s components",
 				Action: generateCSRFromCli,
@@ -66,36 +38,6 @@ func CertificateCommand() cli.Command {
 			},
 		},
 	}
-}
-
-func rotateRKECertificatesFromCli(ctx *cli.Context) error {
-	k8sComponents := ctx.StringSlice("service")
-	rotateCACerts := ctx.Bool("rotate-ca")
-	clusterFile, filePath, err := resolveClusterFile(ctx)
-	if err != nil {
-		return fmt.Errorf("Failed to resolve cluster file: %v", err)
-	}
-
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
-	if err != nil {
-		return fmt.Errorf("Failed to parse cluster file: %v", err)
-	}
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
-	if err != nil {
-		return err
-	}
-	// setting up the flags
-	externalFlags := cluster.GetExternalFlags(false, "", filePath)
-	// setting up rotate flags
-	rkeConfig.RotateCertificates = &types.RotateCertificates{
-		CACertificates: rotateCACerts,
-		Services:       k8sComponents,
-	}
-	if err := ClusterInit(context.Background(), rkeConfig, hosts.DialersOptions{}, externalFlags); err != nil {
-		return err
-	}
-	_, _, _, _, _, err = ClusterUp(context.Background(), hosts.DialersOptions{}, externalFlags)
-	return err
 }
 
 func generateCSRFromCli(ctx *cli.Context) error {
@@ -189,22 +131,6 @@ func rebuildClusterWithRotatedCertificates(ctx context.Context,
 		}
 	}
 	return APIURL, caCrt, clientCert, clientKey, kubeCluster.Certificates, nil
-}
-
-func rotateRKECertificates(ctx context.Context, kubeCluster *cluster.Cluster, flags cluster.ExternalFlags, rkeFullState *cluster.FullState) (*cluster.FullState, error) {
-	log.Infof(ctx, "Rotating Kubernetes cluster certificates")
-	currentCluster, err := kubeCluster.GetClusterState(ctx, rkeFullState)
-	if err != nil {
-		return nil, err
-	}
-	if currentCluster == nil {
-		return nil, fmt.Errorf("Failed to rotate certificates: can't find old certificates")
-	}
-	currentCluster.RotateCertificates = kubeCluster.RotateCertificates
-	if err := cluster.RotateRKECertificates(ctx, currentCluster, flags, rkeFullState); err != nil {
-		return nil, err
-	}
-	return rkeFullState, nil
 }
 
 func GenerateRKECSRs(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineConfig, flags cluster.ExternalFlags) error {

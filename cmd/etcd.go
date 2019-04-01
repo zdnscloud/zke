@@ -28,31 +28,6 @@ func EtcdCommand() cli.Command {
 			Value:  pki.ClusterConfig,
 			EnvVar: "RKE_CONFIG",
 		},
-		cli.BoolFlag{
-			Name:  "s3",
-			Usage: "Enabled backup to s3, set true or false",
-		},
-		cli.StringFlag{
-			Name:  "s3-endpoint",
-			Usage: "Specify s3 endpoint url",
-			Value: s3Endpoint,
-		},
-		cli.StringFlag{
-			Name:  "access-key",
-			Usage: "Specify s3 accessKey",
-		},
-		cli.StringFlag{
-			Name:  "secret-key",
-			Usage: "Specify s3 secretKey",
-		},
-		cli.StringFlag{
-			Name:  "bucket-name",
-			Usage: "Specify s3 bucket name",
-		},
-		cli.StringFlag{
-			Name:  "region",
-			Usage: "Specify the s3 bucket location (optional)",
-		},
 	}
 	snapshotFlags = append(snapshotFlags, commonFlags...)
 
@@ -176,7 +151,7 @@ func SnapshotSaveEtcdHostsFromCli(ctx *cli.Context) error {
 	// Check snapshot name
 	etcdSnapshotName := ctx.String("name")
 	if etcdSnapshotName == "" {
-		etcdSnapshotName = fmt.Sprintf("rke_etcd_snapshot_%s", time.Now().Format(time.RFC3339))
+		etcdSnapshotName = fmt.Sprintf("zke_etcd_snapshot_%s", time.Now().Format(time.RFC3339))
 		logrus.Warnf("Name of the snapshot is not specified using [%s]", etcdSnapshotName)
 	}
 	// setting up the flags
