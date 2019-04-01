@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	stateFileExt = ".rkestate"
+	stateFileExt = ".zkestate"
 	certDirExt   = "_certs"
 )
 
