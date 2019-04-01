@@ -14,8 +14,6 @@ import (
 	"github.com/zdnscloud/zke/types"
 )
 
-const s3Endpoint = "s3.amazonaws.com"
-
 func EtcdCommand() cli.Command {
 	snapshotFlags := []cli.Flag{
 		cli.StringFlag{
@@ -26,7 +24,7 @@ func EtcdCommand() cli.Command {
 			Name:   "config",
 			Usage:  "Specify an alternate cluster YAML file",
 			Value:  pki.ClusterConfig,
-			EnvVar: "RKE_CONFIG",
+			EnvVar: "ZKE_CONFIG",
 		},
 	}
 	snapshotFlags = append(snapshotFlags, commonFlags...)
@@ -53,12 +51,12 @@ func EtcdCommand() cli.Command {
 
 func SnapshotSaveEtcdHosts(
 	ctx context.Context,
-	rkeConfig *types.ZcloudKubernetesEngineConfig,
+	zkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
 
 	log.Infof(ctx, "Starting saving snapshot on etcd hosts")
-	kubeCluster, err := cluster.InitClusterObject(ctx, rkeConfig, flags)
+	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}
@@ -80,22 +78,21 @@ func SnapshotSaveEtcdHosts(
 
 func RestoreEtcdSnapshot(
 	ctx context.Context,
-	rkeConfig *types.ZcloudKubernetesEngineConfig,
+	zkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
 
 	log.Infof(ctx, "Restoring etcd snapshot %s", snapshotName)
 	stateFilePath := cluster.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir)
-	rkeFullState, err := cluster.ReadStateFile(ctx, stateFilePath)
+	zkeFullState, err := cluster.ReadStateFile(ctx, stateFilePath)
 	if err != nil {
 		return err
 	}
-
-	rkeFullState.CurrentState = cluster.State{}
-	if err := rkeFullState.WriteStateFile(ctx, stateFilePath); err != nil {
+	zkeFullState.CurrentState = cluster.State{}
+	if err := zkeFullState.WriteStateFile(ctx, stateFilePath); err != nil {
 		return err
 	}
-	kubeCluster, err := cluster.InitClusterObject(ctx, rkeConfig, flags)
+	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}
@@ -117,7 +114,7 @@ func RestoreEtcdSnapshot(
 		return err
 	}
 
-	if err := ClusterInit(ctx, rkeConfig, dialersOptions, flags); err != nil {
+	if err := ClusterInit(ctx, zkeConfig, dialersOptions, flags); err != nil {
 		return err
 	}
 	if _, _, _, _, _, err := ClusterUp(ctx, dialersOptions, flags); err != nil {
@@ -139,12 +136,12 @@ func SnapshotSaveEtcdHostsFromCli(ctx *cli.Context) error {
 		return fmt.Errorf("failed to resolve cluster file: %v", err)
 	}
 
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
+	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse cluster file: %v", err)
 	}
 
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
+	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {
 		return err
 	}
@@ -157,7 +154,7 @@ func SnapshotSaveEtcdHostsFromCli(ctx *cli.Context) error {
 	// setting up the flags
 	flags := cluster.GetExternalFlags(false, "", filePath)
 
-	return SnapshotSaveEtcdHosts(context.Background(), rkeConfig, hosts.DialersOptions{}, flags, etcdSnapshotName)
+	return SnapshotSaveEtcdHosts(context.Background(), zkeConfig, hosts.DialersOptions{}, flags, etcdSnapshotName)
 }
 
 func RestoreEtcdSnapshotFromCli(ctx *cli.Context) error {
@@ -165,13 +162,11 @@ func RestoreEtcdSnapshotFromCli(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to resolve cluster file: %v", err)
 	}
-
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
+	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse cluster file: %v", err)
 	}
-
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
+	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {
 		return err
 	}
@@ -181,7 +176,5 @@ func RestoreEtcdSnapshotFromCli(ctx *cli.Context) error {
 	}
 	// setting up the flags
 	flags := cluster.GetExternalFlags(false, "", filePath)
-
-	return RestoreEtcdSnapshot(context.Background(), rkeConfig, hosts.DialersOptions{}, flags, etcdSnapshotName)
-
+	return RestoreEtcdSnapshot(context.Background(), zkeConfig, hosts.DialersOptions{}, flags, etcdSnapshotName)
 }

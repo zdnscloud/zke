@@ -22,16 +22,14 @@ func RemoveCommand() cli.Command {
 			Name:   "config",
 			Usage:  "Specify an alternate cluster YAML file",
 			Value:  pki.ClusterConfig,
-			EnvVar: "RKE_CONFIG",
+			EnvVar: "ZKE_CONFIG",
 		},
 		cli.BoolFlag{
 			Name:  "force",
 			Usage: "Force removal of the cluster",
 		},
 	}
-
 	removeFlags = append(removeFlags, commonFlags...)
-
 	return cli.Command{
 		Name:   "remove",
 		Usage:  "Teardown the cluster and clean cluster nodes",
@@ -42,30 +40,27 @@ func RemoveCommand() cli.Command {
 
 func ClusterRemove(
 	ctx context.Context,
-	rkeConfig *types.ZcloudKubernetesEngineConfig,
+	zkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags) error {
 
 	log.Infof(ctx, "Tearing down Kubernetes cluster")
-	kubeCluster, err := cluster.InitClusterObject(ctx, rkeConfig, flags)
+	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}
 	if err := kubeCluster.SetupDialers(ctx, dialersOptions); err != nil {
 		return err
 	}
-
 	err = kubeCluster.TunnelHosts(ctx, flags)
 	if err != nil {
 		return err
 	}
-
 	logrus.Debugf("Starting Cluster removal")
 	err = kubeCluster.ClusterRemove(ctx)
 	if err != nil {
 		return err
 	}
-
 	log.Infof(ctx, "Cluster removed successfully")
 	return nil
 }
@@ -88,42 +83,37 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 			return nil
 		}
 	}
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
+	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
 	}
-
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
+	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {
 		return err
 	}
-
 	// setting up the flags
 	flags := cluster.GetExternalFlags(false, "", filePath)
-
-	return ClusterRemove(context.Background(), rkeConfig, hosts.DialersOptions{}, flags)
+	return ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{}, flags)
 }
 
 func clusterRemoveLocal(ctx *cli.Context) error {
-	var rkeConfig *types.ZcloudKubernetesEngineConfig
+	var zkeConfig *types.ZcloudKubernetesEngineConfig
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		log.Warnf(context.Background(), "Failed to resolve cluster file, using default cluster instead")
-		rkeConfig = cluster.GetLocalRKEConfig()
+		zkeConfig = cluster.GetLocalRKEConfig()
 	} else {
-		rkeConfig, err = cluster.ParseConfig(clusterFile)
+		zkeConfig, err = cluster.ParseConfig(clusterFile)
 		if err != nil {
 			return fmt.Errorf("Failed to parse cluster file: %v", err)
 		}
-		rkeConfig.Nodes = []types.ZKEConfigNode{*cluster.GetLocalRKENodeConfig()}
+		zkeConfig.Nodes = []types.ZKEConfigNode{*cluster.GetLocalRKENodeConfig()}
 	}
-
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
+	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {
 		return err
 	}
 	// setting up the flags
 	flags := cluster.GetExternalFlags(false, "", filePath)
-
-	return ClusterRemove(context.Background(), rkeConfig, hosts.DialersOptions{}, flags)
+	return ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{}, flags)
 }

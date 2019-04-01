@@ -3,12 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"reflect"
-	"strconv"
-	"strings"
-
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
@@ -17,15 +11,19 @@ import (
 	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/util"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
 const (
 	comments = `# If you intened to deploy Kubernetes in an air-gapped environment,
-# please consult the documentation on how to configure custom RKE images.`
-	FlannelIface                = "flannel_iface"
-	FlannelBackendType          = "flannel_backend_type"
-	FlannelBackendDirectrouting = "flannel_vxlan_directrouting"
-
+# please consult the documentation on how to configure custom ZKE images.`
+	FlannelIface                 = "flannel_iface"
+	FlannelBackendType           = "flannel_backend_type"
+	FlannelBackendDirectrouting  = "flannel_vxlan_directrouting"
 	DefaultClusterSSHKeyPath     = "~/.ssh/id_rsa"
 	DefaultClusterSSHKey         = ""
 	DefaultClusterSSHPort        = "22"
@@ -390,14 +388,14 @@ func generateSystemImagesList(version string, all bool) error {
 		currentVersionImages[version] = types.AllK8sVersions[version]
 	}
 	if all {
-		for version, rkeSystemImages := range currentVersionImages {
+		for version, zkeSystemImages := range currentVersionImages {
 			err := util.ValidateVersion(version)
 			if err != nil {
 				continue
 			}
 
 			logrus.Infof("Generating images list for version [%s]:", version)
-			uniqueImages := getUniqueSystemImageList(rkeSystemImages)
+			uniqueImages := getUniqueSystemImageList(zkeSystemImages)
 			for _, image := range uniqueImages {
 				if image == "" {
 					continue
@@ -410,12 +408,12 @@ func generateSystemImagesList(version string, all bool) error {
 	if len(version) == 0 {
 		version = types.DefaultK8s
 	}
-	rkeSystemImages := types.AllK8sVersions[version]
-	if rkeSystemImages == (types.ZKESystemImages{}) {
+	zkeSystemImages := types.AllK8sVersions[version]
+	if zkeSystemImages == (types.ZKESystemImages{}) {
 		return fmt.Errorf("k8s version is not supported, supported versions are: %v", allVersions)
 	}
 	logrus.Infof("Generating images list for version [%s]:", version)
-	uniqueImages := getUniqueSystemImageList(rkeSystemImages)
+	uniqueImages := getUniqueSystemImageList(zkeSystemImages)
 	for _, image := range uniqueImages {
 		if image == "" {
 			continue
@@ -425,8 +423,8 @@ func generateSystemImagesList(version string, all bool) error {
 	return nil
 }
 
-func getUniqueSystemImageList(rkeSystemImages types.ZKESystemImages) []string {
-	imagesReflect := reflect.ValueOf(rkeSystemImages)
+func getUniqueSystemImageList(zkeSystemImages types.ZKESystemImages) []string {
+	imagesReflect := reflect.ValueOf(zkeSystemImages)
 	images := make([]string, imagesReflect.NumField())
 	for i := 0; i < imagesReflect.NumField(); i++ {
 		images[i] = imagesReflect.Field(i).Interface().(string)

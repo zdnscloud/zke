@@ -6,12 +6,9 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
-	"k8s.io/client-go/util/cert"
 )
 
 func CertificateCommand() cli.Command {
@@ -28,7 +25,7 @@ func CertificateCommand() cli.Command {
 						Name:   "config",
 						Usage:  "Specify an alternate cluster YAML file",
 						Value:  pki.ClusterConfig,
-						EnvVar: "RKE_CONFIG",
+						EnvVar: "ZKE_CONFIG",
 					},
 					cli.StringFlag{
 						Name:  "cert-dir",
@@ -46,11 +43,11 @@ func generateCSRFromCli(ctx *cli.Context) error {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
 	}
 
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
+	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
 	}
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
+	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {
 		return err
 	}
@@ -59,81 +56,10 @@ func generateCSRFromCli(ctx *cli.Context) error {
 	externalFlags.CertificateDir = ctx.String("cert-dir")
 	externalFlags.CustomCerts = ctx.Bool("custom-certs")
 
-	return GenerateRKECSRs(context.Background(), rkeConfig, externalFlags)
+	return GenerateRKECSRs(context.Background(), zkeConfig, externalFlags)
 }
 
-func showRKECertificatesFromCli(ctx *cli.Context) error {
-	return nil
-}
-
-func rebuildClusterWithRotatedCertificates(ctx context.Context,
-	dialersOptions hosts.DialersOptions,
-	flags cluster.ExternalFlags) (string, string, string, string, map[string]pki.CertificatePKI, error) {
-	var APIURL, caCrt, clientCert, clientKey string
-	log.Infof(ctx, "Rebuilding Kubernetes cluster with rotated certificates")
-	clusterState, err := cluster.ReadStateFile(ctx, cluster.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir))
-	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-
-	kubeCluster, err := cluster.InitClusterObject(ctx, clusterState.DesiredState.ZcloudKubernetesEngineConfig.DeepCopy(), flags)
-	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-	if err := kubeCluster.SetupDialers(ctx, dialersOptions); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-
-	if err := kubeCluster.TunnelHosts(ctx, flags); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-
-	if err := cluster.SetUpAuthentication(ctx, kubeCluster, nil, clusterState); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-	APIURL = fmt.Sprintf("https://" + kubeCluster.ControlPlaneHosts[0].Address + ":6443")
-	clientCert = string(cert.EncodeCertPEM(kubeCluster.Certificates[pki.KubeAdminCertName].Certificate))
-	clientKey = string(cert.EncodePrivateKeyPEM(kubeCluster.Certificates[pki.KubeAdminCertName].Key))
-	caCrt = string(cert.EncodeCertPEM(kubeCluster.Certificates[pki.CACertName].Certificate))
-
-	if err := kubeCluster.SetUpHosts(ctx, flags); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-	// Save new State
-	if err := kubeCluster.UpdateClusterCurrentState(ctx, clusterState); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-
-	// Restarting Kubernetes components
-	servicesMap := make(map[string]bool)
-	for _, component := range kubeCluster.RotateCertificates.Services {
-		servicesMap[component] = true
-	}
-
-	if len(kubeCluster.RotateCertificates.Services) == 0 || kubeCluster.RotateCertificates.CACertificates || servicesMap[services.EtcdContainerName] {
-		if err := services.RestartEtcdPlane(ctx, kubeCluster.EtcdHosts); err != nil {
-			return APIURL, caCrt, clientCert, clientKey, nil, err
-		}
-	}
-
-	if err := services.RestartControlPlane(ctx, kubeCluster.ControlPlaneHosts); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-
-	allHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts)
-	if err := services.RestartWorkerPlane(ctx, allHosts); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
-
-	if kubeCluster.RotateCertificates.CACertificates {
-		if err := cluster.RestartClusterPods(ctx, kubeCluster); err != nil {
-			return APIURL, caCrt, clientCert, clientKey, nil, err
-		}
-	}
-	return APIURL, caCrt, clientCert, clientKey, kubeCluster.Certificates, nil
-}
-
-func GenerateRKECSRs(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineConfig, flags cluster.ExternalFlags) error {
+func GenerateRKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags cluster.ExternalFlags) error {
 	log.Infof(ctx, "Generating Kubernetes cluster CSR certificates")
 	if len(flags.CertificateDir) == 0 {
 		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
@@ -145,7 +71,7 @@ func GenerateRKECSRs(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngin
 	}
 
 	// initialze the cluster object from the config file
-	kubeCluster, err := cluster.InitClusterObject(ctx, rkeConfig, flags)
+	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}

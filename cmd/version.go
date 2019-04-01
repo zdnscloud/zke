@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/urfave/cli"
 )
 
 func VersionCommand() cli.Command {
@@ -14,7 +14,7 @@ func VersionCommand() cli.Command {
 			Name:   "config",
 			Usage:  "Specify an alternate cluster YAML file",
 			Value:  pki.ClusterConfig,
-			EnvVar: "RKE_CONFIG",
+			EnvVar: "ZKE_CONFIG",
 		},
 	}
 	return cli.Command{

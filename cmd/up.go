@@ -23,7 +23,7 @@ func UpCommand() cli.Command {
 			Name:   "config",
 			Usage:  "Specify an alternate cluster YAML file",
 			Value:  pki.ClusterConfig,
-			EnvVar: "RKE_CONFIG",
+			EnvVar: "ZKE_CONFIG",
 		},
 		cli.BoolFlag{
 			Name:  "disable-port-check",
@@ -38,9 +38,7 @@ func UpCommand() cli.Command {
 			Usage: "Use custom certificates from a cert dir",
 		},
 	}
-
 	upFlags = append(upFlags, commonFlags...)
-
 	return cli.Command{
 		Name:   "up",
 		Usage:  "Bring the cluster up",
@@ -78,12 +76,10 @@ func doUpgradeLegacyCluster(ctx context.Context, kubeCluster *cluster.Cluster, f
 		}
 		fullState.CurrentState.ZcloudKubernetesEngineConfig = recoveredCluster.ZcloudKubernetesEngineConfig.DeepCopy()
 		fullState.CurrentState.CertificatesBundle = recoveredCerts
-
 		// we don't want to regenerate certificates
 		fullState.DesiredState.CertificatesBundle = recoveredCerts
 		return fullState.WriteStateFile(ctx, kubeCluster.StateFilePath)
 	}
-
 	return nil
 }
 
@@ -99,33 +95,24 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-	// check if rotate certificates is triggered
-	if kubeCluster.ZcloudKubernetesEngineConfig.RotateCertificates != nil {
-		return rebuildClusterWithRotatedCertificates(ctx, dialersOptions, flags)
-	}
-
 	log.Infof(ctx, "Building Kubernetes cluster")
 	err = kubeCluster.SetupDialers(ctx, dialersOptions)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = kubeCluster.TunnelHosts(ctx, flags)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	currentCluster, err := kubeCluster.GetClusterState(ctx, clusterState)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	if !flags.DisablePortCheck {
 		if err = kubeCluster.CheckClusterPorts(ctx, currentCluster); err != nil {
 			return APIURL, caCrt, clientCert, clientKey, nil, err
 		}
 	}
-
 	err = cluster.SetUpAuthentication(ctx, kubeCluster, currentCluster, clusterState)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
@@ -136,13 +123,11 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	clientCert = string(cert.EncodeCertPEM(kubeCluster.Certificates[pki.KubeAdminCertName].Certificate))
 	clientKey = string(cert.EncodePrivateKeyPEM(kubeCluster.Certificates[pki.KubeAdminCertName].Key))
 	caCrt = string(cert.EncodeCertPEM(kubeCluster.Certificates[pki.CACertName].Certificate))
-
 	// moved deploying certs before reconcile to remove all unneeded certs generation from reconcile
 	err = kubeCluster.SetUpHosts(ctx, flags)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = cluster.ReconcileCluster(ctx, kubeCluster, currentCluster, flags)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
@@ -151,22 +136,18 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if len(kubeCluster.ControlPlaneHosts) > 0 {
 		APIURL = fmt.Sprintf("https://" + kubeCluster.ControlPlaneHosts[0].Address + ":6443")
 	}
-
 	if err := kubeCluster.PrePullK8sImages(ctx); err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = kubeCluster.DeployControlPlane(ctx)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	// Apply Authz configuration after deploying controlplane
 	err = cluster.ApplyAuthzResources(ctx, kubeCluster.ZcloudKubernetesEngineConfig, flags, dialersOptions)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = kubeCluster.UpdateClusterCurrentState(ctx, clusterState)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
@@ -176,30 +157,24 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = kubeCluster.DeployWorkerPlane(ctx)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	if err = kubeCluster.CleanDeadLogs(ctx); err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = kubeCluster.SyncLabelsAndTaints(ctx, currentCluster)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = cluster.ConfigureCluster(ctx, kubeCluster.ZcloudKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions, false)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	if err := checkAllIncluded(kubeCluster); err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	log.Infof(ctx, "Finished building Kubernetes cluster successfully")
 	return APIURL, caCrt, clientCert, clientKey, kubeCluster.Certificates, nil
 }
@@ -208,12 +183,10 @@ func checkAllIncluded(cluster *cluster.Cluster) error {
 	if len(cluster.InactiveHosts) == 0 {
 		return nil
 	}
-
 	var names []string
 	for _, host := range cluster.InactiveHosts {
 		names = append(names, host.Address)
 	}
-
 	return fmt.Errorf("Provisioning incomplete, host(s) [%s] skipped because they could not be contacted", strings.Join(names, ","))
 }
 
@@ -222,13 +195,11 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
 	}
-
-	rkeConfig, err := cluster.ParseConfig(clusterFile)
+	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
 	}
-
-	rkeConfig, err = setOptionsFromCLI(ctx, rkeConfig)
+	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {
 		return err
 	}
@@ -238,7 +209,7 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	// Custom certificates and certificate dir flags
 	flags.CertificateDir = ctx.String("cert-dir")
 	flags.CustomCerts = ctx.Bool("custom-certs")
-	if err := ClusterInit(context.Background(), rkeConfig, hosts.DialersOptions{}, flags); err != nil {
+	if err := ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{}, flags); err != nil {
 		return err
 	}
 	_, _, _, _, _, err = ClusterUp(context.Background(), hosts.DialersOptions{}, flags)
