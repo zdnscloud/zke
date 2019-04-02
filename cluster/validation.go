@@ -9,32 +9,21 @@ import (
 )
 
 func (c *Cluster) ValidateCluster() error {
-	// validate duplicate nodes
 	if err := validateDuplicateNodes(c); err != nil {
 		return err
 	}
-
-	// validate hosts options
 	if err := validateHostsOptions(c); err != nil {
 		return err
 	}
-
-	// validate Auth options
 	if err := validateAuthOptions(c); err != nil {
 		return err
 	}
-
-	// validate Network options
 	if err := validateNetworkOptions(c); err != nil {
 		return err
 	}
-
-	// validate Ingress options
 	if err := validateIngressOptions(c); err != nil {
 		return err
 	}
-
-	// validate services options
 	return validateServicesOptions(c)
 }
 
@@ -117,26 +106,6 @@ func validateServicesOptions(c *Cluster) error {
 		}
 		if len(c.Services.Etcd.Path) == 0 {
 			return fmt.Errorf("External etcd path can't be empty")
-		}
-	}
-
-	// validate etcd s3 backup backend configurations
-	if err := validateEtcdBackupOptions(c); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validateEtcdBackupOptions(c *Cluster) error {
-	if c.Services.Etcd.BackupConfig != nil {
-		if c.Services.Etcd.BackupConfig.S3BackupConfig != nil {
-			if len(c.Services.Etcd.BackupConfig.S3BackupConfig.Endpoint) == 0 {
-				return fmt.Errorf("etcd s3 backup backend endpoint can't be empty")
-			}
-			if len(c.Services.Etcd.BackupConfig.S3BackupConfig.BucketName) == 0 {
-				return fmt.Errorf("etcd s3 backup backend bucketName can't be empty")
-			}
 		}
 	}
 	return nil

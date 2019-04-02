@@ -9,7 +9,7 @@ import (
 )
 
 func ApplyJobDeployerServiceAccount(ctx context.Context, kubeConfigPath string, k8sWrapTransport k8s.WrapTransport) error {
-	log.Infof(ctx, "[authz] Creating rke-job-deployer ServiceAccount")
+	log.Infof(ctx, "[authz] Creating zke-job-deployer ServiceAccount")
 	k8sClient, err := k8s.NewClient(kubeConfigPath, k8sWrapTransport)
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func ApplyJobDeployerServiceAccount(ctx context.Context, kubeConfigPath string, 
 	if err := k8s.UpdateServiceAccountFromYaml(k8sClient, templates.JobDeployerServiceAccount); err != nil {
 		return err
 	}
-	log.Infof(ctx, "[authz] rke-job-deployer ServiceAccount created successfully")
+	log.Infof(ctx, "[authz] zke-job-deployer ServiceAccount created successfully")
 	return nil
 }
 

@@ -290,7 +290,7 @@ func RunEtcdSnapshotSave(ctx context.Context, etcdHost *hosts.Host, prsMap map[s
 	}
 
 	if es.BackupConfig != nil {
-		imageCfg = configS3BackupImgCmd(ctx, imageCfg, es.BackupConfig)
+		imageCfg = configBackupImgCmd(ctx, imageCfg, es.BackupConfig)
 	}
 	hostCfg := &container.HostConfig{
 		Binds: []string{
@@ -333,54 +333,6 @@ func RunEtcdSnapshotSave(ctx context.Context, etcdHost *hosts.Host, prsMap map[s
 
 	}
 	return nil
-}
-
-func DownloadEtcdSnapshotFromS3(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdSnapshotImage string, name string, es types.ETCDService) error {
-
-	log.Infof(ctx, "[etcd] Get snapshot [%s] on host [%s]", name, etcdHost.Address)
-	s3Backend := es.BackupConfig.S3BackupConfig
-	if len(s3Backend.Endpoint) == 0 || len(s3Backend.BucketName) == 0 {
-		return fmt.Errorf("failed to get snapshot [%s] from s3 on host [%s], invalid s3 configurations", name, etcdHost.Address)
-	}
-	imageCfg := &container.Config{
-		Cmd: []string{
-			"/opt/rke-tools/rke-etcd-backup",
-			"etcd-backup",
-			"download",
-			"--name", name,
-			"--s3-backup=true",
-			"--s3-endpoint=" + s3Backend.Endpoint,
-			"--s3-accessKey=" + s3Backend.AccessKey,
-			"--s3-secretKey=" + s3Backend.SecretKey,
-			"--s3-bucketName=" + s3Backend.BucketName,
-			"--s3-region=" + s3Backend.Region,
-		},
-		Image: etcdSnapshotImage,
-	}
-
-	hostCfg := &container.HostConfig{
-		Binds: []string{
-			fmt.Sprintf("%s:/backup", EtcdSnapshotPath),
-			fmt.Sprintf("%s:/etc/kubernetes:z", path.Join(etcdHost.PrefixPath, "/etc/kubernetes"))},
-		NetworkMode:   container.NetworkMode("host"),
-		RestartPolicy: container.RestartPolicy{Name: "always"},
-	}
-
-	if err := docker.DoRunContainer(ctx, etcdHost.DClient, imageCfg, hostCfg, EtcdDownloadBackupContainerName, etcdHost.Address, ETCDRole, prsMap); err != nil {
-		return err
-	}
-
-	status, _, stderr, err := docker.GetContainerOutput(ctx, etcdHost.DClient, EtcdDownloadBackupContainerName, etcdHost.Address)
-	if status != 0 || err != nil {
-		if removeErr := docker.RemoveContainer(ctx, etcdHost.DClient, etcdHost.Address, EtcdDownloadBackupContainerName); removeErr != nil {
-			log.Warnf(ctx, "Failed to remove container [%s]: %v", removeErr)
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("Failed to download etcd snapshot from s3, exit code [%d]: %v", status, stderr)
-	}
-	return docker.RemoveContainer(ctx, etcdHost.DClient, etcdHost.Address, EtcdDownloadBackupContainerName)
 }
 
 func RestoreEtcdSnapshot(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdRestoreImage, snapshotName, initCluster string) error {
@@ -473,21 +425,10 @@ func GetEtcdSnapshotChecksum(ctx context.Context, etcdHost *hosts.Host, prsMap m
 	return checksum, nil
 }
 
-func configS3BackupImgCmd(ctx context.Context, imageCfg *container.Config, bc *types.BackupConfig) *container.Config {
+func configBackupImgCmd(ctx context.Context, imageCfg *container.Config, bc *types.BackupConfig) *container.Config {
 	cmd := []string{
 		"--creation=" + fmt.Sprintf("%dh", bc.IntervalHours),
 		"--retention=" + fmt.Sprintf("%dh", bc.Retention*bc.IntervalHours),
-	}
-
-	if bc.S3BackupConfig != nil {
-		cmd = append(cmd, []string{
-			"--s3-backup=true",
-			"--s3-endpoint=" + bc.S3BackupConfig.Endpoint,
-			"--s3-accessKey=" + bc.S3BackupConfig.AccessKey,
-			"--s3-secretKey=" + bc.S3BackupConfig.SecretKey,
-			"--s3-bucketName=" + bc.S3BackupConfig.BucketName,
-			"--s3-region=" + bc.S3BackupConfig.Region,
-		}...)
 	}
 	imageCfg.Cmd = append(imageCfg.Cmd, cmd...)
 	return imageCfg
@@ -495,7 +436,6 @@ func configS3BackupImgCmd(ctx context.Context, imageCfg *container.Config, bc *t
 
 func StartBackupServer(ctx context.Context, etcdHost *hosts.Host, prsMap map[string]types.PrivateRegistry, etcdSnapshotImage string, name string) error {
 	log.Infof(ctx, "[etcd] starting backup server on host [%s]", etcdHost.Address)
-
 	imageCfg := &container.Config{
 		Cmd: []string{
 			"/opt/rke-tools/rke-etcd-backup",

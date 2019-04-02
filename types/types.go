@@ -16,9 +16,9 @@ type ZcloudKubernetesEngineConfig struct {
 	// List of images used internally for proxy, cert downlaod and kubedns
 	SystemImages ZKESystemImages `yaml:"system_images" json:"systemImages,omitempty"`
 	// SSH Private Key Path
-	SSHKeyPath string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
-	SSHPort string `yaml:"port" json:"sshPort,omitempty"`
-	SSHUser string `yaml:"user" json:"sshUser,omitempty"`
+	SSHKeyPath   string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
+	SSHPort      string `yaml:"port" json:"sshPort,omitempty"`
+	SSHUser      string `yaml:"user" json:"sshUser,omitempty"`
 	DockerSocket string `yaml:"docker_socket" json:"dockerSocket,omitempty"`
 	// SSH Certificate Path
 	SSHCertPath string `yaml:"ssh_cert_path" json:"sshCertPath,omitempty"`
@@ -634,4 +634,11 @@ type DNSConfig struct {
 type File struct {
 	Name     string `json:"name,omitempty"`
 	Contents string `json:"contents,omitempty"`
+}
+
+type BackupConfig struct {
+	// Backup interval in hours
+	IntervalHours int `yaml:"interval_hours" json:"intervalHours,omitempty" norman:"default=12"`
+	// Number of backups to keep
+	Retention int `yaml:"retention" json:"retention,omitempty" norman:"default=6"`
 }

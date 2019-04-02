@@ -30,9 +30,9 @@ func (c *Cluster) PrepareBackup(ctx context.Context, snapshotPath string) error 
 	var backupServer *hosts.Host
 	// stop etcd on all etcd nodes, we need this because we start the backup server on the same port
 	if !isAutoSyncSupported(c.SystemImages.Alpine) {
-		log.Warnf(ctx, "Auto local backup sync is not supported. Use `rancher/rke-tools:%s` or up", SupportedSyncToolsVersion)
-	} else if c.Services.Etcd.BackupConfig == nil || // legacy rke local backup
-		(c.Services.Etcd.BackupConfig != nil && c.Services.Etcd.BackupConfig.S3BackupConfig == nil) { // rancher local backup, no s3
+		log.Warnf(ctx, "Auto local backup sync is not supported. Use `zdnscloud/zke-tools:%s` or up", SupportedSyncToolsVersion)
+	} else if c.Services.Etcd.BackupConfig == nil || // legacy zke local backup
+		c.Services.Etcd.BackupConfig != nil {
 		for _, host := range c.EtcdHosts {
 			if err := docker.StopContainer(ctx, host.DClient, host.Address, services.EtcdContainerName); err != nil {
 				log.Warnf(ctx, "failed to stop etcd container on host [%s]: %v", host.Address, err)
@@ -59,16 +59,6 @@ func (c *Cluster) PrepareBackup(ctx context.Context, snapshotPath string) error 
 			return err
 		}
 	}
-
-	// s3 backup case
-	if c.Services.Etcd.BackupConfig != nil && c.Services.Etcd.BackupConfig.S3BackupConfig != nil {
-		for _, host := range c.EtcdHosts {
-			if err := services.DownloadEtcdSnapshotFromS3(ctx, host, c.PrivateRegistriesMap, c.SystemImages.Alpine, snapshotPath, c.Services.Etcd); err != nil {
-				return err
-			}
-		}
-	}
-
 	// this applies to all cases!
 	if isEqual := c.etcdSnapshotChecksum(ctx, snapshotPath); !isEqual {
 		return fmt.Errorf("etcd snapshots are not consistent")
