@@ -42,7 +42,6 @@ func generateCSRFromCli(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
 	}
-
 	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
@@ -55,7 +54,6 @@ func generateCSRFromCli(ctx *cli.Context) error {
 	externalFlags := cluster.GetExternalFlags(false, "", filePath)
 	externalFlags.CertificateDir = ctx.String("cert-dir")
 	externalFlags.CustomCerts = ctx.Bool("custom-certs")
-
 	return GenerateRKECSRs(context.Background(), zkeConfig, externalFlags)
 }
 
@@ -64,18 +62,15 @@ func GenerateRKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngin
 	if len(flags.CertificateDir) == 0 {
 		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
 	}
-
 	certBundle, err := pki.ReadCSRsAndKeysFromDir(flags.CertificateDir)
 	if err != nil {
 		return err
 	}
-
 	// initialze the cluster object from the config file
 	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}
-
 	// Generating csrs for kubernetes components
 	if err := pki.GenerateRKEServicesCSRs(ctx, certBundle, kubeCluster.ZcloudKubernetesEngineConfig); err != nil {
 		return err

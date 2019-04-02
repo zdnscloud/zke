@@ -54,7 +54,6 @@ func SnapshotSaveEtcdHosts(
 	zkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
-
 	log.Infof(ctx, "Starting saving snapshot on etcd hosts")
 	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
@@ -63,15 +62,12 @@ func SnapshotSaveEtcdHosts(
 	if err := kubeCluster.SetupDialers(ctx, dialersOptions); err != nil {
 		return err
 	}
-
 	if err := kubeCluster.TunnelHosts(ctx, flags); err != nil {
 		return err
 	}
-
 	if err := kubeCluster.SnapshotEtcd(ctx, snapshotName); err != nil {
 		return err
 	}
-
 	log.Infof(ctx, "Finished saving snapshot [%s] on all etcd hosts", snapshotName)
 	return nil
 }
@@ -81,7 +77,6 @@ func RestoreEtcdSnapshot(
 	zkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags, snapshotName string) error {
-
 	log.Infof(ctx, "Restoring etcd snapshot %s", snapshotName)
 	stateFilePath := cluster.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir)
 	zkeFullState, err := cluster.ReadStateFile(ctx, stateFilePath)
@@ -113,7 +108,6 @@ func RestoreEtcdSnapshot(
 	if err := kubeCluster.RestoreEtcdSnapshot(ctx, snapshotName); err != nil {
 		return err
 	}
-
 	if err := ClusterInit(ctx, zkeConfig, dialersOptions, flags); err != nil {
 		return err
 	}
@@ -135,12 +129,10 @@ func SnapshotSaveEtcdHostsFromCli(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to resolve cluster file: %v", err)
 	}
-
 	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse cluster file: %v", err)
 	}
-
 	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {
 		return err
@@ -153,7 +145,6 @@ func SnapshotSaveEtcdHostsFromCli(ctx *cli.Context) error {
 	}
 	// setting up the flags
 	flags := cluster.GetExternalFlags(false, "", filePath)
-
 	return SnapshotSaveEtcdHosts(context.Background(), zkeConfig, hosts.DialersOptions{}, flags, etcdSnapshotName)
 }
 

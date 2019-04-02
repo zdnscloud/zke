@@ -3,15 +3,14 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/types"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 var commonFlags = []cli.Flag{
@@ -49,7 +48,6 @@ func setOptionsFromCLI(c *cli.Context, zkeConfig *types.ZcloudKubernetesEngineCo
 	if c.Bool("ssh-agent-auth") {
 		zkeConfig.SSHAgentAuth = c.Bool("ssh-agent-auth")
 	}
-
 	if c.Bool("ignore-docker-version") {
 		zkeConfig.IgnoreDockerVersion = c.Bool("ignore-docker-version")
 	}
@@ -64,16 +62,13 @@ func ClusterInit(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCon
 		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
 	}
 	zkeFullState, _ := cluster.ReadStateFile(ctx, stateFilePath)
-
 	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}
-
 	if err := kubeCluster.SetupDialers(ctx, dialersOptions); err != nil {
 		return err
 	}
-
 	err = doUpgradeLegacyCluster(ctx, kubeCluster, zkeFullState)
 	if err != nil {
 		log.Warnf(ctx, "[state] can't fetch legacy cluster state from Kubernetes")
@@ -82,7 +77,6 @@ func ClusterInit(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCon
 	if err != nil {
 		return err
 	}
-
 	zkeState := cluster.FullState{
 		DesiredState: fullState.DesiredState,
 		CurrentState: fullState.CurrentState,

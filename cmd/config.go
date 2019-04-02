@@ -85,7 +85,6 @@ func getConfig(reader *bufio.Reader, text, def string) (string, error) {
 			return "", err
 		}
 		input = strings.TrimSpace(input)
-
 		if input != "" {
 			return input, nil
 		}
@@ -99,7 +98,6 @@ func writeConfig(cluster *types.ZcloudKubernetesEngineConfig, configFile string,
 		return err
 	}
 	logrus.Debugf("Deploying cluster configuration file: %s", configFile)
-
 	configString := fmt.Sprintf("%s\n%s", comments, string(yamlConfig))
 	if print {
 		fmt.Printf("Configuration File: \n%s", configString)
@@ -115,42 +113,34 @@ func clusterConfig(ctx *cli.Context) error {
 	configFile := ctx.String("name")
 	print := ctx.Bool("print")
 	cluster := types.ZcloudKubernetesEngineConfig{}
-
 	// Get cluster config from user
 	reader := bufio.NewReader(os.Stdin)
-
 	// Generate empty configuration file
 	if ctx.Bool("empty") {
 		cluster.Nodes = make([]types.ZKEConfigNode, 1)
 		return writeConfig(&cluster, configFile, print)
 	}
-
 	sshKeyPath, err := getConfig(reader, "Cluster Level SSH Private Key Path", DefaultClusterSSHKeyPath)
 	if err != nil {
 		return err
 	}
 	cluster.SSHKeyPath = sshKeyPath
-
 	sshPort, err := getConfig(reader, "Cluster Level SSH Port of all host", DefaultClusterSSHPort)
 	if err != nil {
 		return err
 	}
 	cluster.SSHPort = sshPort
-
 	sshUser, err := getConfig(reader, "Cluster Level SSH User of all host", DefaultClusterSSHUser)
 	if err != nil {
 		return err
 	}
 	cluster.SSHUser = sshUser
-
 	dockerSocketPath, err := getConfig(reader, "Cluster Level Docker socket path on all host", DefaultClusterDockerSockPath)
 	if err != nil {
 		return err
 	}
 	cluster.DockerSocket = dockerSocketPath
-
 	hostCommonCfg := clusterCommonCfg{sshPort, sshKeyPath, sshUser, dockerSocketPath}
-
 	// Get number of hosts
 	numberOfHostsString, err := getConfig(reader, "Number of Hosts", "1")
 	if err != nil {
@@ -160,7 +150,6 @@ func clusterConfig(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
 	// Get Hosts config
 	cluster.Nodes = make([]types.ZKEConfigNode, 0)
 	for i := 0; i < numberOfHostsInt; i++ {
@@ -170,60 +159,51 @@ func clusterConfig(ctx *cli.Context) error {
 		}
 		cluster.Nodes = append(cluster.Nodes, *hostCfg)
 	}
-
 	// Get Network config
 	networkConfig, err := getNetworkConfig(reader)
 	if err != nil {
 		return err
 	}
 	cluster.Network = *networkConfig
-
 	// Get Authentication Config
 	authnConfig, err := getAuthnConfig(reader)
 	if err != nil {
 		return err
 	}
 	cluster.Authentication = *authnConfig
-
 	// Get Authorization config
 	authzConfig, err := getAuthzConfig(reader)
 	if err != nil {
 		return err
 	}
 	cluster.Authorization = *authzConfig
-
 	// Get k8s/system images
 	systemImages, err := getSystemImagesConfig(reader)
 	if err != nil {
 		return err
 	}
 	cluster.SystemImages = *systemImages
-
 	// Get Services Config
 	serviceConfig, err := getServiceConfig(reader)
 	if err != nil {
 		return err
 	}
 	cluster.Services = *serviceConfig
-
 	return writeConfig(&cluster, configFile, print)
 }
 
 func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonCfg) (*types.ZKEConfigNode, error) {
 	host := types.ZKEConfigNode{}
-
 	address, err := getConfig(reader, fmt.Sprintf("SSH Address of host (%d)", index+1), "")
 	if err != nil {
 		return nil, err
 	}
 	host.Address = address
-
 	host.Port = hostCommonCfg.sshPort
 	host.User = hostCommonCfg.sshUser
 	host.SSHKey = DefaultClusterSSHKey
 	host.SSHKeyPath = hostCommonCfg.sshKeyPath
 	host.DockerSocket = hostCommonCfg.dockerSocket
-
 	isControlHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) a Control Plane host (y/n)?", address), "y")
 	if err != nil {
 		return nil, err
@@ -231,7 +211,6 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if isControlHost == "y" || isControlHost == "Y" {
 		host.Role = append(host.Role, services.ControlRole)
 	}
-
 	isWorkerHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) a Worker host (y/n)?", address), "n")
 	if err != nil {
 		return nil, err
@@ -239,7 +218,6 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if isWorkerHost == "y" || isWorkerHost == "Y" {
 		host.Role = append(host.Role, services.WorkerRole)
 	}
-
 	isEtcdHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an etcd host (y/n)?", address), "n")
 	if err != nil {
 		return nil, err
@@ -247,30 +225,25 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if isEtcdHost == "y" || isEtcdHost == "Y" {
 		host.Role = append(host.Role, services.ETCDRole)
 	}
-
 	hostnameOverride, err := getConfig(reader, fmt.Sprintf("Override Hostname of host (%s)", address), "")
 	if err != nil {
 		return nil, err
 	}
 	host.HostnameOverride = hostnameOverride
-
 	internalAddress, err := getConfig(reader, fmt.Sprintf("Internal IP of host (%s)", address), "")
 	if err != nil {
 		return nil, err
 	}
 	host.InternalAddress = internalAddress
-
 	return &host, nil
 }
 
 func getSystemImagesConfig(reader *bufio.Reader) (*types.ZKESystemImages, error) {
 	imageDefaults := types.K8sVersionToZKESystemImages[cluster.DefaultK8sVersion]
-
 	kubeImage, err := getConfig(reader, "Kubernetes Docker image", imageDefaults.Kubernetes)
 	if err != nil {
 		return nil, err
 	}
-
 	systemImages, ok := types.K8sVersionToZKESystemImages[kubeImage]
 	if ok {
 		return &systemImages, nil
@@ -287,20 +260,17 @@ func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {
 	servicesConfig.Scheduler = types.SchedulerService{}
 	servicesConfig.Kubelet = types.KubeletService{}
 	servicesConfig.Kubeproxy = types.KubeproxyService{}
-
 	clusterDomain, err := getConfig(reader, "Cluster domain", cluster.DefaultClusterDomain)
 	if err != nil {
 		return nil, err
 	}
 	servicesConfig.Kubelet.ClusterDomain = clusterDomain
-
 	serviceClusterIPRange, err := getConfig(reader, "Service Cluster IP Range", cluster.DefaultServiceClusterIPRange)
 	if err != nil {
 		return nil, err
 	}
 	servicesConfig.KubeAPI.ServiceClusterIPRange = serviceClusterIPRange
 	servicesConfig.KubeController.ServiceClusterIPRange = serviceClusterIPRange
-
 	podSecurityPolicy, err := getConfig(reader, "Enable PodSecurityPolicy", "n")
 	if err != nil {
 		return nil, err
@@ -310,25 +280,21 @@ func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {
 	} else {
 		servicesConfig.KubeAPI.PodSecurityPolicy = false
 	}
-
 	clusterNetworkCidr, err := getConfig(reader, "Cluster Network CIDR", cluster.DefaultClusterCIDR)
 	if err != nil {
 		return nil, err
 	}
 	servicesConfig.KubeController.ClusterCIDR = clusterNetworkCidr
-
 	clusterDNSServiceIP, err := getConfig(reader, "Cluster DNS Service IP", cluster.DefaultClusterDNSService)
 	if err != nil {
 		return nil, err
 	}
 	servicesConfig.Kubelet.ClusterDNSServer = clusterDNSServiceIP
-
 	return &servicesConfig, nil
 }
 
 func getAuthnConfig(reader *bufio.Reader) (*types.AuthnConfig, error) {
 	authnConfig := types.AuthnConfig{}
-
 	authnType, err := getConfig(reader, "Authentication Strategy", cluster.DefaultAuthStrategy)
 	if err != nil {
 		return nil, err
@@ -349,7 +315,6 @@ func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
 
 func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 	networkConfig := types.NetworkConfig{}
-
 	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico)", cluster.DefaultNetworkPlugin)
 	if err != nil {
 		return nil, err
@@ -393,7 +358,6 @@ func generateSystemImagesList(version string, all bool) error {
 			if err != nil {
 				continue
 			}
-
 			logrus.Infof("Generating images list for version [%s]:", version)
 			uniqueImages := getUniqueSystemImageList(zkeSystemImages)
 			for _, image := range uniqueImages {
@@ -435,7 +399,6 @@ func getUniqueSystemImageList(zkeSystemImages types.ZKESystemImages) []string {
 func getUniqueSlice(slice []string) []string {
 	encountered := map[string]bool{}
 	unqiue := []string{}
-
 	for i := range slice {
 		if encountered[slice[i]] {
 			continue

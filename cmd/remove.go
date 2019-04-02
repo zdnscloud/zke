@@ -4,9 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
@@ -14,6 +11,8 @@ import (
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/types"
+	"os"
+	"strings"
 )
 
 func RemoveCommand() cli.Command {
@@ -43,7 +42,6 @@ func ClusterRemove(
 	zkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
 	flags cluster.ExternalFlags) error {
-
 	log.Infof(ctx, "Tearing down Kubernetes cluster")
 	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
@@ -86,28 +84,6 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 	zkeConfig, err := cluster.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
-	}
-	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
-	if err != nil {
-		return err
-	}
-	// setting up the flags
-	flags := cluster.GetExternalFlags(false, "", filePath)
-	return ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{}, flags)
-}
-
-func clusterRemoveLocal(ctx *cli.Context) error {
-	var zkeConfig *types.ZcloudKubernetesEngineConfig
-	clusterFile, filePath, err := resolveClusterFile(ctx)
-	if err != nil {
-		log.Warnf(context.Background(), "Failed to resolve cluster file, using default cluster instead")
-		zkeConfig = cluster.GetLocalRKEConfig()
-	} else {
-		zkeConfig, err = cluster.ParseConfig(clusterFile)
-		if err != nil {
-			return fmt.Errorf("Failed to parse cluster file: %v", err)
-		}
-		zkeConfig.Nodes = []types.ZKEConfigNode{*cluster.GetLocalRKENodeConfig()}
 	}
 	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
 	if err != nil {

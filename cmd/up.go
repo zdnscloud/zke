@@ -3,9 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
@@ -13,6 +10,8 @@ import (
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
 	"k8s.io/client-go/util/cert"
+	"os"
+	"strings"
 )
 
 const DINDWaitTime = 3
@@ -85,7 +84,6 @@ func doUpgradeLegacyCluster(ctx context.Context, kubeCluster *cluster.Cluster, f
 
 func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags cluster.ExternalFlags) (string, string, string, string, map[string]pki.CertificatePKI, error) {
 	var APIURL, caCrt, clientCert, clientKey string
-
 	clusterState, err := cluster.ReadStateFile(ctx, cluster.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir))
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
@@ -152,7 +150,6 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	err = cluster.SaveFullStateToKubernetes(ctx, kubeCluster, clusterState)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
