@@ -19,12 +19,6 @@ var (
 		image = strings.Replace(image, "quay.io/coreos/", "zdnscloud/coreos-", 1)
 		image = strings.Replace(image, "quay.io/calico/", "zdnscloud/calico-", 1)
 		image = strings.Replace(image, "k8s.gcr.io/", "zdnscloud/nginx-ingress-controller-", 1)
-		image = strings.Replace(image, "plugins/docker", "rancher/jenkins-plugins-docker", 1)
-		image = strings.Replace(image, "kibana", "rancher/kibana", 1)
-		image = strings.Replace(image, "jenkins/", "rancher/jenkins-", 1)
-		image = strings.Replace(image, "alpine/git", "rancher/alpine-git", 1)
-		image = strings.Replace(image, "prom/", "rancher/prom-", 1)
-		image = strings.Replace(image, "quay.io/pires", "rancher", 1)
 		image = strings.Replace(image, "coredns/", "zdnscloud/", 1)
 		return image
 	}
@@ -65,20 +59,11 @@ var (
 			NginxProxy:                m("zdnscloud/zke-tools:v0.1.23"),
 			CertDownloader:            m("zdnscloud/zke-tools:v0.1.23"),
 			KubernetesServicesSidecar: m("zdnscloud/zke-tools:v0.1.23"),
-			KubeDNS:                   m("gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.15.0"),
-			DNSmasq:                   m("gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.15.0"),
-			KubeDNSSidecar:            m("gcr.io/google_containers/k8s-dns-sidecar-amd64:1.15.0"),
-			KubeDNSAutoscaler:         m("gcr.io/google_containers/cluster-proportional-autoscaler-amd64:1.0.0"),
 			Flannel:                   m("quay.io/coreos/flannel:v0.10.0"),
 			FlannelCNI:                m("quay.io/coreos/flannel-cni:v0.3.0"),
 			CalicoNode:                m("quay.io/calico/node:v3.4.0"),
 			CalicoCNI:                 m("quay.io/calico/cni:v3.4.0"),
 			CalicoCtl:                 m("quay.io/calico/ctl:v2.0.0"),
-			CanalNode:                 m("quay.io/calico/node:v3.4.0"),
-			CanalCNI:                  m("quay.io/calico/cni:v3.4.0"),
-			CanalFlannel:              m("quay.io/coreos/flannel:v0.10.0"),
-			WeaveNode:                 m("weaveworks/weave-kube:2.5.0"),
-			WeaveCNI:                  m("weaveworks/weave-npc:2.5.0"),
 			PodInfraContainer:         m("gcr.io/google_containers/pause-amd64:3.1"),
 			Ingress:                   m("zdnscloud/nginx-ingress-controller:0.21.0"),
 			IngressBackend:            m("k8s.gcr.io/defaultbackend:1.4"),

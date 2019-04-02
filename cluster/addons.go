@@ -3,25 +3,22 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"time"
-
-	"strings"
-
 	"github.com/zdnscloud/zke/addons"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
-        "github.com/zdnscloud/zke/templates"
+	"github.com/zdnscloud/zke/templates"
+	"strings"
+	"time"
 )
 
 const (
-	UserAddonResourceName         = "rke-user-addon"
-	IngressAddonResourceName      = "rke-ingress-controller"
-	UserAddonsIncludeResourceName = "rke-user-includes-addons"
-
-	DNSAddonResourceName           = "rke-coredns-addon"
-	IngressAddonJobName            = "rke-ingress-controller-deploy-job"
-	MetricsServerAddonJobName      = "rke-metrics-addon-deploy-job"
-	MetricsServerAddonResourceName = "rke-metrics-addon"
+	UserAddonResourceName          = "zke-user-addon"
+	IngressAddonResourceName       = "zke-ingress-controller"
+	UserAddonsIncludeResourceName  = "zke-user-includes-addons"
+	DNSAddonResourceName           = "zke-coredns-addon"
+	IngressAddonJobName            = "zke-ingress-controller-deploy-job"
+	MetricsServerAddonJobName      = "zke-metrics-addon-deploy-job"
+	MetricsServerAddonResourceName = "zke-metrics-addon"
 	NginxIngressAddonAppName       = "ingress-nginx"
 	CoreDNSAddonAppName            = "coredns"
 )
@@ -70,7 +67,7 @@ func (e *addonError) Error() string {
 }
 
 func getAddonResourceName(addon string) string {
-	AddonResourceName := "rke-" + addon + "-addon"
+	AddonResourceName := "zke-" + addon + "-addon"
 	return AddonResourceName
 }
 
@@ -124,7 +121,6 @@ func (c *Cluster) deployMetricServer(ctx context.Context) error {
 	log.Infof(ctx, "[addons] Setting up %s", c.Monitoring.Provider)
 	s := strings.Split(c.SystemImages.MetricsServer, ":")
 	versionTag := s[len(s)-1]
-
 	MetricsServerConfig := MetricsServerOptions{
 		MetricsServerImage: c.SystemImages.MetricsServer,
 		RBACConfig:         c.Authorization.Mode,
@@ -147,7 +143,6 @@ func (c *Cluster) doAddonDeploy(ctx context.Context, addonYaml, resourceName str
 	if err != nil {
 		return &addonError{fmt.Sprintf("Failed to save addon ConfigMap: %v", err), isCritical}
 	}
-
 	log.Infof(ctx, "[addons] Executing deploy job %s", resourceName)
 	k8sClient, err := k8s.NewClient(c.LocalKubeConfigPath, c.K8sWrapTransport)
 	if err != nil {
@@ -158,7 +153,6 @@ func (c *Cluster) doAddonDeploy(ctx context.Context, addonYaml, resourceName str
 		return &addonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].HostnameOverride, err), isCritical}
 	}
 	addonJob, err := addons.GetAddonsExecuteJob(resourceName, node.Name, c.Services.KubeAPI.Image)
-
 	if err != nil {
 		return &addonError{fmt.Sprintf("Failed to generate addon execute job: %v", err), isCritical}
 	}
@@ -179,7 +173,6 @@ func (c *Cluster) StoreAddonConfigMap(ctx context.Context, addonYaml string, add
 	timeout := make(chan bool, 1)
 	go func() {
 		for {
-
 			updated, err = k8s.UpdateConfigMap(kubeClient, []byte(addonYaml), addonName)
 			if err != nil {
 				time.Sleep(time.Second * 5)
@@ -224,7 +217,6 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 			ingressConfig.AlpineImage = c.SystemImages.Alpine
 		}
 	}
-
 	// Currently only deploying nginx ingress controller
 	ingressYaml, err := c.GetManifest(ingressConfig, c.Ingress.Provider)
 	if err != nil {
@@ -238,10 +230,10 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 }
 
 func (c *Cluster) GetManifest(Config interface{}, addonName string) (string, error) {
-       tmplt, ok := tmpltMap[addonName]
-       if ok{
-               return templates.CompileTemplateFromMap(tmplt, Config)
-       } else {
-	       return "", fmt.Errorf("[addon] Unknown addon %s", addonName)
-       }
+	tmplt, ok := tmpltMap[addonName]
+	if ok {
+		return templates.CompileTemplateFromMap(tmplt, Config)
+	} else {
+		return "", fmt.Errorf("[addon] Unknown addon %s", addonName)
+	}
 }

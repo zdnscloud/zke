@@ -6,12 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/k8s"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/services"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -21,20 +18,6 @@ func SetUpAuthentication(ctx context.Context, kubeCluster, currentCluster *Clust
 		return nil
 	}
 	return nil
-}
-
-func regenerateAPICertificate(c *Cluster, certificates map[string]pki.CertificatePKI) (map[string]pki.CertificatePKI, error) {
-	logrus.Debugf("[certificates] Regenerating kubeAPI certificate")
-	kubeAPIAltNames := pki.GetAltNames(c.ControlPlaneHosts, c.ClusterDomain, c.KubernetesServiceIP, c.Authentication.SANs)
-	caCrt := certificates[pki.CACertName].Certificate
-	caKey := certificates[pki.CACertName].Key
-	kubeAPIKey := certificates[pki.KubeAPICertName].Key
-	kubeAPICert, _, err := pki.GenerateSignedCertAndKey(caCrt, caKey, true, pki.KubeAPICertName, kubeAPIAltNames, kubeAPIKey, nil)
-	if err != nil {
-		return nil, err
-	}
-	certificates[pki.KubeAPICertName] = pki.ToCertObject(pki.KubeAPICertName, "", "", kubeAPICert, kubeAPIKey, nil)
-	return certificates, nil
 }
 
 func GetClusterCertsFromKubernetes(ctx context.Context, kubeCluster *Cluster) (map[string]pki.CertificatePKI, error) {
@@ -118,88 +101,4 @@ func GetClusterCertsFromKubernetes(ctx context.Context, kubeCluster *Cluster) (m
 	}
 	log.Infof(ctx, "[certificates] Successfully fetched Cluster certificates from Kubernetes")
 	return certMap, nil
-}
-
-func (c *Cluster) getBackupHosts() []*hosts.Host {
-	var backupHosts []*hosts.Host
-	if len(c.Services.Etcd.ExternalURLs) > 0 {
-		backupHosts = c.ControlPlaneHosts
-	} else {
-		// Save certificates on etcd and controlplane hosts
-		backupHosts = hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, nil)
-	}
-	return backupHosts
-}
-
-func regenerateAPIAggregationCerts(c *Cluster, certificates map[string]pki.CertificatePKI) (map[string]pki.CertificatePKI, error) {
-	logrus.Debugf("[certificates] Regenerating Kubernetes API server aggregation layer requestheader client CA certificates")
-	requestHeaderCACrt, requestHeaderCAKey, err := pki.GenerateCACertAndKey(pki.RequestHeaderCACertName, nil)
-	if err != nil {
-		return nil, err
-	}
-	certificates[pki.RequestHeaderCACertName] = pki.ToCertObject(pki.RequestHeaderCACertName, "", "", requestHeaderCACrt, requestHeaderCAKey, nil)
-
-	//generate API server proxy client key and certs
-	logrus.Debugf("[certificates] Regenerating Kubernetes API server proxy client certificates")
-	apiserverProxyClientCrt, apiserverProxyClientKey, err := pki.GenerateSignedCertAndKey(requestHeaderCACrt, requestHeaderCAKey, true, pki.APIProxyClientCertName, nil, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	certificates[pki.APIProxyClientCertName] = pki.ToCertObject(pki.APIProxyClientCertName, "", "", apiserverProxyClientCrt, apiserverProxyClientKey, nil)
-	return certificates, nil
-}
-
-func RotateRKECertificates(ctx context.Context, c *Cluster, flags ExternalFlags, clusterState *FullState) error {
-	var (
-		serviceAccountTokenKey string
-	)
-	componentsCertsFuncMap := map[string]pki.GenFunc{
-		services.KubeAPIContainerName:        pki.GenerateKubeAPICertificate,
-		services.KubeControllerContainerName: pki.GenerateKubeControllerCertificate,
-		services.SchedulerContainerName:      pki.GenerateKubeSchedulerCertificate,
-		services.KubeproxyContainerName:      pki.GenerateKubeProxyCertificate,
-		services.KubeletContainerName:        pki.GenerateKubeNodeCertificate,
-		services.EtcdContainerName:           pki.GenerateEtcdCertificates,
-	}
-	rotateFlags := c.ZcloudKubernetesEngineConfig.RotateCertificates
-	if rotateFlags.CACertificates {
-		// rotate CA cert and RequestHeader CA cert
-		if err := pki.GenerateRKECACerts(ctx, c.Certificates, flags.ClusterFilePath, flags.ConfigDir); err != nil {
-			return err
-		}
-		rotateFlags.Services = nil
-	}
-	for _, k8sComponent := range rotateFlags.Services {
-		genFunc := componentsCertsFuncMap[k8sComponent]
-		if genFunc != nil {
-			if err := genFunc(ctx, c.Certificates, c.ZcloudKubernetesEngineConfig, flags.ClusterFilePath, flags.ConfigDir, true); err != nil {
-				return err
-			}
-		}
-	}
-	// to handle kontainer engine sending empty string for services
-	if len(rotateFlags.Services) == 0 || (len(rotateFlags.Services) == 1 && rotateFlags.Services[0] == "") {
-		// do not rotate service account token
-		if c.Certificates[pki.ServiceAccountTokenKeyName].Key != nil {
-			serviceAccountTokenKey = string(cert.EncodePrivateKeyPEM(c.Certificates[pki.ServiceAccountTokenKeyName].Key))
-		}
-		if err := pki.GenerateRKEServicesCerts(ctx, c.Certificates, c.ZcloudKubernetesEngineConfig, flags.ClusterFilePath, flags.ConfigDir, true); err != nil {
-			return err
-		}
-		if serviceAccountTokenKey != "" {
-			privateKey, err := cert.ParsePrivateKeyPEM([]byte(serviceAccountTokenKey))
-			if err != nil {
-				return err
-			}
-			c.Certificates[pki.ServiceAccountTokenKeyName] = pki.ToCertObject(
-				pki.ServiceAccountTokenKeyName,
-				pki.ServiceAccountTokenKeyName,
-				"",
-				c.Certificates[pki.ServiceAccountTokenKeyName].Certificate,
-				privateKey.(*rsa.PrivateKey), nil)
-		}
-	}
-	clusterState.DesiredState.CertificatesBundle = c.Certificates
-	clusterState.DesiredState.ZcloudKubernetesEngineConfig = &c.ZcloudKubernetesEngineConfig
-	return nil
 }

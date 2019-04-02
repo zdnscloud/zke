@@ -122,7 +122,7 @@ func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
 	if c.AuthnStrategies[AuthnX509Provider] {
 		log.Infof(ctx, "[certificates] Deploying kubernetes certificates to Cluster nodes")
 		forceDeploy := false
-		if flags.CustomCerts || c.ZcloudKubernetesEngineConfig.RotateCertificates != nil {
+		if flags.CustomCerts {
 			forceDeploy = true
 		}
 		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)

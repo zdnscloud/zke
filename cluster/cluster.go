@@ -87,7 +87,6 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	for _, etcdHost := range c.EtcdHosts {
 		etcdNodePlanMap[etcdHost.Address] = BuildRKEConfigNodePlan(ctx, c, etcdHost, etcdHost.DockerInfo)
 	}
-
 	if len(c.Services.Etcd.ExternalURLs) > 0 {
 		log.Infof(ctx, "[etcd] External etcd connection string has been specified, skipping etcd plane")
 	} else {
@@ -95,7 +94,6 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 			return fmt.Errorf("[etcd] Failed to bring up Etcd Plane: %v", err)
 		}
 	}
-
 	// Deploy Control plane
 	cpNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
 	// Build cp node plan map
@@ -111,7 +109,6 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 		c.Certificates); err != nil {
 		return fmt.Errorf("[controlPlane] Failed to bring up Control Plane: %v", err)
 	}
-
 	return nil
 }
 
