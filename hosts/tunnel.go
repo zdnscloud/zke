@@ -10,10 +10,10 @@ import (
 	"net"
 
 	"github.com/docker/docker/client"
+	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/log"
 	"github.com/zdnscloud/zke/util"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
@@ -42,20 +42,6 @@ func (h *Host) TunnelUp(ctx context.Context, dialerFactory DialerFactory, cluste
 	}
 	h.PrefixPath = GetPrefixPath(h.DockerInfo.OperatingSystem, clusterPrefixPath)
 	return nil
-}
-
-func (h *Host) TunnelUpLocal(ctx context.Context, clusterVersion string) error {
-	var err error
-	if h.DClient != nil {
-		return nil
-	}
-	// set Docker client
-	logrus.Debugf("Connecting to Docker API for host [%s]", h.Address)
-	h.DClient, err = client.NewEnvClient()
-	if err != nil {
-		return fmt.Errorf("Can't initiate NewClient: %v", err)
-	}
-	return checkDockerVersion(ctx, h, clusterVersion)
 }
 
 func checkDockerVersion(ctx context.Context, h *Host, clusterVersion string) error {

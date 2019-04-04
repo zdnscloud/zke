@@ -26,12 +26,6 @@ const (
 )
 
 func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
-	if flags.Local {
-		if err := c.ControlPlaneHosts[0].TunnelUpLocal(ctx, c.Version); err != nil {
-			return fmt.Errorf("Failed to connect to docker for local host [%s]: %v", c.EtcdHosts[0].Address, err)
-		}
-		return nil
-	}
 	c.InactiveHosts = make([]*hosts.Host, 0)
 	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
 	var errgrp errgroup.Group

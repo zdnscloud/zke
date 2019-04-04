@@ -120,14 +120,6 @@ func LocalConnFactory(h *Host) (func(network, address string) (net.Conn, error),
 	return dialer.Dial, err
 }
 
-func (d *dialer) DialDocker(network, addr string) (net.Conn, error) {
-	return d.Dial(network, addr)
-}
-
-func (d *dialer) DialLocalConn(network, addr string) (net.Conn, error) {
-	return d.Dial(network, addr)
-}
-
 func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 	var conn *ssh.Client
 	var err error
