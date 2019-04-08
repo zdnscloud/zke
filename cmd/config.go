@@ -29,6 +29,8 @@ const (
 	DefaultClusterSSHPort        = "22"
 	DefaultClusterSSHUser        = "ubuntu"
 	DefaultClusterDockerSockPath = "/var/run/docker.sock"
+	Storage                      = "storage"
+	NetBorder                    = "netborder"
 )
 
 type clusterCommonCfg struct {
@@ -165,6 +167,12 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Network = *networkConfig
+	// Get Storage config
+	storageConfig, err := getStorageConfig(reader, cluster.Nodes)
+	if err != nil {
+		return err
+	}
+	cluster.Storage = *storageConfig
 	// Get Authentication Config
 	authnConfig, err := getAuthnConfig(reader)
 	if err != nil {
@@ -224,6 +232,26 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	}
 	if isEtcdHost == "y" || isEtcdHost == "Y" {
 		host.Role = append(host.Role, services.ETCDRole)
+	}
+	isStorageHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Storage host (y/n)?", address), "n")
+	if err != nil {
+		return nil, err
+	}
+	if isStorageHost == "y" || isStorageHost == "Y" {
+		if len(host.Labels) == 0 {
+			host.Labels = make(map[string]string)
+		}
+		host.Labels[Storage] = "true"
+	}
+	isNetBorderHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Network Border (y/n)?", address), "n")
+	if err != nil {
+		return nil, err
+	}
+	if isNetBorderHost == "y" || isNetBorderHost == "Y" {
+		if len(host.Labels) == 0 {
+			host.Labels = make(map[string]string)
+		}
+		host.Labels[NetBorder] = "true"
 	}
 	hostnameOverride, err := getConfig(reader, fmt.Sprintf("Override Hostname of host (%s)", address), "")
 	if err != nil {
@@ -339,6 +367,29 @@ func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 		}
 	}
 	return &networkConfig, nil
+}
+
+func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types.StorageConfig, error) {
+	storageCfg := types.StorageConfig{}
+	if len(storageCfg.Lvm) < 1 {
+		storageCfg.Lvm = make([]types.Lvmconf, 0)
+	}
+	for _, n := range nodes {
+		for k, v := range n.Labels {
+			if k == "storage" && v == "true" {
+				adress := n.Address
+				devices, err := getConfig(reader, fmt.Sprintf("Storage disk partitions on host (%s),separated by commas", adress), "")
+				if err != nil {
+					return nil, err
+				}
+				lvmConfig := types.Lvmconf{}
+				lvmConfig.Host = adress
+				lvmConfig.Devs = strings.Split(devices, ",")
+				storageCfg.Lvm = append(storageCfg.Lvm, lvmConfig)
+			}
+		}
+	}
+	return &storageCfg, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {
