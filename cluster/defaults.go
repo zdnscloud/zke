@@ -62,7 +62,6 @@ type ExternalFlags struct {
 	CustomCerts      bool
 	DisablePortCheck bool
 	GenerateCSR      bool
-	Local            bool
 	UpdateOnly       bool
 }
 
@@ -214,7 +213,12 @@ func (c *Cluster) setClusterServicesDefaults() {
 
 func (c *Cluster) setClusterImageDefaults() error {
 	var privRegURL string
-
+	d := func(image, defaultRegistryURL string) string {
+		if len(defaultRegistryURL) == 0 {
+			return image
+		}
+		return fmt.Sprintf("%s/%s", defaultRegistryURL, image)
+	}
 	// Version Check
 	err := util.ValidateVersion(c.Version)
 	if err != nil {
@@ -264,7 +268,7 @@ func (c *Cluster) setClusterNetworkDefaults() {
 		c.Network.Options = make(map[string]string)
 	}
 	networkPluginConfigDefaultsMap := make(map[string]string)
-	// This is still needed because RKE doesn't use c.Network.*NetworkProvider, that's a rancher type
+	// This is still needed because ZKE doesn't use c.Network.*NetworkProvider, that's a rancher type
 	switch c.Network.Plugin {
 	case CalicoNetworkPlugin:
 		networkPluginConfigDefaultsMap = map[string]string{
@@ -310,13 +314,6 @@ func (c *Cluster) setClusterAuthnDefaults() {
 			setDefaultIfEmpty(k, v)
 		}
 	}
-}
-
-func d(image, defaultRegistryURL string) string {
-	if len(defaultRegistryURL) == 0 {
-		return image
-	}
-	return fmt.Sprintf("%s/%s", defaultRegistryURL, image)
 }
 
 func GetExternalFlags(disablePortCheck bool, configDir, clusterFilePath string) ExternalFlags {

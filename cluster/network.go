@@ -20,12 +20,12 @@ import (
 )
 
 const (
-	NetworkPluginResourceName = "rke-network-plugin"
+	NetworkPluginResourceName = "zke-network-plugin"
 
-	PortCheckContainer        = "rke-port-checker"
-	EtcdPortListenContainer   = "rke-etcd-port-listener"
-	CPPortListenContainer     = "rke-cp-port-listener"
-	WorkerPortListenContainer = "rke-worker-port-listener"
+	PortCheckContainer        = "zke-port-checker"
+	EtcdPortListenContainer   = "zke-etcd-port-listener"
+	CPPortListenContainer     = "zke-cp-port-listener"
+	WorkerPortListenContainer = "zke-worker-port-listener"
 
 	KubeAPIPort         = "6443"
 	EtcdPort1           = "2379"
@@ -41,14 +41,13 @@ const (
 
 	NoNetworkPlugin = "none"
 
-	FlannelNetworkPlugin = "flannel"
-	FlannelIface         = "flannel_iface"
-	FlannelBackendType   = "flannel_backend_type"
+	FlannelNetworkPlugin        = "flannel"
+	FlannelIface                = "flannel_iface"
+	FlannelBackendType          = "flannel_backend_type"
 	FlannelBackendDirectrouting = "flannel_vxlan_directrouting"
 
 	CalicoNetworkPlugin = "calico"
 	CalicoCloudProvider = "calico_cloud_provider"
-
 
 	// List of map keys to be used with network templates
 
@@ -74,10 +73,10 @@ const (
 	ClusterCIDR = "ClusterCIDR"
 	// Images key names
 
-	Image              = "Image"
-	CNIImage           = "CNIImage"
-	NodeImage          = "NodeImage"
-	ControllersImage   = "ControllersImage"
+	Image            = "Image"
+	CNIImage         = "CNIImage"
+	NodeImage        = "NodeImage"
+	ControllersImage = "ControllersImage"
 
 	Calicoctl = "Calicoctl"
 
@@ -126,7 +125,7 @@ func (c *Cluster) doFlannelDeploy(ctx context.Context) error {
 		CNIImage:         c.SystemImages.FlannelCNI,
 		FlannelInterface: c.Network.Options[FlannelIface],
 		FlannelBackend: map[string]interface{}{
-			"Type": c.Network.Options[FlannelBackendType],
+			"Type":          c.Network.Options[FlannelBackendType],
 			"Directrouting": c.Network.Options[FlannelBackendDirectrouting],
 		},
 		RBACConfig:     c.Authorization.Mode,
@@ -156,7 +155,6 @@ func (c *Cluster) doCalicoDeploy(ctx context.Context) error {
 	}
 	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
-
 
 func (c *Cluster) getNetworkPluginManifest(pluginConfig map[string]interface{}) (string, error) {
 	switch c.Network.Plugin {

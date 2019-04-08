@@ -194,7 +194,7 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 
 		etcdNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
 		for _, etcdReadyHost := range kubeCluster.EtcdReadyHosts {
-			etcdNodePlanMap[etcdReadyHost.Address] = BuildRKEConfigNodePlan(ctx, kubeCluster, etcdReadyHost, etcdReadyHost.DockerInfo)
+			etcdNodePlanMap[etcdReadyHost.Address] = BuildZKEConfigNodePlan(ctx, kubeCluster, etcdReadyHost, etcdReadyHost.DockerInfo)
 		}
 		// this will start the newly added etcd node and make sure it started correctly before restarting other node
 		// https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/runtime-configuration.md#add-a-new-member

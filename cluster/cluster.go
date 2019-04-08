@@ -85,7 +85,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	etcdNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
 	// Build etcd node plan map
 	for _, etcdHost := range c.EtcdHosts {
-		etcdNodePlanMap[etcdHost.Address] = BuildRKEConfigNodePlan(ctx, c, etcdHost, etcdHost.DockerInfo)
+		etcdNodePlanMap[etcdHost.Address] = BuildZKEConfigNodePlan(ctx, c, etcdHost, etcdHost.DockerInfo)
 	}
 	if len(c.Services.Etcd.ExternalURLs) > 0 {
 		log.Infof(ctx, "[etcd] External etcd connection string has been specified, skipping etcd plane")
@@ -98,7 +98,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	cpNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
 	// Build cp node plan map
 	for _, cpHost := range c.ControlPlaneHosts {
-		cpNodePlanMap[cpHost.Address] = BuildRKEConfigNodePlan(ctx, c, cpHost, cpHost.DockerInfo)
+		cpNodePlanMap[cpHost.Address] = BuildZKEConfigNodePlan(ctx, c, cpHost, cpHost.DockerInfo)
 	}
 	if err := services.RunControlPlane(ctx, c.ControlPlaneHosts,
 		c.LocalConnDialerFactory,
@@ -118,7 +118,7 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 	// Build cp node plan map
 	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
 	for _, workerHost := range allHosts {
-		workerNodePlanMap[workerHost.Address] = BuildRKEConfigNodePlan(ctx, c, workerHost, workerHost.DockerInfo)
+		workerNodePlanMap[workerHost.Address] = BuildZKEConfigNodePlan(ctx, c, workerHost, workerHost.DockerInfo)
 	}
 	if err := services.RunWorkerPlane(ctx, allHosts,
 		c.LocalConnDialerFactory,
@@ -134,15 +134,15 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 
 func ParseConfig(clusterFile string) (*types.ZcloudKubernetesEngineConfig, error) {
 	logrus.Debugf("Parsing cluster file [%v]", clusterFile)
-	var rkeConfig types.ZcloudKubernetesEngineConfig
-	if err := yaml.Unmarshal([]byte(clusterFile), &rkeConfig); err != nil {
+	var zkeConfig types.ZcloudKubernetesEngineConfig
+	if err := yaml.Unmarshal([]byte(clusterFile), &zkeConfig); err != nil {
 		return nil, err
 	}
-	return &rkeConfig, nil
+	return &zkeConfig, nil
 }
 
 func InitClusterObject(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags ExternalFlags) (*Cluster, error) {
-	// basic cluster object from rkeConfig
+	// basic cluster object from zkeConfig
 	c := &Cluster{
 		AuthnStrategies:              make(map[string]bool),
 		ZcloudKubernetesEngineConfig: *zkeConfig,
@@ -278,9 +278,9 @@ func getLocalAdminConfigWithNewAddress(localConfigPath, cpAddress string, cluste
 		string(config.KeyData))
 }
 
-func ApplyAuthzResources(ctx context.Context, rkeConfig types.ZcloudKubernetesEngineConfig, flags ExternalFlags, dailersOptions hosts.DialersOptions) error {
+func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZcloudKubernetesEngineConfig, flags ExternalFlags, dailersOptions hosts.DialersOptions) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
-	kubeCluster, err := InitClusterObject(ctx, &rkeConfig, flags)
+	kubeCluster, err := InitClusterObject(ctx, &zkeConfig, flags)
 	if err != nil {
 		return err
 	}
@@ -438,13 +438,13 @@ func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 
 func ConfigureCluster(
 	ctx context.Context,
-	rkeConfig types.ZcloudKubernetesEngineConfig,
+	zkeConfig types.ZcloudKubernetesEngineConfig,
 	crtBundle map[string]pki.CertificatePKI,
 	flags ExternalFlags,
 	dailersOptions hosts.DialersOptions,
 	useKubectl bool) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
-	kubeCluster, err := InitClusterObject(ctx, &rkeConfig, flags)
+	kubeCluster, err := InitClusterObject(ctx, &zkeConfig, flags)
 	if err != nil {
 		return err
 	}
@@ -469,7 +469,7 @@ func ConfigureCluster(
 
 func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 	log.Infof(ctx, "Restarting network, ingress, and metrics pods")
-	// this will remove the pods created by RKE and let the controller creates them again
+	// this will remove the pods created by ZKE and let the controller creates them again
 	kubeClient, err := k8s.NewClient(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize new kubernetes client: %v", err)

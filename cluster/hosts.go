@@ -51,7 +51,7 @@ func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 		c.EtcdHosts = removeFromHosts(host, c.EtcdHosts)
 		c.ControlPlaneHosts = removeFromHosts(host, c.ControlPlaneHosts)
 		c.WorkerHosts = removeFromHosts(host, c.WorkerHosts)
-		c.ZcloudKubernetesEngineConfig.Nodes = removeFromRKENodes(host.ZKEConfigNode, c.ZcloudKubernetesEngineConfig.Nodes)
+		c.ZcloudKubernetesEngineConfig.Nodes = removeFromZKENodes(host.ZKEConfigNode, c.ZcloudKubernetesEngineConfig.Nodes)
 	}
 	return ValidateHostCount(c)
 
@@ -179,7 +179,7 @@ func removeFromHosts(hostToRemove *hosts.Host, hostList []*hosts.Host) []*hosts.
 	return hostList
 }
 
-func removeFromRKENodes(nodeToRemove types.ZKEConfigNode, nodeList []types.ZKEConfigNode) []types.ZKEConfigNode {
+func removeFromZKENodes(nodeToRemove types.ZKEConfigNode, nodeList []types.ZKEConfigNode) []types.ZKEConfigNode {
 	for i := range nodeList {
 		if nodeToRemove.Address == nodeList[i].Address {
 			return append(nodeList[:i], nodeList[i+1:]...)

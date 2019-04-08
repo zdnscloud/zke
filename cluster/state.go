@@ -144,10 +144,10 @@ func GetK8sVersion(localConfigPath string, k8sWrapTransport k8s.WrapTransport) (
 	return fmt.Sprintf("%#v", *serverVersion), nil
 }
 
-func RebuildState(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
+func RebuildState(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
 	newState := &FullState{
 		DesiredState: State{
-			ZcloudKubernetesEngineConfig: rkeConfig.DeepCopy(),
+			ZcloudKubernetesEngineConfig: zkeConfig.DeepCopy(),
 		},
 	}
 
@@ -157,7 +157,7 @@ func RebuildState(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineCo
 			return nil, fmt.Errorf("Failed to read certificates from dir [%s]: %v", flags.CertificateDir, err)
 		}
 		// make sure all custom certs are included
-		if err := pki.ValidateBundleContent(rkeConfig, certBundle, flags.ClusterFilePath, flags.ConfigDir); err != nil {
+		if err := pki.ValidateBundleContent(zkeConfig, certBundle, flags.ClusterFilePath, flags.ConfigDir); err != nil {
 			return nil, fmt.Errorf("Failed to validates certificates from dir [%s]: %v", flags.CertificateDir, err)
 		}
 		newState.DesiredState.CertificatesBundle = certBundle
@@ -168,7 +168,7 @@ func RebuildState(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineCo
 	// Rebuilding the certificates of the desired state
 	if oldState.DesiredState.CertificatesBundle == nil {
 		// Get the certificate Bundle
-		certBundle, err := pki.GenerateRKECerts(ctx, *rkeConfig, "", "")
+		certBundle, err := pki.GenerateRKECerts(ctx, *zkeConfig, "", "")
 		if err != nil {
 			return nil, fmt.Errorf("Failed to generate certificate bundle: %v", err)
 		}
@@ -176,7 +176,7 @@ func RebuildState(ctx context.Context, rkeConfig *types.ZcloudKubernetesEngineCo
 	} else {
 		// Regenerating etcd certificates for any new etcd nodes
 		pkiCertBundle := oldState.DesiredState.CertificatesBundle
-		if err := pki.GenerateRKEServicesCerts(ctx, pkiCertBundle, *rkeConfig, flags.ClusterFilePath, flags.ConfigDir, false); err != nil {
+		if err := pki.GenerateRKEServicesCerts(ctx, pkiCertBundle, *zkeConfig, flags.ClusterFilePath, flags.ConfigDir, false); err != nil {
 			return nil, err
 		}
 		newState.DesiredState.CertificatesBundle = pkiCertBundle
