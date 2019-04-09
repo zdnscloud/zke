@@ -167,6 +167,12 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Network = *networkConfig
+	// Get Ingress config
+	ingressConfig, err := getIngressConfig(reader, cluster.Nodes)
+	if err != nil {
+		return err
+	}
+	cluster.Ingress = *ingressConfig
 	// Get Storage config
 	storageConfig, err := getStorageConfig(reader, cluster.Nodes)
 	if err != nil {
@@ -369,6 +375,19 @@ func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 	return &networkConfig, nil
 }
 
+func getIngressConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types.IngressConfig, error) {
+	ingressCfg := types.IngressConfig{}
+	ingressCfg.NodeSelector = make(map[string]string)
+	for _, n := range nodes {
+		for k, v := range n.Labels {
+			if k == "netborder" && v == "true" {
+				ingressCfg.NodeSelector[NetBorder] = v
+			}
+		}
+	}
+	return &ingressCfg, nil
+}
+
 func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types.StorageConfig, error) {
 	storageCfg := types.StorageConfig{}
 	if len(storageCfg.Lvm) < 1 {
@@ -377,13 +396,16 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 	for _, n := range nodes {
 		for k, v := range n.Labels {
 			if k == "storage" && v == "true" {
-				adress := n.Address
-				devices, err := getConfig(reader, fmt.Sprintf("Storage disk partitions on host (%s),separated by commas", adress), "")
+				lvmConfig := types.Lvmconf{}
+				if n.NodeName != "" {
+					lvmConfig.Host = n.NodeName
+				} else {
+					lvmConfig.Host = n.Address
+				}
+				devices, err := getConfig(reader, fmt.Sprintf("Storage disk partitions on host (%s),separated by commas", n.Address), "")
 				if err != nil {
 					return nil, err
 				}
-				lvmConfig := types.Lvmconf{}
-				lvmConfig.Host = adress
 				lvmConfig.Devs = strings.Split(devices, ",")
 				storageCfg.Lvm = append(storageCfg.Lvm, lvmConfig)
 			}

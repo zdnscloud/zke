@@ -460,6 +460,9 @@ func ConfigureCluster(
 			}
 			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", NetworkPluginResourceName, err)
 		}
+		if err := kubeCluster.deployStorageClass(ctx); err != nil {
+			return err
+		}
 		if err := kubeCluster.deployAddons(ctx); err != nil {
 			return err
 		}

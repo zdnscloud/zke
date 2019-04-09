@@ -41,6 +41,8 @@ const (
 
 	DefaultDNSProvider = "coredns"
 
+	DefaultStorageclass = "lvm"
+
 	DefaultIngressController             = "nginx"
 	DefaultEtcdBackupCreationPeriod      = "12h"
 	DefaultEtcdBackupRetentionPeriod     = "72h"

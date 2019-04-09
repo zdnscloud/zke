@@ -2,8 +2,22 @@ package templates
 
 import (
 	"bytes"
+	"fmt"
 	"text/template"
 )
+
+const (
+	Calico = "calico"
+)
+
+var tmpltMap map[string]string = map[string]string{
+	"flannel": FlannelTemplate,
+	//"calico":           GetVersionedTemplates("calico", c.Version),
+	"coredns":          CoreDNSTemplate,
+	"nginx":            NginxIngressTemplate,
+	"metrics-server":   MetricsServerTemplate,
+	"lvm-storageclass": LVMStorageTemplate,
+}
 
 var VersionedTemplate = map[string]map[string]string{
 	"calico": map[string]string{
@@ -27,4 +41,16 @@ func GetVersionedTemplates(templateName string, k8sVersion string) string {
 		return versionedTemplate[k8sVersion]
 	}
 	return versionedTemplate["default"]
+}
+
+func GetManifest(Config interface{}, addonName string, v ...string) (string, error) {
+	if addonName == Calico {
+		return CompileTemplateFromMap(GetVersionedTemplates(addonName, v[0]), Config)
+	}
+	tmplt, ok := tmpltMap[addonName]
+	if ok {
+		return CompileTemplateFromMap(tmplt, Config)
+	} else {
+		return "", fmt.Errorf("[addon] Unknown addon: %s", addonName)
+	}
 }
