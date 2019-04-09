@@ -131,7 +131,6 @@ func (c *Cluster) doFlannelDeploy(ctx context.Context) error {
 		RBACConfig:     c.Authorization.Mode,
 		ClusterVersion: getTagMajorVersion(c.Version),
 	}
-	// pluginYaml, err := c.getNetworkPluginManifest(flannelConfig)
 	pluginYaml, err := templates.GetManifest(flannelConfig, FlannelNetworkPlugin)
 	if err != nil {
 		return err
@@ -150,25 +149,12 @@ func (c *Cluster) doCalicoDeploy(ctx context.Context) error {
 		CloudProvider: c.Network.Options[CalicoCloudProvider],
 		RBACConfig:    c.Authorization.Mode,
 	}
-	// pluginYaml, err := c.getNetworkPluginManifest(calicoConfig)
 	pluginYaml, err := templates.GetManifest(calicoConfig, CalicoNetworkPlugin, c.Version)
 	if err != nil {
 		return err
 	}
 	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
-
-/*
-func (c *Cluster) getNetworkPluginManifest(pluginConfig map[string]interface{}) (string, error) {
-	switch c.Network.Plugin {
-	case FlannelNetworkPlugin:
-		return templates.CompileTemplateFromMap(templates.FlannelTemplate, pluginConfig)
-	case CalicoNetworkPlugin:
-		return templates.CompileTemplateFromMap(templates.GetVersionedTemplates(CalicoNetworkPlugin, c.Version), pluginConfig)
-	default:
-		return "", fmt.Errorf("[network] Unsupported network plugin: %s", c.Network.Plugin)
-	}
-}*/
 
 func (c *Cluster) CheckClusterPorts(ctx context.Context, currentCluster *Cluster) error {
 	if currentCluster != nil {

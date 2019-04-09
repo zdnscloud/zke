@@ -12,7 +12,6 @@ const (
 	LVMStorageResourceName = "zke-storage-plugin-lvm"
 	LVMResourceName        = "lvm-storageclass"
 	LVMStorageClassName    = "lvm"
-	Default                = "Default"
 	LVMList                = "LVMList"
 	Host                   = "Host"
 	Devs                   = "Devs"
@@ -31,7 +30,7 @@ func (c *Cluster) doLVMStorageclassDeploy(ctx context.Context) error {
 	for _, v := range c.Storage.Lvm {
 		var m = make(map[string]string)
 		m[Host] = v.Host
-		m[Devs] = strings.Replace(strings.Trim(fmt.Sprint(v.Devs), "[]"), " ", ",", -1)
+		m[Devs] = strings.Replace(strings.Trim(fmt.Sprint(v.Devs), "[]"), " ", " ", -1)
 		arr = append(arr, m)
 	}
 	lvmstorageClassConfig := map[string]interface{}{

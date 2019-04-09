@@ -11,8 +11,7 @@ const (
 )
 
 var tmpltMap map[string]string = map[string]string{
-	"flannel": FlannelTemplate,
-	//"calico":           GetVersionedTemplates("calico", c.Version),
+	"flannel":          FlannelTemplate,
 	"coredns":          CoreDNSTemplate,
 	"nginx":            NginxIngressTemplate,
 	"metrics-server":   MetricsServerTemplate,
