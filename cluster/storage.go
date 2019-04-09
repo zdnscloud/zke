@@ -15,6 +15,12 @@ const (
 	LVMList                = "LVMList"
 	Host                   = "Host"
 	Devs                   = "Devs"
+
+	StorageCSIAttacherImage     = "StorageCSIAttacherImage"
+	StorageCSIProvisionerImage  = "StorageCSIProvisionerImage"
+	StorageDriverRegistrarImage = "StorageDriverRegistrarImage"
+	StorageCSILvmpluginImage    = "StorageCSILvmpluginImage"
+	StorageLvmdImage            = "StorageLvmdImage"
 )
 
 func (c *Cluster) deployStorageClass(ctx context.Context) error {
@@ -34,8 +40,13 @@ func (c *Cluster) doLVMStorageclassDeploy(ctx context.Context) error {
 		arr = append(arr, m)
 	}
 	lvmstorageClassConfig := map[string]interface{}{
-		RBACConfig: c.Authorization.Mode,
-		LVMList:    arr,
+		RBACConfig:                  c.Authorization.Mode,
+		StorageCSIAttacherImage:     c.SystemImages.StorageCSIAttacher,
+		StorageCSIProvisionerImage:  c.SystemImages.StorageCSIProvisioner,
+		StorageDriverRegistrarImage: c.SystemImages.StorageDriverRegistrar,
+		StorageCSILvmpluginImage:    c.SystemImages.StorageCSILvmplugin,
+		StorageLvmdImage:            c.SystemImages.StorageLvmd,
+		LVMList:                     arr,
 	}
 	storageYaml, err := templates.GetManifest(lvmstorageClassConfig, LVMResourceName)
 	if err != nil {

@@ -25,13 +25,13 @@ spec:
       hostNetwork: true
       containers:
       - name: lvmd
-        image: docker.zdns.cn/zdnscloud/lvmd:v0.1
+        image: {{$.StorageLvmdImage}}
         command: ["/lvmd.sh"]
         env:
           - name: MOUNT_PATH
             value: "/host/dev"
           - name: VG_NAME
-            value: "k8s-zdns"
+            value: "k8s"
           - name: DEVICE
             value: "{{.Devs}}"
         securityContext:
@@ -135,7 +135,7 @@ spec:
                 - "true"
       containers:
         - name: csi-attacher
-          image: quay.io/k8scsi/csi-attacher:v0.4.2
+          image: {{.StorageCSIAttacherImage}}
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -167,6 +167,9 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["nodes"]
     verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["persistentvolumes"]
@@ -248,7 +251,7 @@ spec:
                 - "true"
       containers:
         - name: csi-provisioner
-          image: quay.io/k8scsi/csi-provisioner:v0.4.2
+          image: {{.StorageCSIProvisionerImage}}
           args:
             - "--provisioner=csi-lvmplugin"
             - "--csi-address=$(ADDRESS)"
@@ -334,7 +337,7 @@ spec:
       hostNetwork: true
       containers:
         - name: driver-registrar
-          image: quay.io/k8scsi/driver-registrar:v0.4.2
+          image: {{.StorageDriverRegistrarImage}}
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -357,14 +360,16 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: quay.io/lvmcsi/lvmplugin:v0.3.1
+          image: {{.StorageCSILvmpluginImage}}
           args :
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--v=5"
-            - "--vgname=k8s-zdns"
+            - "--vgname=$(VG_NAME)"
             - "--drivername=csi-lvmplugin"
           env:
+            - name: VG_NAME
+              value: "k8s"
             - name: NODE_ID
               valueFrom:
                 fieldRef:
@@ -419,4 +424,5 @@ metadata:
     storageclass.kubernetes.io/is-default-class: "true"
   name: lvm
 provisioner: csi-lvmplugin
+volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Delete`

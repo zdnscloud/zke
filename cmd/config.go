@@ -397,8 +397,8 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 		for k, v := range n.Labels {
 			if k == "storage" && v == "true" {
 				lvmConfig := types.Lvmconf{}
-				if n.NodeName != "" {
-					lvmConfig.Host = n.NodeName
+				if n.HostnameOverride != "" {
+					lvmConfig.Host = n.HostnameOverride
 				} else {
 					lvmConfig.Host = n.Address
 				}
