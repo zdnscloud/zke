@@ -74,7 +74,7 @@ var (
 			StorageCSIProvisioner:     m("quay.io/k8scsi/csi-provisioner:v0.4.2"),
 			StorageDriverRegistrar:    m("quay.io/k8scsi/driver-registrar:v0.4.2"),
 			StorageCSILvmplugin:       m("quay.io/lvmcsi/lvmplugin:v0.3.1"),
-			StorageLvmd:               m("docker.zdns.cn/zdnscloud/lvmd:v0.1"),
+			StorageLvmd:               m("zdnscloud/lvmd:v0.1"),
 		},
 	}
 )
