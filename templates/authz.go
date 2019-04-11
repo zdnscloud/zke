@@ -23,7 +23,7 @@ subjects:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: rke-job-deployer
+  name: zke-job-deployer
   namespace: kube-system`
 
 	JobDeployerClusterRoleBinding = `
@@ -38,7 +38,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   namespace: kube-system
-  name: rke-job-deployer`
+  name: zke-job-deployer`
 
 	DefaultPodSecurityPolicy = `
 apiVersion: extensions/v1beta1

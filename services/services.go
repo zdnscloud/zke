@@ -36,8 +36,8 @@ const (
 	EtcdChecksumContainerName       = "etcd-checksum-checker"
 	NginxProxyContainerName         = "nginx-proxy"
 	SidekickContainerName           = "service-sidekick"
-	LogLinkContainerName            = "rke-log-linker"
-	LogCleanerContainerName         = "rke-log-cleaner"
+	LogLinkContainerName            = "zke-log-linker"
+	LogCleanerContainerName         = "zke-log-cleaner"
 
 	KubeAPIPort        = 6443
 	SchedulerPort      = 10251
@@ -127,14 +127,14 @@ func createLogLink(ctx context.Context, host *hosts.Host, containerName, plane, 
 	}
 	containerID := containerInspect.ID
 	containerLogPath := containerInspect.LogPath
-	containerLogLink := fmt.Sprintf("%s/%s_%s.log", hosts.RKELogsPath, containerName, containerID)
+	containerLogLink := fmt.Sprintf("%s/%s_%s.log", hosts.ZKELogsPath, containerName, containerID)
 	imageCfg := &container.Config{
 		Image: image,
 		Tty:   true,
 		Cmd: []string{
 			"sh",
 			"-c",
-			fmt.Sprintf("mkdir -p %s ; ln -s %s %s", hosts.RKELogsPath, containerLogPath, containerLogLink),
+			fmt.Sprintf("mkdir -p %s ; ln -s %s %s", hosts.ZKELogsPath, containerLogPath, containerLogLink),
 		},
 	}
 	hostCfg := &container.HostConfig{

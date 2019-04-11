@@ -31,7 +31,7 @@ type FullState struct {
 }
 
 type State struct {
-	ZcloudKubernetesEngineConfig *types.ZcloudKubernetesEngineConfig `json:"rkeConfig,omitempty"`
+	ZcloudKubernetesEngineConfig *types.ZcloudKubernetesEngineConfig `json:"zkeConfig,omitempty"`
 	CertificatesBundle           map[string]pki.CertificatePKI       `json:"certificatesBundle,omitempty"`
 }
 
@@ -168,7 +168,7 @@ func RebuildState(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCo
 	// Rebuilding the certificates of the desired state
 	if oldState.DesiredState.CertificatesBundle == nil {
 		// Get the certificate Bundle
-		certBundle, err := pki.GenerateRKECerts(ctx, *zkeConfig, "", "")
+		certBundle, err := pki.GenerateZKECerts(ctx, *zkeConfig, "", "")
 		if err != nil {
 			return nil, fmt.Errorf("Failed to generate certificate bundle: %v", err)
 		}
@@ -176,7 +176,7 @@ func RebuildState(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCo
 	} else {
 		// Regenerating etcd certificates for any new etcd nodes
 		pkiCertBundle := oldState.DesiredState.CertificatesBundle
-		if err := pki.GenerateRKEServicesCerts(ctx, pkiCertBundle, *zkeConfig, flags.ClusterFilePath, flags.ConfigDir, false); err != nil {
+		if err := pki.GenerateZKEServicesCerts(ctx, pkiCertBundle, *zkeConfig, flags.ClusterFilePath, flags.ConfigDir, false); err != nil {
 			return nil, err
 		}
 		newState.DesiredState.CertificatesBundle = pkiCertBundle
@@ -229,26 +229,26 @@ func GetCertificateDirPath(configPath, configDir string) string {
 }
 
 func ReadStateFile(ctx context.Context, statePath string) (*FullState, error) {
-	rkeFullState := &FullState{}
+	zkeFullState := &FullState{}
 	fp, err := filepath.Abs(statePath)
 	if err != nil {
-		return rkeFullState, fmt.Errorf("failed to lookup current directory name: %v", err)
+		return zkeFullState, fmt.Errorf("failed to lookup current directory name: %v", err)
 	}
 	file, err := os.Open(fp)
 	if err != nil {
-		return rkeFullState, fmt.Errorf("Can not find RKE state file: %v", err)
+		return zkeFullState, fmt.Errorf("Can not find ZKE state file: %v", err)
 	}
 	defer file.Close()
 	buf, err := ioutil.ReadAll(file)
 	if err != nil {
-		return rkeFullState, fmt.Errorf("failed to read state file: %v", err)
+		return zkeFullState, fmt.Errorf("failed to read state file: %v", err)
 	}
-	if err := json.Unmarshal(buf, rkeFullState); err != nil {
-		return rkeFullState, fmt.Errorf("failed to unmarshal the state file: %v", err)
+	if err := json.Unmarshal(buf, zkeFullState); err != nil {
+		return zkeFullState, fmt.Errorf("failed to unmarshal the state file: %v", err)
 	}
-	rkeFullState.DesiredState.CertificatesBundle = pki.TransformPEMToObject(rkeFullState.DesiredState.CertificatesBundle)
-	rkeFullState.CurrentState.CertificatesBundle = pki.TransformPEMToObject(rkeFullState.CurrentState.CertificatesBundle)
-	return rkeFullState, nil
+	zkeFullState.DesiredState.CertificatesBundle = pki.TransformPEMToObject(zkeFullState.DesiredState.CertificatesBundle)
+	zkeFullState.CurrentState.CertificatesBundle = pki.TransformPEMToObject(zkeFullState.CurrentState.CertificatesBundle)
+	return zkeFullState, nil
 }
 
 func removeStateFile(ctx context.Context, statePath string) {

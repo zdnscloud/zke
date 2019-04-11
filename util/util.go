@@ -88,22 +88,22 @@ func ValidateVersion(version string) error {
 	// Make sure Target version is greater than or equal to oldest major.minor supported.
 	semver.Sort(currentVersionsList)
 	if targetVersion.Major < currentVersionsList[0].Major {
-		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'rke config --system-images --all' for versions supported with this release", version)
+		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'zke config --system-images --all' for versions supported with this release", version)
 	}
 	if targetVersion.Major == currentVersionsList[0].Major {
 		if targetVersion.Minor < currentVersionsList[0].Minor {
-			return fmt.Errorf("%s is an unsupported Kubernetes version - see 'rke config --system-images --all' for versions supported with this release", version)
+			return fmt.Errorf("%s is an unsupported Kubernetes version - see 'zke config --system-images --all' for versions supported with this release", version)
 		}
 	}
 	// Make sure Target version is in the AllK8sVersions list.
 	_, ok := types.AllK8sVersions[version]
 	if !ok {
-		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'rke config --system-images --all' for versions supported with this release", version)
+		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'zke config --system-images --all' for versions supported with this release", version)
 	}
 	// Make sure Target version is not "bad".
 	_, ok = types.K8sBadVersions[version]
 	if ok {
-		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'rke config --system-images --all' for versions supported with this release", version)
+		return fmt.Errorf("%s is an unsupported Kubernetes version - see 'zke config --system-images --all' for versions supported with this release", version)
 	}
 
 	return nil

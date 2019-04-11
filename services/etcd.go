@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	EtcdSnapshotPath     = "/opt/rke/etcd-snapshots/"
-	EtcdRestorePath      = "/opt/rke/etcd-snapshots-restore/"
-	EtcdDataDir          = "/var/lib/rancher/etcd/"
+	EtcdSnapshotPath     = "/opt/zke/etcd-snapshots/"
+	EtcdRestorePath      = "/opt/zke/etcd-snapshots-restore/"
+	EtcdDataDir          = "/var/lib/zdnscloud/etcd/"
 	EtcdInitWaitTime     = 10
 	EtcdSnapshotWaitTime = 5
 )
@@ -365,8 +365,8 @@ func RestoreEtcdSnapshot(ctx context.Context, etcdHost *hosts.Host, prsMap map[s
 	}
 	hostCfg := &container.HostConfig{
 		Binds: []string{
-			"/opt/rke/:/opt/rke/:z",
-			fmt.Sprintf("%s:/var/lib/rancher/etcd:z", path.Join(etcdHost.PrefixPath, "/var/lib/etcd")),
+			"/opt/zke/:/opt/zke/:z",
+			fmt.Sprintf("%s:/var/lib/zdnscloud/etcd:z", path.Join(etcdHost.PrefixPath, "/var/lib/etcd")),
 			fmt.Sprintf("%s:/etc/kubernetes:z", path.Join(etcdHost.PrefixPath, "/etc/kubernetes"))},
 		NetworkMode: container.NetworkMode("host"),
 	}
@@ -406,7 +406,7 @@ func GetEtcdSnapshotChecksum(ctx context.Context, etcdHost *hosts.Host, prsMap m
 	}
 	hostCfg := &container.HostConfig{
 		Binds: []string{
-			"/opt/rke/:/opt/rke/:z",
+			"/opt/zke/:/opt/zke/:z",
 		}}
 
 	if err := docker.DoRunContainer(ctx, etcdHost.DClient, imageCfg, hostCfg, EtcdChecksumContainerName, etcdHost.Address, ETCDRole, prsMap); err != nil {

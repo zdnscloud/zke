@@ -1,3 +1,3 @@
-FROM ubuntu:16.04
-COPY rke /usr/bin/
-CMD ["rke"]
+FROM alpine
+COPY zke /usr/bin/
+CMD ["zke"]

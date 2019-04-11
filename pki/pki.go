@@ -43,27 +43,27 @@ const (
 	etcdRole            = "etcd"
 	controlRole         = "controlplane"
 	workerRole          = "worker"
-	BundleCertContainer = "rke-bundle-cert"
+	BundleCertContainer = "zke-bundle-cert"
 )
 
-func GenerateRKECerts(ctx context.Context, rkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
+func GenerateZKECerts(ctx context.Context, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
 	certs := make(map[string]CertificatePKI)
-	// generate RKE CA certificates
-	if err := GenerateRKECACerts(ctx, certs, configPath, configDir); err != nil {
+	// generate ZKE CA certificates
+	if err := GenerateZKECACerts(ctx, certs, configPath, configDir); err != nil {
 		return certs, err
 	}
 	// Generating certificates for kubernetes components
-	if err := GenerateRKEServicesCerts(ctx, certs, rkeConfig, configPath, configDir, false); err != nil {
+	if err := GenerateZKEServicesCerts(ctx, certs, zkeConfig, configPath, configDir, false); err != nil {
 		return certs, err
 	}
 	return certs, nil
 }
 
-func GenerateRKENodeCerts(ctx context.Context, rkeConfig types.ZcloudKubernetesEngineConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
+func GenerateZKENodeCerts(ctx context.Context, zkeConfig types.ZcloudKubernetesEngineConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
 	crtMap := make(map[string]CertificatePKI)
 	crtKeys := []string{}
 	removeCAKey := true
-	for _, node := range rkeConfig.Nodes {
+	for _, node := range zkeConfig.Nodes {
 		if node.Address == nodeAddress {
 			for _, role := range node.Role {
 				switch role {
@@ -75,7 +75,7 @@ func GenerateRKENodeCerts(ctx context.Context, rkeConfig types.ZcloudKubernetesE
 					keys := getWorkerCertKeys()
 					crtKeys = append(crtKeys, keys...)
 				case etcdRole:
-					keys := getEtcdCertKeys(rkeConfig.Nodes, etcdRole)
+					keys := getEtcdCertKeys(zkeConfig.Nodes, etcdRole)
 					crtKeys = append(crtKeys, keys...)
 				}
 			}

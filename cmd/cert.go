@@ -14,7 +14,7 @@ import (
 func CertificateCommand() cli.Command {
 	return cli.Command{
 		Name:  "cert",
-		Usage: "Certificates management for RKE cluster",
+		Usage: "Certificates management for ZKE cluster",
 		Subcommands: cli.Commands{
 			cli.Command{
 				Name:   "generate-csr",
@@ -54,10 +54,10 @@ func generateCSRFromCli(ctx *cli.Context) error {
 	externalFlags := cluster.GetExternalFlags(false, "", filePath)
 	externalFlags.CertificateDir = ctx.String("cert-dir")
 	externalFlags.CustomCerts = ctx.Bool("custom-certs")
-	return GenerateRKECSRs(context.Background(), zkeConfig, externalFlags)
+	return GenerateZKECSRs(context.Background(), zkeConfig, externalFlags)
 }
 
-func GenerateRKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags cluster.ExternalFlags) error {
+func GenerateZKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags cluster.ExternalFlags) error {
 	log.Infof(ctx, "Generating Kubernetes cluster CSR certificates")
 	if len(flags.CertificateDir) == 0 {
 		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
@@ -72,7 +72,7 @@ func GenerateRKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngin
 		return err
 	}
 	// Generating csrs for kubernetes components
-	if err := pki.GenerateRKEServicesCSRs(ctx, certBundle, kubeCluster.ZcloudKubernetesEngineConfig); err != nil {
+	if err := pki.GenerateZKEServicesCSRs(ctx, certBundle, kubeCluster.ZcloudKubernetesEngineConfig); err != nil {
 		return err
 	}
 	return pki.WriteCertificates(kubeCluster.CertificateDir, certBundle)

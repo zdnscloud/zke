@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	NginxProxyImage   = "rancher/rke-nginx-proxy:0.1.0"
 	NginxProxyEnvName = "CP_HOSTS"
 )
 

@@ -17,7 +17,7 @@ spec:
   backoffLimit: 10
   template:
     metadata:
-       name: rke-deploy
+       name: zke-deploy
     spec:
         tolerations:
         - key: node-role.kubernetes.io/controlplane
@@ -27,7 +27,7 @@ spec:
           operator: Exists
           effect: NoExecute
         hostNetwork: true
-        serviceAccountName: rke-job-deployer
+        serviceAccountName: zke-job-deployer
         nodeName: {{$nodeName}}
         containers:
           {{- if eq .DeleteJob "true" }}

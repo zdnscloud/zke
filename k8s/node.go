@@ -15,20 +15,11 @@ import (
 
 const (
 	HostnameLabel             = "kubernetes.io/hostname"
-	InternalAddressAnnotation = "rke.cattle.io/internal-ip"
-	ExternalAddressAnnotation = "rke.cattle.io/external-ip"
-	AWSCloudProvider          = "aws"
+	InternalAddressAnnotation = "zdnscloud.cn/internal-ip"
+	ExternalAddressAnnotation = "zdnscloud.cn/external-ip"
 )
 
 func DeleteNode(k8sClient *kubernetes.Clientset, nodeName, cloudProvider string) error {
-
-	if cloudProvider == AWSCloudProvider {
-		node, err := GetNode(k8sClient, nodeName)
-		if err != nil {
-			return err
-		}
-		nodeName = node.Name
-	}
 	return k8sClient.CoreV1().Nodes().Delete(nodeName, &metav1.DeleteOptions{})
 }
 

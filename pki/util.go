@@ -318,13 +318,13 @@ func getWorkerCertKeys() []string {
 	}
 }
 
-func getEtcdCertKeys(rkeNodes []types.ZKEConfigNode, etcdRole string) []string {
+func getEtcdCertKeys(zkeNodes []types.ZKEConfigNode, etcdRole string) []string {
 	certList := []string{
 		CACertName,
 		KubeProxyCertName,
 		KubeNodeCertName,
 	}
-	etcdHosts := hosts.NodesToHosts(rkeNodes, etcdRole)
+	etcdHosts := hosts.NodesToHosts(zkeNodes, etcdRole)
 	for _, host := range etcdHosts {
 		certList = append(certList, GetEtcdCrtName(host.InternalAddress))
 	}
@@ -663,7 +663,7 @@ func WriteCertificates(certDirPath string, certBundle map[string]CertificatePKI)
 	return nil
 }
 
-func ValidateBundleContent(rkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI, configPath, configDir string) error {
+func ValidateBundleContent(zkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI, configPath, configDir string) error {
 	// ensure all needed certs exists
 	// make sure all CA Certs exist
 	if certBundle[CACertName].Certificate == nil {
@@ -688,7 +688,7 @@ func ValidateBundleContent(rkeConfig *types.ZcloudKubernetesEngineConfig, certBu
 			return fmt.Errorf("Failed to find [%s] Certificate or Key", certName)
 		}
 	}
-	etcdHosts := hosts.NodesToHosts(rkeConfig.Nodes, etcdRole)
+	etcdHosts := hosts.NodesToHosts(zkeConfig.Nodes, etcdRole)
 	for _, host := range etcdHosts {
 		etcdName := GetEtcdCrtName(host.InternalAddress)
 		if certBundle[etcdName].Certificate == nil || certBundle[etcdName].Key == nil {
@@ -696,13 +696,13 @@ func ValidateBundleContent(rkeConfig *types.ZcloudKubernetesEngineConfig, certBu
 		}
 	}
 	// Configure kubeconfig
-	cpHosts := hosts.NodesToHosts(rkeConfig.Nodes, controlRole)
+	cpHosts := hosts.NodesToHosts(zkeConfig.Nodes, controlRole)
 	localKubeConfigPath := GetLocalKubeConfig(configPath, configDir)
 	if len(cpHosts) > 0 {
 		kubeAdminCertObj := certBundle[KubeAdminCertName]
 		kubeAdminConfig := GetKubeConfigX509WithData(
 			"https://"+cpHosts[0].Address+":6443",
-			rkeConfig.ClusterName,
+			zkeConfig.ClusterName,
 			KubeAdminCertName,
 			string(cert.EncodeCertPEM(certBundle[CACertName].Certificate)),
 			string(cert.EncodeCertPEM(certBundle[KubeAdminCertName].Certificate)),
@@ -711,10 +711,10 @@ func ValidateBundleContent(rkeConfig *types.ZcloudKubernetesEngineConfig, certBu
 		kubeAdminCertObj.ConfigPath = localKubeConfigPath
 		certBundle[KubeAdminCertName] = kubeAdminCertObj
 	}
-	return validateCAIssuer(rkeConfig, certBundle)
+	return validateCAIssuer(zkeConfig, certBundle)
 }
 
-func validateCAIssuer(rkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI) error {
+func validateCAIssuer(zkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI) error {
 	// make sure all certs are signed by CA cert
 	caCert := certBundle[CACertName].Certificate
 	ComponentsCerts := []string{
@@ -725,7 +725,7 @@ func validateCAIssuer(rkeConfig *types.ZcloudKubernetesEngineConfig, certBundle 
 		KubeNodeCertName,
 		KubeAdminCertName,
 	}
-	etcdHosts := hosts.NodesToHosts(rkeConfig.Nodes, etcdRole)
+	etcdHosts := hosts.NodesToHosts(zkeConfig.Nodes, etcdRole)
 	for _, host := range etcdHosts {
 		etcdName := GetEtcdCrtName(host.InternalAddress)
 		ComponentsCerts = append(ComponentsCerts, etcdName)

@@ -16,7 +16,7 @@ const (
 )
 
 func TestPKI(t *testing.T) {
-	rkeConfig := types.ZcloudKubernetesEngineConfig{
+	zkeConfig := types.ZcloudKubernetesEngineConfig{
 		Nodes: []types.ZKEConfigNode{
 			types.ZKEConfigNode{
 				Address:          "1.1.1.1",
@@ -34,7 +34,7 @@ func TestPKI(t *testing.T) {
 			},
 		},
 	}
-	certificateMap, err := GenerateRKECerts(context.Background(), rkeConfig, "", "")
+	certificateMap, err := GenerateZKECerts(context.Background(), zkeConfig, "", "")
 	if err != nil {
 		t.Fatalf("Failed To generate certificates: %v", err)
 	}
@@ -84,8 +84,8 @@ func TestPKI(t *testing.T) {
 	// Test ALT IPs
 	kubeAPIAltIPs := []net.IP{
 		net.ParseIP("127.0.0.1"),
-		net.ParseIP(rkeConfig.Nodes[0].InternalAddress),
-		net.ParseIP(rkeConfig.Nodes[0].Address),
+		net.ParseIP(zkeConfig.Nodes[0].InternalAddress),
+		net.ParseIP(zkeConfig.Nodes[0].Address),
 		kubernetesServiceIP,
 	}
 

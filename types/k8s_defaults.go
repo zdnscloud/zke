@@ -22,7 +22,7 @@ var (
 		"v1.13.1",
 	}
 
-	// K8sVersionToRKESystemImages is dynamically populated on init() with the latest versions
+	// K8sVersionToZKESystemImages is dynamically populated on init() with the latest versions
 	K8sVersionToZKESystemImages map[string]ZKESystemImages
 
 	// K8sVersionServiceOptions - service options per k8s version
@@ -76,7 +76,7 @@ var (
 
 func init() {
 	if K8sVersionToZKESystemImages != nil {
-		panic("Do not initialize or add values to K8sVersionToRKESystemImages")
+		panic("Do not initialize or add values to K8sVersionToZKESystemImages")
 	}
 
 	K8sVersionToZKESystemImages = map[string]ZKESystemImages{}

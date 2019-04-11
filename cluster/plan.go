@@ -25,15 +25,15 @@ import (
 
 const (
 	EtcdPathPrefix     = "/registry"
-	ContainerNameLabel = "io.rancher.rke.container.name"
-	CloudConfigSumEnv  = "RKE_CLOUD_CONFIG_CHECKSUM"
+	ContainerNameLabel = "zdnscloud.cn.zke.container.name"
+	CloudConfigSumEnv  = "ZKE_CLOUD_CONFIG_CHECKSUM"
 
 	DefaultToolsEntrypoint        = "/opt/rke-tools/entrypoint.sh"
 	DefaultToolsEntrypointVersion = "0.1.13"
 	LegacyToolsEntrypoint         = "/opt/rke/entrypoint.sh"
 
-	KubeletDockerConfigEnv     = "RKE_KUBELET_DOCKER_CONFIG"
-	KubeletDockerConfigFileEnv = "RKE_KUBELET_DOCKER_FILE"
+	KubeletDockerConfigEnv     = "ZKE_KUBELET_DOCKER_CONFIG"
+	KubeletDockerConfigFileEnv = "ZKE_KUBELET_DOCKER_FILE"
 	KubeletDockerConfigPath    = "/var/lib/kubelet/config.json"
 )
 
@@ -55,7 +55,7 @@ func GeneratePlan(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCo
 }
 
 func BuildZKEConfigNodePlan(ctx context.Context, myCluster *Cluster, host *hosts.Host, hostDockerInfo dockertypes.Info) types.ZKEConfigNodePlan {
-	prefixPath := hosts.GetPrefixPath(hostDockerInfo.OperatingSystem, myCluster.PrefixPath)
+	prefixPath := myCluster.PrefixPath
 	processes := map[string]types.Process{}
 	portChecks := []types.PortCheck{}
 	// Everybody gets a sidecar and a kubelet..
@@ -114,7 +114,7 @@ func (c *Cluster) BuildKubeAPIProcess(host *hosts.Host, prefixPath string) types
 	}
 
 	Command := []string{
-		c.getRKEToolsEntryPoint(),
+		c.getZKEToolsEntryPoint(),
 		"kube-apiserver",
 	}
 	baseEnabledAdmissionPlugins := []string{
@@ -276,7 +276,7 @@ func (c *Cluster) BuildKubeAPIProcess(host *hosts.Host, prefixPath string) types
 
 func (c *Cluster) BuildKubeControllerProcess(prefixPath string) types.Process {
 	Command := []string{
-		c.getRKEToolsEntryPoint(),
+		c.getZKEToolsEntryPoint(),
 		"kube-controller-manager",
 	}
 
@@ -363,7 +363,7 @@ func (c *Cluster) BuildKubeControllerProcess(prefixPath string) types.Process {
 func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) types.Process {
 
 	Command := []string{
-		c.getRKEToolsEntryPoint(),
+		c.getZKEToolsEntryPoint(),
 		"kubelet",
 	}
 
@@ -435,7 +435,7 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) types
 		"/sys:/sys:rprivate",
 		host.DockerInfo.DockerRootDir + ":" + host.DockerInfo.DockerRootDir + ":rw,rslave,z",
 		fmt.Sprintf("%s:%s:shared,z", path.Join(prefixPath, "/var/lib/kubelet"), path.Join(prefixPath, "/var/lib/kubelet")),
-		"/var/lib/rancher:/var/lib/rancher:shared,z",
+		"/var/lib/zdnscloud:/var/lib/zdnscloud:shared,z",
 		"/var/run:/var/run:rw,rprivate",
 		"/run:/run:rprivate",
 		fmt.Sprintf("%s:/etc/ceph", path.Join(prefixPath, "/etc/ceph")),
@@ -489,7 +489,7 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) types
 
 func (c *Cluster) BuildKubeProxyProcess(host *hosts.Host, prefixPath string) types.Process {
 	Command := []string{
-		c.getRKEToolsEntryPoint(),
+		c.getZKEToolsEntryPoint(),
 		"kube-proxy",
 	}
 
@@ -586,7 +586,7 @@ func (c *Cluster) BuildProxyProcess() types.Process {
 
 func (c *Cluster) BuildSchedulerProcess(prefixPath string) types.Process {
 	Command := []string{
-		c.getRKEToolsEntryPoint(),
+		c.getZKEToolsEntryPoint(),
 		"kube-scheduler",
 	}
 
@@ -813,7 +813,7 @@ func getUniqStringList(l []string) []string {
 	return ul
 }
 
-func (c *Cluster) getRKEToolsEntryPoint() string {
+func (c *Cluster) getZKEToolsEntryPoint() string {
 	v := strings.Split(c.SystemImages.KubernetesServicesSidecar, ":")
 	last := v[len(v)-1]
 

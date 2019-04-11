@@ -268,7 +268,7 @@ func (c *Cluster) setClusterNetworkDefaults() {
 		c.Network.Options = make(map[string]string)
 	}
 	networkPluginConfigDefaultsMap := make(map[string]string)
-	// This is still needed because ZKE doesn't use c.Network.*NetworkProvider, that's a rancher type
+	// This is still needed because ZKE doesn't use c.Network.*NetworkProvider
 	switch c.Network.Plugin {
 	case CalicoNetworkPlugin:
 		networkPluginConfigDefaultsMap = map[string]string{

@@ -328,7 +328,6 @@ func (c *Cluster) deployAddons(ctx context.Context) error {
 }
 
 func (c *Cluster) SyncLabelsAndTaints(ctx context.Context, currentCluster *Cluster) error {
-	// Handle issue when deleting all controlplane nodes https://github.com/rancher/rancher/issues/15810
 	if currentCluster != nil {
 		cpToDelete := hosts.GetToDeleteHosts(currentCluster.ControlPlaneHosts, c.ControlPlaneHosts, c.InactiveHosts)
 		if len(cpToDelete) == len(currentCluster.ControlPlaneHosts) {

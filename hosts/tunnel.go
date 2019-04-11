@@ -40,7 +40,7 @@ func (h *Host) TunnelUp(ctx context.Context, dialerFactory DialerFactory, cluste
 	if err := checkDockerVersion(ctx, h, clusterVersion); err != nil {
 		return err
 	}
-	h.PrefixPath = GetPrefixPath(h.DockerInfo.OperatingSystem, clusterPrefixPath)
+	h.PrefixPath = clusterPrefixPath
 	return nil
 }
 

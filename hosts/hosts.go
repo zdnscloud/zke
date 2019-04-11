@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"strings"
 
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -49,15 +48,8 @@ const (
 	ToCleanCalicoRun        = "/var/run/calico/"
 	ToCleanTempCertPath     = "/etc/kubernetes/.tmp/"
 	CleanerContainerName    = "kube-cleaner"
-	LogCleanerContainerName = "rke-log-cleaner"
-	RKELogsPath             = "/var/lib/rancher/rke/log"
-
-	B2DOS            = "Boot2Docker"
-	B2DPrefixPath    = "/mnt/sda1/rke"
-	ROS              = "RancherOS"
-	ROSPrefixPath    = "/opt/rke"
-	CoreOS           = "CoreOS"
-	CoreOSPrefixPath = "/opt/rke"
+	LogCleanerContainerName = "zke-log-cleaner"
+	ZKELogsPath             = "/var/lib/zdnscloud/zke/log"
 )
 
 func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
@@ -266,9 +258,9 @@ func buildCleanerConfig(host *Host, toCleanDirs []string, cleanerImage string) (
 	return imageCfg, hostCfg
 }
 
-func NodesToHosts(rkeNodes []types.ZKEConfigNode, nodeRole string) []*Host {
+func NodesToHosts(zkeNodes []types.ZKEConfigNode, nodeRole string) []*Host {
 	hostList := make([]*Host, 0)
-	for _, node := range rkeNodes {
+	for _, node := range zkeNodes {
 		for _, role := range node.Role {
 			if role == nodeRole {
 				newHost := Host{
@@ -299,23 +291,6 @@ func GetUniqueHostList(etcdHosts, cpHosts, workerHosts []*Host) []*Host {
 	return uniqHostList
 }
 
-func GetPrefixPath(osType, ClusterPrefixPath string) string {
-	var prefixPath string
-	switch {
-	case ClusterPrefixPath != "/":
-		prefixPath = ClusterPrefixPath
-	case strings.Contains(osType, B2DOS):
-		prefixPath = B2DPrefixPath
-	case strings.Contains(osType, ROS):
-		prefixPath = ROSPrefixPath
-	case strings.Contains(osType, CoreOS):
-		prefixPath = CoreOSPrefixPath
-	default:
-		prefixPath = ClusterPrefixPath
-	}
-	return prefixPath
-}
-
 func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap map[string]types.PrivateRegistry) error {
 	logrus.Debugf("[cleanup] Starting log link cleanup on host [%s]", host.Address)
 	imageCfg := &container.Config{
@@ -324,7 +299,7 @@ func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap
 		Cmd: []string{
 			"sh",
 			"-c",
-			fmt.Sprintf("find %s -type l ! -exec test -e {} \\; -print -delete", RKELogsPath),
+			fmt.Sprintf("find %s -type l ! -exec test -e {} \\; -print -delete", ZKELogsPath),
 		},
 	}
 	hostCfg := &container.HostConfig{

@@ -7,8 +7,8 @@ import (
 
 var VersionedTemplate = map[string]map[string]string{
 	"calico": map[string]string{
-		"v1.13.1-rancher1-1": CalicoTemplateV113,
-		"default":            CalicoTemplateV112,
+		"v1.13.1": CalicoTemplateV113,
+		"default": CalicoTemplateV112,
 	},
 }
 
