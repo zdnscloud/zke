@@ -248,8 +248,6 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	}
 	if isStorageHost == "y" || isStorageHost == "Y" {
 		host.Labels[Storage] = "true"
-	} else {
-		host.Labels[Storage] = "false"
 	}
 	isNetBorderHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Edge host (y/n)?", address), "y")
 	if err != nil {
@@ -258,9 +256,7 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if len(host.Labels) == 0 {
 		host.Labels = make(map[string]string)
 	}
-	if isNetBorderHost == "n" || isNetBorderHost == "N" {
-		host.Labels[Edge] = "false"
-	} else {
+	if isNetBorderHost == "y" || isNetBorderHost == "Y" {
 		host.Labels[Edge] = "true"
 	}
 	hostnameOverride, err := getConfig(reader, fmt.Sprintf("Override Hostname of host (%s)", address), "")
