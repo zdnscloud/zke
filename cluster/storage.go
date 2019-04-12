@@ -15,6 +15,8 @@ const (
 	LVMList                = "LVMList"
 	Host                   = "Host"
 	Devs                   = "Devs"
+	Storage                = "node-role.kubernetes.io/storage"
+	NodeSelector           = "NodeSelector"
 
 	StorageCSIAttacherImage     = "StorageCSIAttacherImage"
 	StorageCSIProvisionerImage  = "StorageCSIProvisionerImage"
@@ -23,15 +25,17 @@ const (
 	StorageLvmdImage            = "StorageLvmdImage"
 )
 
-func (c *Cluster) deployStorageClass(ctx context.Context) error {
-	if err := c.doLVMStorageclassDeploy(ctx); err != nil {
-		return err
+func (c *Cluster) deployStoragePlugin(ctx context.Context) error {
+	if len(c.Storage.Lvm) > 0 {
+		if err := c.doLVMStorageDeploy(ctx); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (c *Cluster) doLVMStorageclassDeploy(ctx context.Context) error {
-	log.Infof(ctx, "[storage] Setting up StorageClass: %s", LVMStorageClassName)
+func (c *Cluster) doLVMStorageDeploy(ctx context.Context) error {
+	log.Infof(ctx, "[storage] Setting up StoragePlugin : %s", LVMStorageClassName)
 	var arr = make([]map[string]string, 0)
 	for _, v := range c.Storage.Lvm {
 		var m = make(map[string]string)
@@ -39,7 +43,7 @@ func (c *Cluster) doLVMStorageclassDeploy(ctx context.Context) error {
 		m[Devs] = strings.Replace(strings.Trim(fmt.Sprint(v.Devs), "[]"), " ", " ", -1)
 		arr = append(arr, m)
 	}
-	lvmstorageClassConfig := map[string]interface{}{
+	lvmstorageConfig := map[string]interface{}{
 		RBACConfig:                  c.Authorization.Mode,
 		StorageCSIAttacherImage:     c.SystemImages.StorageCSIAttacher,
 		StorageCSIProvisionerImage:  c.SystemImages.StorageCSIProvisioner,
@@ -47,8 +51,9 @@ func (c *Cluster) doLVMStorageclassDeploy(ctx context.Context) error {
 		StorageCSILvmpluginImage:    c.SystemImages.StorageCSILvmplugin,
 		StorageLvmdImage:            c.SystemImages.StorageLvmd,
 		LVMList:                     arr,
+		NodeSelector:                Storage,
 	}
-	storageYaml, err := templates.GetManifest(lvmstorageClassConfig, LVMResourceName)
+	storageYaml, err := templates.GetManifest(lvmstorageConfig, LVMResourceName)
 	if err != nil {
 		return err
 	}

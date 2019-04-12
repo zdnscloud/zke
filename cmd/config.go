@@ -29,8 +29,8 @@ const (
 	DefaultClusterSSHPort        = "22"
 	DefaultClusterSSHUser        = "ubuntu"
 	DefaultClusterDockerSockPath = "/var/run/docker.sock"
-	Storage                      = "storage"
-	NetBorder                    = "netborder"
+	Storage                      = "node-role.kubernetes.io/storage"
+	Edge                         = "node-role.kubernetes.io/edge"
 )
 
 type clusterCommonCfg struct {
@@ -243,21 +243,25 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if err != nil {
 		return nil, err
 	}
-	if isStorageHost == "y" || isStorageHost == "Y" {
-		if len(host.Labels) == 0 {
-			host.Labels = make(map[string]string)
-		}
-		host.Labels[Storage] = "true"
+	if len(host.Labels) == 0 {
+		host.Labels = make(map[string]string)
 	}
-	isNetBorderHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Network Border (y/n)?", address), "n")
+	if isStorageHost == "y" || isStorageHost == "Y" {
+		host.Labels[Storage] = "true"
+	} else {
+		host.Labels[Storage] = "false"
+	}
+	isNetBorderHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Edge host (y/n)?", address), "y")
 	if err != nil {
 		return nil, err
 	}
-	if isNetBorderHost == "y" || isNetBorderHost == "Y" {
-		if len(host.Labels) == 0 {
-			host.Labels = make(map[string]string)
-		}
-		host.Labels[NetBorder] = "true"
+	if len(host.Labels) == 0 {
+		host.Labels = make(map[string]string)
+	}
+	if isNetBorderHost == "n" || isNetBorderHost == "N" {
+		host.Labels[Edge] = "false"
+	} else {
+		host.Labels[Edge] = "true"
 	}
 	hostnameOverride, err := getConfig(reader, fmt.Sprintf("Override Hostname of host (%s)", address), "")
 	if err != nil {
@@ -380,8 +384,8 @@ func getIngressConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 	ingressCfg.NodeSelector = make(map[string]string)
 	for _, n := range nodes {
 		for k, v := range n.Labels {
-			if k == "netborder" && v == "true" {
-				ingressCfg.NodeSelector[NetBorder] = v
+			if k == Edge && v == "true" {
+				ingressCfg.NodeSelector[Edge] = v
 			}
 		}
 	}
@@ -395,7 +399,7 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 	}
 	for _, n := range nodes {
 		for k, v := range n.Labels {
-			if k == "storage" && v == "true" {
+			if k == Storage && v == "true" {
 				lvmConfig := types.Lvmconf{}
 				if n.HostnameOverride != "" {
 					lvmConfig.Host = n.HostnameOverride

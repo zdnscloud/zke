@@ -4,14 +4,14 @@ const LVMStorageTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: ike
+  name: storage
 {{range .LVMList}}
 ---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: csi-lvmd-{{.Host}}
-  namespace: ike
+  namespace: storage
 spec:
   selector:
     matchLabels:
@@ -53,13 +53,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: csi-attacher
-  namespace: ike
+  namespace: storage
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: external-attacher-runner
-  namespace: ike
+  namespace: storage
 rules:
   - apiGroups: [""]
     resources: ["events"]
@@ -84,11 +84,11 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: csi-attacher-role
-  namespace: ike
+  namespace: storage
 subjects:
   - kind: ServiceAccount
     name: csi-attacher
-    namespace: ike
+    namespace: storage
 roleRef:
   kind: ClusterRole
   name: external-attacher-runner
@@ -98,7 +98,7 @@ roleRef:
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-attacher
   labels:
     app: csi-attacher
@@ -112,7 +112,7 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1beta1
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-attacher
 spec:
   serviceName: "csi-attacher"
@@ -122,17 +122,9 @@ spec:
       labels:
         app: csi-attacher
     spec:
+      nodeSelector: 
+        {{.NodeSelector}}: "true"
       serviceAccount: csi-attacher
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-              - key: storage
-                operator: In
-                values:
-                - "true"
       containers:
         - name: csi-attacher
           image: {{.StorageCSIAttacherImage}}
@@ -157,12 +149,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: csi-provisioner
-  namespace: ike
+  namespace: storage
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: ike
+  namespace: storage
   name: external-provisioner-runner
 rules:
   - apiGroups: [""]
@@ -193,12 +185,12 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-provisioner-role
 subjects:
   - kind: ServiceAccount
     name: csi-provisioner
-    namespace: ike
+    namespace: storage
 roleRef:
   kind: ClusterRole
   name: external-provisioner-runner
@@ -208,7 +200,7 @@ roleRef:
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-provisioner
   labels:
     app: csi-provisioner
@@ -223,7 +215,7 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1beta1
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-provisioner
 spec:
   serviceName: "csi-provisioner"
@@ -233,22 +225,14 @@ spec:
       labels:
         app: csi-provisioner
     spec:
+      nodeSelector: 
+        {{.NodeSelector}}: "true"
       serviceAccount: csi-provisioner
       tolerations:
       - key: "node-role.kubernetes.io/master"
         operator: "Equal"
         value: ""
         effect: "NoSchedule"
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
-              - key: storage
-                operator: In
-                values:
-                - "true"
       containers:
         - name: csi-provisioner
           image: {{.StorageCSIProvisionerImage}}
@@ -275,12 +259,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: csi-lvmplugin
-  namespace: ike
+  namespace: storage
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-lvmplugin
 rules:
   - apiGroups: [""]
@@ -305,12 +289,12 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-lvmplugin
 subjects:
   - kind: ServiceAccount
     name: csi-lvmplugin
-    namespace: ike
+    namespace: storage
 roleRef:
   kind: ClusterRole
   name: csi-lvmplugin
@@ -320,7 +304,7 @@ roleRef:
 kind: DaemonSet
 apiVersion: apps/v1beta2
 metadata:
-  namespace: ike
+  namespace: storage
   name: csi-lvmplugin
 spec:
   selector:
@@ -332,7 +316,7 @@ spec:
         app: csi-lvmplugin
     spec:
       nodeSelector: 
-        storage: "true"
+        {{.NodeSelector}}: "true"
       serviceAccount: csi-lvmplugin
       hostNetwork: true
       containers:
@@ -424,5 +408,4 @@ metadata:
     storageclass.kubernetes.io/is-default-class: "true"
   name: lvm
 provisioner: csi-lvmplugin
-volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Delete`
