@@ -682,6 +682,7 @@ func (in *ZcloudKubernetesEngineConfig) DeepCopyInto(out *ZcloudKubernetesEngine
 	}
 	in.Services.DeepCopyInto(&out.Services)
 	in.Network.DeepCopyInto(&out.Network)
+	in.Storage.DeepCopyInto(&out.Storage)
 	in.Authentication.DeepCopyInto(&out.Authentication)
 	if in.AddonsInclude != nil {
 		in, out := &in.AddonsInclude, &out.AddonsInclude
@@ -766,6 +767,47 @@ func (in *MonitoringConfig) DeepCopy() *MonitoringConfig {
 		return nil
 	}
 	out := new(MonitoringConfig)
+	in.DeepCopyInto(out)
+	return out
+}
+
+//
+func (in *StorageConfig) DeepCopyInto(out *StorageConfig) {
+	*out = *in
+	if in.Lvm != nil {
+		in, out := &in.Lvm, &out.Lvm
+		*out = make([]Lvmconf, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	return
+}
+
+func (in *StorageConfig) DeepCopy() *StorageConfig {
+	if in == nil {
+		return nil
+	}
+	out := new(StorageConfig)
+	in.DeepCopyInto(out)
+	return out
+}
+
+func (in *Lvmconf) DeepCopyInto(out *Lvmconf) {
+	*out = *in
+	if in.Devs != nil {
+		in, out := &in.Devs, &out.Devs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	return
+}
+
+func (in *Lvmconf) DeepCopy() *Lvmconf {
+	if in == nil {
+		return nil
+	}
+	out := new(Lvmconf)
 	in.DeepCopyInto(out)
 	return out
 }

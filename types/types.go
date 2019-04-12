@@ -7,6 +7,8 @@ type ZcloudKubernetesEngineConfig struct {
 	Services ZKEConfigServices `yaml:"services" json:"services,omitempty"`
 	// Network configuration used in the kubernetes cluster (flannel, calico)
 	Network NetworkConfig `yaml:"network" json:"network,omitempty"`
+	// Storage configuration used in the kubernetes cluster (lvm)
+	Storage StorageConfig `yaml:"storage" json:"storage,omitempty"`
 	// Authentication configuration used in the cluster (default: x509)
 	Authentication AuthnConfig `yaml:"authentication" json:"authentication,omitempty"`
 	// YAML manifest for user provided addons to be deployed on the cluster
@@ -119,6 +121,16 @@ type ZKESystemImages struct {
 	IngressBackend string `yaml:"ingress_backend" json:"ingressBackend,omitempty"`
 	// Metrics Server image
 	MetricsServer string `yaml:"metrics_server" json:"metricsServer,omitempty"`
+	// Storage csi-attacher image
+	StorageCSIAttacher string `yaml:"storage_csi_attacher" json:"storage_csi_attacher,omitempty"`
+	// Storage csi-provisioner image
+	StorageCSIProvisioner string `yaml:"storage_csi_provisioner" json:"storage_csi_provisioner,omitempty"`
+	// Storage driver-registrar image
+	StorageDriverRegistrar string `yaml:"storage_driver_registrar" json:"storage_driver_registrar,omitempty"`
+	// Storage csi-lvmplugin image
+	StorageCSILvmplugin string `yaml:"storage_csi_lvmplugin" json:"storage_csi_lvmplugin,omitempty"`
+	// Storage lvmd image
+	StorageLvmd string `yaml:"storage_lvmd" json:"storage_lvmd,omitempty"`
 }
 
 type ZKEConfigNode struct {
@@ -255,6 +267,16 @@ type NetworkConfig struct {
 	CalicoNetworkProvider *CalicoNetworkProvider `yaml:",omitempty" json:"calicoNetworkProvider,omitempty"`
 	// FlannelNetworkProvider
 	FlannelNetworkProvider *FlannelNetworkProvider `yaml:",omitempty" json:"flannelNetworkProvider,omitempty"`
+}
+
+type StorageConfig struct {
+	Lvm []Lvmconf `yaml:"lvm" json:lvm,omitempty`
+	//NFS NFSconf `yaml:"nfs" json:nfs,omitempty`
+}
+
+type Lvmconf struct {
+	Host string   `yaml:"host" json:"host,omitempty"`
+	Devs []string `yaml:"devs" json:"devs,omitempty"`
 }
 
 type AuthWebhookConfig struct {

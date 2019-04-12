@@ -41,6 +41,8 @@ const (
 
 	DefaultDNSProvider = "coredns"
 
+	DefaultStorageclass = "lvm"
+
 	DefaultIngressController             = "nginx"
 	DefaultEtcdBackupCreationPeriod      = "12h"
 	DefaultEtcdBackupRetentionPeriod     = "72h"
@@ -251,6 +253,11 @@ func (c *Cluster) setClusterImageDefaults() error {
 		&c.SystemImages.Ingress:                   d(imageDefaults.Ingress, privRegURL),
 		&c.SystemImages.IngressBackend:            d(imageDefaults.IngressBackend, privRegURL),
 		&c.SystemImages.MetricsServer:             d(imageDefaults.MetricsServer, privRegURL),
+		&c.SystemImages.StorageCSIAttacher:        d(imageDefaults.StorageCSIAttacher, privRegURL),
+		&c.SystemImages.StorageCSIProvisioner:     d(imageDefaults.StorageCSIProvisioner, privRegURL),
+		&c.SystemImages.StorageDriverRegistrar:    d(imageDefaults.StorageDriverRegistrar, privRegURL),
+		&c.SystemImages.StorageCSILvmplugin:       d(imageDefaults.StorageCSILvmplugin, privRegURL),
+		&c.SystemImages.StorageLvmd:               d(imageDefaults.StorageLvmd, privRegURL),
 	}
 
 	for k, v := range systemImagesDefaultsMap {
