@@ -5,48 +5,6 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: storage
-{{range .LVMList}}
----
-kind: Deployment
-apiVersion: apps/v1
-metadata:
-  name: csi-lvmd-{{.Host}}
-  namespace: storage
-spec:
-  selector:
-    matchLabels:
-      app: csi-lvmd-{{.Host}}
-  template:
-    metadata:
-      labels:
-        app: csi-lvmd-{{.Host}}
-    spec:
-      nodeName: "{{.Host}}"
-      hostNetwork: true
-      containers:
-      - name: lvmd
-        image: {{$.StorageLvmdImage}}
-        command: ["/lvmd.sh"]
-        env:
-          - name: MOUNT_PATH
-            value: "/host/dev"
-          - name: VG_NAME
-            value: "k8s"
-          - name: DEVICE
-            value: "{{.Devs}}"
-        securityContext:
-          privileged: true
-          capabilities:
-            add: ["SYS_ADMIN"]
-          allowPrivilegeEscalation: true
-        volumeMounts:
-          - mountPath: /host/dev
-            name: host-dev
-      volumes:
-        - name: host-dev
-          hostPath:
-            path: /dev
-{{end}}
 {{- if eq .RBACConfig "rbac"}}
 ---
 apiVersion: v1
@@ -93,57 +51,6 @@ roleRef:
   kind: ClusterRole
   name: external-attacher-runner
   apiGroup: rbac.authorization.k8s.io
-{{- end}}
----
-kind: Service
-apiVersion: v1
-metadata:
-  namespace: storage
-  name: csi-attacher
-  labels:
-    app: csi-attacher
-spec:
-  selector:
-    app: csi-attacher
-  ports:
-    - name: dummy
-      port: 12345
----
-kind: StatefulSet
-apiVersion: apps/v1beta1
-metadata:
-  namespace: storage
-  name: csi-attacher
-spec:
-  serviceName: "csi-attacher"
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: csi-attacher
-    spec:
-      nodeSelector: 
-        {{.NodeSelector}}: "true"
-      serviceAccount: csi-attacher
-      containers:
-        - name: csi-attacher
-          image: {{.StorageCSIAttacherImage}}
-          args:
-            - "--v=5"
-            - "--csi-address=$(ADDRESS)"
-          env:
-            - name: ADDRESS
-              value: /var/lib/kubelet/plugins/csi-lvmplugin/csi.sock
-          imagePullPolicy: "IfNotPresent"
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /var/lib/kubelet/plugins/csi-lvmplugin
-      volumes:
-        - name: socket-dir
-          hostPath:
-            path: /var/lib/kubelet/plugins/csi-lvmplugin
-            type: DirectoryOrCreate
-{{- if eq .RBACConfig "rbac"}}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -162,7 +69,7 @@ rules:
     verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["nodes"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["persistentvolumes"]
     verbs: ["get", "list", "watch", "create", "delete"]
@@ -195,65 +102,6 @@ roleRef:
   kind: ClusterRole
   name: external-provisioner-runner
   apiGroup: rbac.authorization.k8s.io
-{{- end}}
----
-kind: Service
-apiVersion: v1
-metadata:
-  namespace: storage
-  name: csi-provisioner
-  labels:
-    app: csi-provisioner
-spec:
-  selector:
-    app: csi-provisioner
-  ports:
-    - name: dummy
-      port: 12345
-
----
-kind: StatefulSet
-apiVersion: apps/v1beta1
-metadata:
-  namespace: storage
-  name: csi-provisioner
-spec:
-  serviceName: "csi-provisioner"
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: csi-provisioner
-    spec:
-      nodeSelector: 
-        {{.NodeSelector}}: "true"
-      serviceAccount: csi-provisioner
-      tolerations:
-      - key: "node-role.kubernetes.io/master"
-        operator: "Equal"
-        value: ""
-        effect: "NoSchedule"
-      containers:
-        - name: csi-provisioner
-          image: {{.StorageCSIProvisionerImage}}
-          args:
-            - "--provisioner=csi-lvmplugin"
-            - "--csi-address=$(ADDRESS)"
-            - "--v=50"
-            - "--logtostderr"
-          env:
-            - name: ADDRESS
-              value: /var/lib/kubelet/plugins/csi-lvmplugin/csi.sock
-          imagePullPolicy: "IfNotPresent"
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /var/lib/kubelet/plugins/csi-lvmplugin
-      volumes:
-        - name: socket-dir
-          hostPath:
-            path: /var/lib/kubelet/plugins/csi-lvmplugin
-            type: DirectoryOrCreate
-{{- if eq .RBACConfig "rbac"}}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -269,7 +117,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
-    verbs: ["get", "list", "update"]
+    verbs: ["get", "list", "update", "watch"]
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list"]
@@ -298,11 +146,53 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: csi-lvmplugin
-  apiGroup: rbac.authorization.k8s.io          
+  apiGroup: rbac.authorization.k8s.io  
 {{- end}}
+{{range .LVMList}}
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: csi-lvmd-{{.Host}}
+  namespace: storage
+spec:
+  selector:
+    matchLabels:
+      app: csi-lvmd-{{.Host}}
+  template:
+    metadata:
+      labels:
+        app: csi-lvmd-{{.Host}}
+    spec:
+      nodeName: "{{.Host}}"
+      hostNetwork: true
+      containers:
+      - name: lvmd
+        image: {{$.StorageLvmdImage}}
+        command: ["/lvmd.sh"]
+        env:
+          - name: MOUNT_PATH
+            value: "/host/dev"
+          - name: VG_NAME
+            value: "k8s"
+          - name: DEVICE
+            value: "{{.Devs}}"
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["SYS_ADMIN"]
+          allowPrivilegeEscalation: true
+        volumeMounts:
+          - mountPath: /host/dev
+            name: host-dev
+      volumes:
+        - name: host-dev
+          hostPath:
+            path: /dev
+{{end}}
 ---
 kind: DaemonSet
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 metadata:
   namespace: storage
   name: csi-lvmplugin
@@ -325,19 +215,19 @@ spec:
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
-            - "--kubelet-registration-path=/var/lib/kubelet/plugins/csi-lvmplugin/csi.sock"
+            - "--kubelet-registration-path=/var/lib/kubelet/plugins/csi-lvm/csi.sock"
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /registration/ /csi/"]
           env:
             - name: ADDRESS
-              value: /var/lib/kubelet/plugins/csi-lvmplugin/csi.sock
-            - name: KUBE_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
+              value: /csi/csi.sock
           volumeMounts:
-            - name: socket-dir
-              mountPath: /var/lib/kubelet/plugins/csi-lvmplugin
+            - name: plugin-dir
+              mountPath: /csi
             - name: registration-dir
-              mountPath: /registration/
+              mountPath: /registration
         - name: csi-lvmplugin 
           securityContext:
             privileged: true
@@ -359,11 +249,11 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
-              value: unix://var/lib/kubelet/plugins/csi-lvmplugin/csi.sock
+              value: unix://csi/csi.sock
           imagePullPolicy: "IfNotPresent"
           volumeMounts:
             - name: plugin-dir
-              mountPath: /var/lib/kubelet/plugins/csi-lvmplugin
+              mountPath: /csi
             - name: pods-mount-dir
               mountPath: /var/lib/kubelet/pods
               mountPropagation: "Bidirectional"
@@ -377,19 +267,15 @@ spec:
       volumes:
         - name: registration-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/
-            type: DirectoryOrCreate
-        - name: plugin-dir
-          hostPath:
-            path: /var/lib/kubelet/plugins/csi-lvmplugin
+            path: /var/lib/kubelet/plugins_registry/
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
             path: /var/lib/kubelet/pods
             type: Directory
-        - name: socket-dir
+        - name: plugin-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/csi-lvmplugin
+            path: /var/lib/kubelet/plugins/csi-lvm/
             type: DirectoryOrCreate
         - name: host-dev
           hostPath:
@@ -400,6 +286,115 @@ spec:
         - name: lib-modules
           hostPath:
             path: /lib/modules
+---
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: storage
+  name: csi-attacher
+  labels:
+    app: csi-attacher
+spec:
+  selector:
+    app: csi-attacher
+  ports:
+    - name: dummy
+      port: 12345
+---
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  namespace: storage
+  name: csi-attacher
+spec:
+  serviceName: "csi-attacher"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-attacher
+  template:
+    metadata:
+      labels:
+        app: csi-attacher
+    spec:
+      nodeSelector: 
+        {{.NodeSelector}}: "true"
+      serviceAccount: csi-attacher
+      hostNetwork: true
+      containers:
+        - name: csi-attacher
+          image: {{.StorageCSIAttacherImage}}
+          args:
+            - "--v=5"
+            - "--csi-address=$(ADDRESS)"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+      volumes:
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-lvm
+            type: DirectoryOrCreate
+---
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: storage
+  name: csi-provisioner
+  labels:
+    app: csi-provisioner
+spec:
+  selector:
+    app: csi-provisioner
+  ports:
+    - name: dummy
+      port: 12345
+
+---
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  namespace: storage
+  name: csi-provisioner
+spec:
+  serviceName: "csi-provisioner"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-provisioner
+  template:
+    metadata:
+      labels:
+        app: csi-provisioner
+    spec:
+      nodeSelector: 
+        {{.NodeSelector}}: "true"
+      serviceAccount: csi-provisioner
+      hostNetwork: true
+      containers:
+        - name: csi-provisioner
+          image: {{.StorageCSIProvisionerImage}}
+          args:
+            - "--provisioner=csi-lvmplugin"
+            - "--csi-address=$(ADDRESS)"
+            - "--v=50"
+            - "--logtostderr"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+      volumes:
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-lvm
+            type: DirectoryOrCreate
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
