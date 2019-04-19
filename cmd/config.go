@@ -411,6 +411,13 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 			}
 		}
 	}
+	nfssize, err := getConfig(reader, fmt.Sprintf("Network storage NFS service disk capacity(G)"), "")
+	if err != nil {
+		return nil, err
+	}
+	size, err := strconv.Atoi(nfssize)
+	storageCfg.NFS.Size = size
+
 	return &storageCfg, nil
 }
 

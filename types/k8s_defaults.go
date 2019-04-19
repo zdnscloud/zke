@@ -73,8 +73,9 @@ var (
 			StorageCSIAttacher:        m("quay.io/k8scsi/csi-attacher:v1.0.0"),
 			StorageCSIProvisioner:     m("zdnscloud/csi-provisioner:v1.0.0"),
 			StorageDriverRegistrar:    m("quay.io/k8scsi/csi-node-driver-registrar:v1.0.2"),
-			StorageCSILvmplugin:       m("zdnscloud/lvmplugin:v0.3"),
+			StorageCSILvmplugin:       m("zdnscloud/lvmplugin:v0.4"),
 			StorageLvmd:               m("zdnscloud/lvmd:v0.1"),
+			StorageNFSProvisioner:     m("quay.io/kubernetes_incubator/nfs-provisioner:v2.2.1-k8s1.12"),
 		},
 	}
 )

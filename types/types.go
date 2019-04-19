@@ -131,6 +131,8 @@ type ZKESystemImages struct {
 	StorageCSILvmplugin string `yaml:"storage_csi_lvmplugin" json:"storage_csi_lvmplugin,omitempty"`
 	// Storage lvmd image
 	StorageLvmd string `yaml:"storage_lvmd" json:"storage_lvmd,omitempty"`
+	// Storage nfs image
+	StorageNFSProvisioner string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
 }
 
 type ZKEConfigNode struct {
@@ -271,12 +273,16 @@ type NetworkConfig struct {
 
 type StorageConfig struct {
 	Lvm []Lvmconf `yaml:"lvm" json:lvm,omitempty`
-	//NFS NFSconf `yaml:"nfs" json:nfs,omitempty`
+	NFS NFSconf   `yaml:"nfs" json:nfs,omitempty`
 }
 
 type Lvmconf struct {
 	Host string   `yaml:"host" json:"host,omitempty"`
 	Devs []string `yaml:"devs" json:"devs,omitempty"`
+}
+
+type NFSconf struct {
+	Size int `yaml:"size" json:"size,omitempty"`
 }
 
 type AuthWebhookConfig struct {

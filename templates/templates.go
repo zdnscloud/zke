@@ -16,6 +16,7 @@ var tmpltMap map[string]string = map[string]string{
 	"nginx":            NginxIngressTemplate,
 	"metrics-server":   MetricsServerTemplate,
 	"lvm-storageclass": LVMStorageTemplate,
+	"nfs-storageclass": NFSStorageTemplate,
 }
 
 var VersionedTemplate = map[string]map[string]string{

@@ -18,16 +18,27 @@ const (
 	Storage                = "node-role.kubernetes.io/storage"
 	NodeSelector           = "NodeSelector"
 
+	NFSStorageResourceName = "zke-storage-plugin-nfs"
+	NFSResourceName        = "nfs-storageclass"
+	NFSStorageClassName    = "nfs"
+	Size                   = "Size"
+
 	StorageCSIAttacherImage     = "StorageCSIAttacherImage"
 	StorageCSIProvisionerImage  = "StorageCSIProvisionerImage"
 	StorageDriverRegistrarImage = "StorageDriverRegistrarImage"
 	StorageCSILvmpluginImage    = "StorageCSILvmpluginImage"
 	StorageLvmdImage            = "StorageLvmdImage"
+	StorageNFSProvisionerImage  = "StorageNFSProvisionerImage"
 )
 
 func (c *Cluster) deployStoragePlugin(ctx context.Context) error {
 	if len(c.Storage.Lvm) > 0 {
 		if err := c.doLVMStorageDeploy(ctx); err != nil {
+			return err
+		}
+	}
+	if c.Storage.NFS.Size > 0 {
+		if err := c.doNFSStorageDeploy(ctx); err != nil {
 			return err
 		}
 	}
@@ -53,11 +64,28 @@ func (c *Cluster) doLVMStorageDeploy(ctx context.Context) error {
 		LVMList:                     arr,
 		NodeSelector:                Storage,
 	}
-	storageYaml, err := templates.GetManifest(lvmstorageConfig, LVMResourceName)
+	lvmstorageYaml, err := templates.GetManifest(lvmstorageConfig, LVMResourceName)
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, storageYaml, LVMStorageResourceName, true); err != nil {
+	if err := c.doAddonDeploy(ctx, lvmstorageYaml, LVMStorageResourceName, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Cluster) doNFSStorageDeploy(ctx context.Context) error {
+	log.Infof(ctx, "[storage] Setting up StoragePlugin : %s", NFSStorageClassName)
+	nfsstorageConfig := map[string]interface{}{
+		RBACConfig:                 c.Authorization.Mode,
+		StorageNFSProvisionerImage: c.SystemImages.StorageNFSProvisioner,
+		Size:                       c.Storage.NFS.Size,
+	}
+	nfsstorageYaml, err := templates.GetManifest(nfsstorageConfig, NFSResourceName)
+	if err != nil {
+		return err
+	}
+	if err := c.doAddonDeploy(ctx, nfsstorageYaml, NFSStorageResourceName, true); err != nil {
 		return err
 	}
 	return nil

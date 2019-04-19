@@ -811,3 +811,17 @@ func (in *Lvmconf) DeepCopy() *Lvmconf {
 	in.DeepCopyInto(out)
 	return out
 }
+
+func (in *NFSconf) DeepCopyInto(out *NFSconf) {
+	*out = *in
+	return
+}
+
+func (in *NFSconf) DeepCopy() *NFSconf {
+	if in == nil {
+		return nil
+	}
+	out := new(NFSconf)
+	in.DeepCopyInto(out)
+	return out
+}
