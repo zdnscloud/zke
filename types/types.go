@@ -131,6 +131,14 @@ type ZKESystemImages struct {
 	StorageCSILvmplugin string `yaml:"storage_csi_lvmplugin" json:"storage_csi_lvmplugin,omitempty"`
 	// Storage lvmd image
 	StorageLvmd string `yaml:"storage_lvmd" json:"storage_lvmd,omitempty"`
+	// Monitoring images
+	PrometheusAlertManager      string `yaml:"prometheus_alert_manager" json:"prometheus_alert_manager"`
+	PrometheusConfigMapReloader string `yaml:"prometheus_configmap_reloader" json:"prometheus_configmap_reloader"`
+	PrometheusNodeExporter      string `yaml:"prometheus_nodeexporter" json:"prometheus_nodeexporter"`
+	PrometheusServer            string `yaml:"prometheus_server" json:"prometheus_server"`
+	Grafana                     string `yaml:"grafana" json:"grafana"`
+	GrafanaWatcher              string `yaml:"grafana_watcher" json:"grafana_watcher"`
+	KubeStateMetrics            string `yaml:"kube_state_metrics" json:"kube_state_metrics"`
 }
 
 type ZKEConfigNode struct {
@@ -409,9 +417,11 @@ type KubernetesServicesOptions struct {
 
 type MonitoringConfig struct {
 	// Monitoring server provider
-	Provider string `yaml:"provider" json:"provider,omitempty" norman:"default=metrics-server"`
+	MetricsProvider string `yaml:"metrics_provider" json:"metrics_provider,omitempty" norman:"default=metrics-server"`
 	// Metrics server options
-	Options map[string]string `yaml:"options" json:"options,omitempty"`
+	MetricsOptions                        map[string]string `yaml:"metrics_options" json:"metrics_options,omitempty"`
+	PrometheusAlertManagerIngressEndpoint string            `yaml:"prometheus_alertmanager_ingress_endpoint" json:"prometheus_alertmanager_ingress_endpoint"`
+	GrafanaIngressEndpoint                string            `yaml:"grafana_ingress_endpoint" json:"grafana_ingress_endpoint"`
 }
 
 type RestoreConfig struct {

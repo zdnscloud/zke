@@ -47,7 +47,6 @@ const (
 	DefaultEtcdBackupCreationPeriod      = "12h"
 	DefaultEtcdBackupRetentionPeriod     = "72h"
 	DefaultEtcdSnapshot                  = true
-	DefaultMonitoringProvider            = "metrics-server"
 	DefaultEtcdBackupConfigIntervalHours = 12
 	DefaultEtcdBackupConfigRetention     = 6
 
@@ -55,6 +54,9 @@ const (
 	DefaultEtcdHeartbeatIntervalValue = "500"
 	DefaultEtcdElectionTimeoutName    = "election-timeout"
 	DefaultEtcdElectionTimeoutValue   = "5000"
+
+	DefaultMonitoringMetricsProvider = "metrics-server"
+	DefaultMonitoringNamespace       = "zcloud"
 )
 
 type ExternalFlags struct {
@@ -140,8 +142,14 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	if c.AddonJobTimeout == 0 {
 		c.AddonJobTimeout = k8s.DefaultTimeout
 	}
-	if len(c.Monitoring.Provider) == 0 {
-		c.Monitoring.Provider = DefaultMonitoringProvider
+	if len(c.Monitoring.MetricsProvider) == 0 {
+		c.Monitoring.MetricsProvider = DefaultMonitoringMetricsProvider
+	}
+	if len(c.Monitoring.PrometheusAlertManagerIngressEndpoint) == 0 {
+		c.Monitoring.PrometheusAlertManagerIngressEndpoint = "alertmanager" + "." + DefaultMonitoringNamespace + "." + DefaultClusterDomain
+	}
+	if len(c.Monitoring.GrafanaIngressEndpoint) == 0 {
+		c.Monitoring.GrafanaIngressEndpoint = "grafana" + "." + DefaultMonitoringNamespace + "." + DefaultClusterDomain
 	}
 	//set docker private registry URL
 	for _, pr := range c.PrivateRegistries {

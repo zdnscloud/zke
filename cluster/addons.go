@@ -112,23 +112,23 @@ func (c *Cluster) deployDNS(ctx context.Context) error {
 }
 
 func (c *Cluster) deployMetricServer(ctx context.Context) error {
-	log.Infof(ctx, "[addons] Setting up %s", c.Monitoring.Provider)
+	log.Infof(ctx, "[addons] Setting up %s", c.Monitoring.MetricsProvider)
 	s := strings.Split(c.SystemImages.MetricsServer, ":")
 	versionTag := s[len(s)-1]
 	MetricsServerConfig := MetricsServerOptions{
 		MetricsServerImage: c.SystemImages.MetricsServer,
 		RBACConfig:         c.Authorization.Mode,
-		Options:            c.Monitoring.Options,
+		Options:            c.Monitoring.MetricsOptions,
 		Version:            getTagMajorVersion(versionTag),
 	}
-	metricsYaml, err := templates.GetManifest(MetricsServerConfig, c.Monitoring.Provider)
+	metricsYaml, err := templates.GetManifest(MetricsServerConfig, c.Monitoring.MetricsProvider)
 	if err != nil {
 		return err
 	}
 	if err := c.doAddonDeploy(ctx, metricsYaml, MetricsServerAddonResourceName, false); err != nil {
 		return err
 	}
-	log.Infof(ctx, "[addons] %s deployed successfully", c.Monitoring.Provider)
+	log.Infof(ctx, "[addons] %s deployed successfully", c.Monitoring.MetricsProvider)
 	return nil
 }
 

@@ -465,6 +465,9 @@ func ConfigureCluster(
 		if err := kubeCluster.deployAddons(ctx); err != nil {
 			return err
 		}
+		if err := kubeCluster.deployMonitoring(ctx); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -480,7 +483,7 @@ func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 		fmt.Sprintf("%s=%s", KubeAppLabel, CalicoNetworkPlugin),
 		fmt.Sprintf("%s=%s", KubeAppLabel, FlannelNetworkPlugin),
 		fmt.Sprintf("%s=%s", AppLabel, NginxIngressAddonAppName),
-		fmt.Sprintf("%s=%s", KubeAppLabel, DefaultMonitoringProvider),
+		fmt.Sprintf("%s=%s", KubeAppLabel, DefaultMonitoringMetricsProvider),
 		fmt.Sprintf("%s=%s", KubeAppLabel, CoreDNSAddonAppName),
 	}
 	var errgrp errgroup.Group
