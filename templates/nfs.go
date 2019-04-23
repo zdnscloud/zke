@@ -11,13 +11,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: nfs-provisioner
-  namespace: storage
+  namespace: zcloud
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: nfs-provisioner-runner
-  namespace: storage
+  namespace: zcloud
 rules:
   - apiGroups: [""]
     resources: ["persistentvolumes"]
@@ -43,11 +43,11 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: run-nfs-provisioner
-  namespace: storage
+  namespace: zcloud
 subjects:
   - kind: ServiceAccount
     name: nfs-provisioner
-    namespace: storage
+    namespace: zcloud
 roleRef:
   kind: ClusterRole
   name: nfs-provisioner-runner
@@ -56,7 +56,7 @@ roleRef:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: leader-locking-nfs-provisioner
 rules:
   - apiGroups: [""]
@@ -66,12 +66,12 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: leader-locking-nfs-provisioner
 subjects:
   - kind: ServiceAccount
     name: nfs-provisioner
-    namespace: storage
+    namespace: zcloud
 roleRef:
   kind: Role
   name: leader-locking-nfs-provisioner
@@ -81,7 +81,7 @@ roleRef:
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: nfs-provisioner
   labels:
     app: nfs-provisioner
@@ -102,7 +102,7 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: nfs-provisioner
 spec:
   selector:
