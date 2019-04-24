@@ -16,6 +16,7 @@ var tmpltMap map[string]string = map[string]string{
 	"nginx":                         NginxIngressTemplate,
 	"metrics-server":                MetricsServerTemplate,
 	"lvm-storageclass":              LVMStorageTemplate,
+	"nfs-storageclass":              NFSStorageTemplate,
 	"monitoring-prometheus":         PrometheusTemplate,
 	"monitoring-alertmanager":       AlertManagerTemplate,
 	"monitoring-node-exporter":      NodeExporterTemplate,

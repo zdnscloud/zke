@@ -139,6 +139,8 @@ type ZKESystemImages struct {
 	Grafana                     string `yaml:"grafana" json:"grafana"`
 	GrafanaWatcher              string `yaml:"grafana_watcher" json:"grafana_watcher"`
 	KubeStateMetrics            string `yaml:"kube_state_metrics" json:"kube_state_metrics"`
+	// Storage nfs image
+	StorageNFSProvisioner string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
 }
 
 type ZKEConfigNode struct {
@@ -279,12 +281,16 @@ type NetworkConfig struct {
 
 type StorageConfig struct {
 	Lvm []Lvmconf `yaml:"lvm" json:lvm,omitempty`
-	//NFS NFSconf `yaml:"nfs" json:nfs,omitempty`
+	NFS NFSconf   `yaml:"nfs" json:nfs,omitempty`
 }
 
 type Lvmconf struct {
 	Host string   `yaml:"host" json:"host,omitempty"`
 	Devs []string `yaml:"devs" json:"devs,omitempty"`
+}
+
+type NFSconf struct {
+	Size int `yaml:"size" json:"size,omitempty"`
 }
 
 type AuthWebhookConfig struct {

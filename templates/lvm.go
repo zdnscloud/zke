@@ -4,20 +4,20 @@ const LVMStorageTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: storage
+  name: zcloud
 {{- if eq .RBACConfig "rbac"}}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: csi-attacher
-  namespace: storage
+  namespace: zcloud
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: external-attacher-runner
-  namespace: storage
+  namespace: zcloud
 rules:
   - apiGroups: [""]
     resources: ["events"]
@@ -42,11 +42,11 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: csi-attacher-role
-  namespace: storage
+  namespace: zcloud
 subjects:
   - kind: ServiceAccount
     name: csi-attacher
-    namespace: storage
+    namespace: zcloud
 roleRef:
   kind: ClusterRole
   name: external-attacher-runner
@@ -56,12 +56,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: csi-provisioner
-  namespace: storage
+  namespace: zcloud
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: external-provisioner-runner
 rules:
   - apiGroups: [""]
@@ -92,12 +92,12 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-provisioner-role
 subjects:
   - kind: ServiceAccount
     name: csi-provisioner
-    namespace: storage
+    namespace: zcloud
 roleRef:
   kind: ClusterRole
   name: external-provisioner-runner
@@ -107,17 +107,26 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: csi-lvmplugin
-  namespace: storage
+  namespace: zcloud
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-lvmplugin
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list", "watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["list", "watch"]
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list"]
@@ -137,12 +146,12 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-lvmplugin
 subjects:
   - kind: ServiceAccount
     name: csi-lvmplugin
-    namespace: storage
+    namespace: zcloud
 roleRef:
   kind: ClusterRole
   name: csi-lvmplugin
@@ -154,7 +163,7 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: csi-lvmd-{{.Host}}
-  namespace: storage
+  namespace: zcloud
 spec:
   selector:
     matchLabels:
@@ -194,7 +203,7 @@ spec:
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-lvmplugin
 spec:
   selector:
@@ -290,7 +299,7 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-attacher
   labels:
     app: csi-attacher
@@ -304,7 +313,7 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-attacher
 spec:
   serviceName: "csi-attacher"
@@ -343,7 +352,7 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-provisioner
   labels:
     app: csi-provisioner
@@ -358,7 +367,7 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  namespace: storage
+  namespace: zcloud
   name: csi-provisioner
 spec:
   serviceName: "csi-provisioner"
