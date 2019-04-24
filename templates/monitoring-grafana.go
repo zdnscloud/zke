@@ -97,6 +97,8 @@ spec:
             secretKeyRef:
               key: password
               name: prometheus-grafana
+        - name: GF_USERS_DEFAULT_THEME
+          value: "light"
         image: {{ .GrafanaImage }}
         imagePullPolicy: IfNotPresent
         name: grafana
