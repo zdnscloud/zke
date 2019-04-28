@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
 	"k8s.io/client-go/util/cert"
 	"os"

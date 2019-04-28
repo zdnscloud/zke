@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/templates"
 	"strings"
 )

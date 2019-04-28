@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
-	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
 )
 

@@ -3,8 +3,8 @@ package authz
 import (
 	"context"
 
-	"github.com/zdnscloud/zke/k8s"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/k8s"
+	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/templates"
 )
 

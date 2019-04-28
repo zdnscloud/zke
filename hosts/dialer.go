@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zdnscloud/zke/k8s"
+	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/types"
 	"golang.org/x/crypto/ssh"
 )

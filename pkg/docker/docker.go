@@ -20,7 +20,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/sirupsen/logrus"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 )

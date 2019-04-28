@@ -9,11 +9,11 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
-	"github.com/zdnscloud/zke/util"
 	"golang.org/x/sync/errgroup"
 )
 
