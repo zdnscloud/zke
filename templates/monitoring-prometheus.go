@@ -2,11 +2,6 @@ package templates
 
 const PrometheusTemplate = `
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: zcloud
----
-apiVersion: v1
 items:
 - apiVersion: v1
   kind: ServiceAccount

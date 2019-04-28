@@ -23,6 +23,7 @@ var tmpltMap map[string]string = map[string]string{
 	"monitoring-kube-state-metrics": KubeStateMetricsTemplate,
 	"monitoring-grafana-conf":       GrafanaConfigMapTemplate,
 	"monitoring-grafana":            GrafanaTemplate,
+	"zcloud-predeploy":              ZcloudPreDeployTemplate,
 }
 
 var VersionedTemplate = map[string]map[string]string{

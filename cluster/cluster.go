@@ -21,7 +21,7 @@ import (
 	"github.com/zdnscloud/zke/util"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/cert"
@@ -463,6 +463,9 @@ func ConfigureCluster(
 			return err
 		}
 		if err := kubeCluster.deployAddons(ctx); err != nil {
+			return err
+		}
+		if err := kubeCluster.deployZcloudPre(ctx); err != nil {
 			return err
 		}
 		if err := kubeCluster.deployMonitoring(ctx); err != nil {
