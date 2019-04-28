@@ -4,7 +4,7 @@ const NFSStorageTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: storage
+  name: zcloud
 ---
 {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1

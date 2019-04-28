@@ -21,9 +21,9 @@ func (c *Cluster) ClusterRemove(ctx context.Context) error {
 	return nil
 }
 
-func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
+func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
 
-	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts)
+	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts)
 
 	var errgrp errgroup.Group
 	hostsQueue := util.GetObjectQueue(uniqueHosts)
@@ -65,7 +65,7 @@ func (c *Cluster) CleanupNodes(ctx context.Context) error {
 	}
 
 	// Clean up all hosts
-	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap, externalEtcd)
+	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap, externalEtcd)
 }
 
 func (c *Cluster) CleanupFiles(ctx context.Context) error {
@@ -83,7 +83,7 @@ func (c *Cluster) RemoveOldNodes(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	for _, node := range nodeList.Items {
 		if k8s.IsNodeReady(node) {
 			continue
