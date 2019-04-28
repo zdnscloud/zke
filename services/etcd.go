@@ -271,7 +271,7 @@ func RunEtcdSnapshotSave(ctx context.Context, etcdHost *hosts.Host, prsMap map[s
 	log.Infof(ctx, "[etcd] Saving snapshot [%s] on host [%s]", name, etcdHost.Address)
 	imageCfg := &container.Config{
 		Cmd: []string{
-			"/opt/rke-tools/rke-etcd-backup",
+			"/opt/zke-tools/etcd-backup",
 			"etcd-backup",
 			"save",
 			"--cacert", pki.GetCertPath(pki.CACertName),
@@ -438,7 +438,7 @@ func StartBackupServer(ctx context.Context, etcdHost *hosts.Host, prsMap map[str
 	log.Infof(ctx, "[etcd] starting backup server on host [%s]", etcdHost.Address)
 	imageCfg := &container.Config{
 		Cmd: []string{
-			"/opt/rke-tools/rke-etcd-backup",
+			"/opt/zke-tools/etcd-backup",
 			"etcd-backup",
 			"serve",
 			"--name", name,
@@ -462,7 +462,7 @@ func DownloadEtcdSnapshotFromBackupServer(ctx context.Context, etcdHost *hosts.H
 	log.Infof(ctx, "[etcd] Get snapshot [%s] on host [%s]", name, etcdHost.Address)
 	imageCfg := &container.Config{
 		Cmd: []string{
-			"/opt/rke-tools/rke-etcd-backup",
+			"/opt/zke-tools/etcd-backup",
 			"etcd-backup",
 			"download",
 			"--name", name,

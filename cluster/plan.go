@@ -28,9 +28,9 @@ const (
 	ContainerNameLabel = "zdnscloud.cn.zke.container.name"
 	CloudConfigSumEnv  = "ZKE_CLOUD_CONFIG_CHECKSUM"
 
-	DefaultToolsEntrypoint        = "/opt/rke-tools/entrypoint.sh"
+	DefaultToolsEntrypoint        = "/opt/zke-tools/entrypoint.sh"
 	DefaultToolsEntrypointVersion = "0.1.13"
-	LegacyToolsEntrypoint         = "/opt/rke/entrypoint.sh"
+	LegacyToolsEntrypoint         = "/opt/zke/entrypoint.sh"
 
 	KubeletDockerConfigEnv     = "ZKE_KUBELET_DOCKER_CONFIG"
 	KubeletDockerConfigFileEnv = "ZKE_KUBELET_DOCKER_FILE"
