@@ -46,7 +46,7 @@ func GeneratePlan(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCo
 		return clusterPlan, err
 	}
 	// zkeConfig.Nodes are already unique. But they don't have role flags. So I will use the parsed cluster.Hosts to make use of the role flags.
-	uniqHosts := hosts.GetUniqueHostList(myCluster.EtcdHosts, myCluster.ControlPlaneHosts, myCluster.WorkerHosts)
+	uniqHosts := hosts.GetUniqueHostList(myCluster.EtcdHosts, myCluster.ControlPlaneHosts, myCluster.WorkerHosts, myCluster.StorageHosts, myCluster.EdgeHosts)
 	for _, host := range uniqHosts {
 		host.DockerInfo = hostsInfoMap[host.Address]
 		clusterPlan.Nodes = append(clusterPlan.Nodes, BuildZKEConfigNodePlan(ctx, myCluster, host, hostsInfoMap[host.Address]))

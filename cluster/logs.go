@@ -9,7 +9,7 @@ import (
 )
 
 func (c *Cluster) CleanDeadLogs(ctx context.Context) error {
-	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 
 	var errgrp errgroup.Group
 

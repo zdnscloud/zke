@@ -21,13 +21,15 @@ const (
 	etcdRoleLabel         = "node-role.kubernetes.io/etcd"
 	controlplaneRoleLabel = "node-role.kubernetes.io/controlplane"
 	workerRoleLabel       = "node-role.kubernetes.io/worker"
+	storageRoleLabel      = "node-role.kubernetes.io/storage"
+	edgeRoleLabel         = "node-role.kubernetes.io/edge"
 	cloudConfigFileName   = "/etc/kubernetes/cloud-config"
 	authnWebhookFileName  = "/etc/kubernetes/kube-api-authn-webhook.yaml"
 )
 
 func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 	c.InactiveHosts = make([]*hosts.Host, 0)
-	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	var errgrp errgroup.Group
 	for _, uniqueHost := range uniqueHosts {
 		runHost := uniqueHost
@@ -51,6 +53,8 @@ func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 		c.EtcdHosts = removeFromHosts(host, c.EtcdHosts)
 		c.ControlPlaneHosts = removeFromHosts(host, c.ControlPlaneHosts)
 		c.WorkerHosts = removeFromHosts(host, c.WorkerHosts)
+		c.StorageHosts = removeFromHosts(host, c.StorageHosts)
+		c.EdgeHosts = removeFromHosts(host, c.EdgeHosts)
 		c.ZcloudKubernetesEngineConfig.Nodes = removeFromZKENodes(host.ZKEConfigNode, c.ZcloudKubernetesEngineConfig.Nodes)
 	}
 	return ValidateHostCount(c)
@@ -61,6 +65,8 @@ func (c *Cluster) InvertIndexHosts() error {
 	c.EtcdHosts = make([]*hosts.Host, 0)
 	c.WorkerHosts = make([]*hosts.Host, 0)
 	c.ControlPlaneHosts = make([]*hosts.Host, 0)
+	c.StorageHosts = make([]*hosts.Host, 0)
+	c.EdgeHosts = make([]*hosts.Host, 0)
 	for _, host := range c.Nodes {
 		newHost := hosts.Host{
 			ZKEConfigNode: host,
@@ -95,6 +101,14 @@ func (c *Cluster) InvertIndexHosts() error {
 				newHost.IsWorker = true
 				newHost.ToAddLabels[workerRoleLabel] = "true"
 				c.WorkerHosts = append(c.WorkerHosts, &newHost)
+			case services.StorageRole:
+				newHost.IsStorage = true
+				newHost.ToAddLabels[storageRoleLabel] = "true"
+				c.StorageHosts = append(c.StorageHosts, &newHost)
+			case services.EdgeRole:
+				newHost.IsEdge = true
+				newHost.ToAddLabels[edgeRoleLabel] = "true"
+				c.EdgeHosts = append(c.EdgeHosts, &newHost)
 			default:
 				return fmt.Errorf("Failed to recognize host [%s] role %s", host.Address, role)
 			}
@@ -108,6 +122,12 @@ func (c *Cluster) InvertIndexHosts() error {
 		if !newHost.IsWorker {
 			newHost.ToDelLabels[workerRoleLabel] = "true"
 		}
+		if !newHost.IsStorage {
+			newHost.ToDelLabels[storageRoleLabel] = "true"
+		}
+		if !newHost.IsEdge {
+			newHost.ToDelLabels[edgeRoleLabel] = "true"
+		}
 	}
 	return nil
 }
@@ -119,7 +139,7 @@ func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
 		if flags.CustomCerts {
 			forceDeploy = true
 		}
-		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 		var errgrp errgroup.Group
 
 		hostsQueue := util.GetObjectQueue(hostList)

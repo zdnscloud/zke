@@ -21,7 +21,7 @@ import (
 	"github.com/zdnscloud/zke/util"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/cert"
@@ -53,6 +53,8 @@ type Cluster struct {
 	UseKubectlDeploy                   bool
 	types.ZcloudKubernetesEngineConfig `yaml:",inline"`
 	WorkerHosts                        []*hosts.Host
+	StorageHosts                       []*hosts.Host
+	EdgeHosts                          []*hosts.Host
 }
 
 const (
@@ -116,7 +118,7 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 	// Deploy Worker plane
 	workerNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
 	// Build cp node plan map
-	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	for _, workerHost := range allHosts {
 		workerNodePlanMap[workerHost.Address] = BuildZKEConfigNodePlan(ctx, c, workerHost, workerHost.DockerInfo)
 	}
@@ -346,7 +348,7 @@ func (c *Cluster) SyncLabelsAndTaints(ctx context.Context, currentCluster *Clust
 		if err != nil {
 			return fmt.Errorf("Failed to initialize new kubernetes client: %v", err)
 		}
-		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 		var errgrp errgroup.Group
 		hostQueue := make(chan *hosts.Host, len(hostList))
 		for _, host := range hostList {
@@ -412,7 +414,7 @@ func setNodeAnnotationsLabelsTaints(k8sClient *kubernetes.Clientset, host *hosts
 func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 	log.Infof(ctx, "Pre-pulling kubernetes images")
 	var errgrp errgroup.Group
-	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	hostsQueue := util.GetObjectQueue(hostList)
 	for w := 0; w < WorkerThreads; w++ {
 		errgrp.Go(func() error {
@@ -465,6 +467,9 @@ func ConfigureCluster(
 		if err := kubeCluster.deployAddons(ctx); err != nil {
 			return err
 		}
+		if err := kubeCluster.deployZcloudPre(ctx); err != nil {
+			return err
+		}
 		if err := kubeCluster.deployMonitoring(ctx); err != nil {
 			return err
 		}
@@ -515,7 +520,7 @@ func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 
 func (c *Cluster) GetHostInfoMap() map[string]dockertypes.Info {
 	hostsInfoMap := make(map[string]dockertypes.Info)
-	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts)
+	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	for _, host := range allHosts {
 		hostsInfoMap[host.Address] = host.DockerInfo
 	}
