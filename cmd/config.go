@@ -29,8 +29,8 @@ const (
 	DefaultClusterSSHPort        = "22"
 	DefaultClusterSSHUser        = "ubuntu"
 	DefaultClusterDockerSockPath = "/var/run/docker.sock"
-	Storage                      = "node-role.kubernetes.io/storage"
-	Edge                         = "node-role.kubernetes.io/edge"
+
+	IngressSelectLabel = "node-role.kubernetes.io/edge"
 )
 
 type clusterCommonCfg struct {
@@ -243,21 +243,15 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if err != nil {
 		return nil, err
 	}
-	if len(host.Labels) == 0 {
-		host.Labels = make(map[string]string)
-	}
 	if isStorageHost == "y" || isStorageHost == "Y" {
-		host.Labels[Storage] = "true"
+		host.Role = append(host.Role, services.StorageRole)
 	}
 	isNetBorderHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Edge host (y/n)?", address), "y")
 	if err != nil {
 		return nil, err
 	}
-	if len(host.Labels) == 0 {
-		host.Labels = make(map[string]string)
-	}
 	if isNetBorderHost == "y" || isNetBorderHost == "Y" {
-		host.Labels[Edge] = "true"
+		host.Role = append(host.Role, services.EdgeRole)
 	}
 	hostnameOverride, err := getConfig(reader, fmt.Sprintf("Override Hostname of host (%s)", address), "")
 	if err != nil {
@@ -379,9 +373,9 @@ func getIngressConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 	ingressCfg := types.IngressConfig{}
 	ingressCfg.NodeSelector = make(map[string]string)
 	for _, n := range nodes {
-		for k, v := range n.Labels {
-			if k == Edge && v == "true" {
-				ingressCfg.NodeSelector[Edge] = v
+		for _, v := range n.Role {
+			if v == services.EdgeRole {
+				ingressCfg.NodeSelector[IngressSelectLabel] = "true"
 			}
 		}
 	}
@@ -394,8 +388,8 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 		storageCfg.Lvm = make([]types.Lvmconf, 0)
 	}
 	for _, n := range nodes {
-		for k, v := range n.Labels {
-			if k == Storage && v == "true" {
+		for _, v := range n.Role {
+			if v == services.StorageRole {
 				lvmConfig := types.Lvmconf{}
 				if n.HostnameOverride != "" {
 					lvmConfig.Host = n.HostnameOverride
