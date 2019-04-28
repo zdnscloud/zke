@@ -18,6 +18,8 @@ const (
 	ETCDRole    = "etcd"
 	ControlRole = "controlplane"
 	WorkerRole  = "worker"
+	EdgeRole    = "edge"
+	StorageRole = "storage"
 
 	SidekickServiceName   = "sidekick"
 	RBACAuthorizationMode = "rbac"

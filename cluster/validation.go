@@ -65,7 +65,7 @@ func validateHostsOptions(c *Cluster) error {
 			return fmt.Errorf("Hostname_override [%s] for host (%d) is not valid: %v", host.HostnameOverride, i+1, errs)
 		}
 		for _, role := range host.Role {
-			if role != services.ETCDRole && role != services.ControlRole && role != services.WorkerRole {
+			if role != services.ETCDRole && role != services.ControlRole && role != services.WorkerRole && role != services.StorageRole && role != services.EdgeRole {
 				return fmt.Errorf("Role [%s] for host (%d) is not recognized", role, i+1)
 			}
 		}

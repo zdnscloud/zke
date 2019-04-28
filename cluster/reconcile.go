@@ -206,8 +206,8 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 }
 
 func syncLabels(ctx context.Context, currentCluster, kubeCluster *Cluster) {
-	currentHosts := hosts.GetUniqueHostList(currentCluster.EtcdHosts, currentCluster.ControlPlaneHosts, currentCluster.WorkerHosts)
-	configHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts)
+	currentHosts := hosts.GetUniqueHostList(currentCluster.EtcdHosts, currentCluster.ControlPlaneHosts, currentCluster.WorkerHosts, currentCluster.StorageHosts, currentCluster.EdgeHosts)
+	configHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts, kubeCluster.StorageHosts, kubeCluster.EdgeHosts)
 	for _, host := range configHosts {
 		for _, currentHost := range currentHosts {
 			if host.Address == currentHost.Address {
@@ -265,7 +265,7 @@ func restartComponentsWhenCertChanges(ctx context.Context, currentCluster, kubeC
 	}
 	checkCertificateChanges(ctx, currentCluster, kubeCluster, AllCertsMap)
 	// check Restart Function
-	allHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts)
+	allHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts, kubeCluster.StorageHosts, kubeCluster.EdgeHosts)
 	AllCertsFuncMap := map[string][]services.RestartFunc{
 		pki.CACertName:                 []services.RestartFunc{services.RestartKubeAPI, services.RestartKubeController, services.RestartKubelet},
 		pki.KubeAPICertName:            []services.RestartFunc{services.RestartKubeAPI, services.RestartKubeController},
