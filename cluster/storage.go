@@ -15,7 +15,6 @@ const (
 	LVMList                = "LVMList"
 	Host                   = "Host"
 	Devs                   = "Devs"
-	Storage                = "node-role.kubernetes.io/storage"
 	NodeSelector           = "NodeSelector"
 
 	NFSStorageResourceName = "zke-storage-plugin-nfs"
@@ -62,7 +61,7 @@ func (c *Cluster) doLVMStorageDeploy(ctx context.Context) error {
 		StorageCSILvmpluginImage:    c.SystemImages.StorageCSILvmplugin,
 		StorageLvmdImage:            c.SystemImages.StorageLvmd,
 		LVMList:                     arr,
-		NodeSelector:                Storage,
+		NodeSelector:                storageRoleLabel,
 	}
 	lvmstorageYaml, err := templates.GetManifest(lvmstorageConfig, LVMResourceName)
 	if err != nil {
