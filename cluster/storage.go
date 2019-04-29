@@ -30,7 +30,7 @@ const (
 	StorageNFSProvisionerImage  = "StorageNFSProvisionerImage"
 )
 
-func (c *Cluster) deployStoragePlugin(ctx context.Context) error {
+func (c *Cluster) DeployStoragePlugin(ctx context.Context) error {
 	if len(c.Storage.Lvm) > 0 {
 		if err := c.doLVMStorageDeploy(ctx); err != nil {
 			return err

@@ -51,12 +51,12 @@ type CoreDNSOptions struct {
 	NodeSelector           map[string]string
 }
 
-type addonError struct {
+type AddonError struct {
 	err        string
-	isCritical bool
+	IsCritical bool
 }
 
-func (e *addonError) Error() string {
+func (e *AddonError) Error() string {
 	return e.err
 }
 
@@ -67,20 +67,20 @@ func getAddonResourceName(addon string) string {
 
 func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
 	if err := c.deployDNS(ctx); err != nil {
-		if err, ok := err.(*addonError); ok && err.isCritical {
+		if err, ok := err.(*AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider %s: %v", DNSAddonResourceName, err)
 
 	}
 	if err := c.deployMetricServer(ctx); err != nil {
-		if err, ok := err.(*addonError); ok && err.isCritical {
+		if err, ok := err.(*AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", MetricsServerAddonResourceName, err)
 	}
 	if err := c.deployIngress(ctx); err != nil {
-		if err, ok := err.(*addonError); ok && err.isCritical {
+		if err, ok := err.(*AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", IngressAddonResourceName, err)
@@ -132,27 +132,27 @@ func (c *Cluster) deployMetricServer(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) doAddonDeploy(ctx context.Context, addonYaml, resourceName string, isCritical bool) error {
+func (c *Cluster) doAddonDeploy(ctx context.Context, addonYaml, resourceName string, IsCritical bool) error {
 	addonUpdated, err := c.StoreAddonConfigMap(ctx, addonYaml, resourceName)
 	if err != nil {
-		return &addonError{fmt.Sprintf("Failed to save addon ConfigMap: %v", err), isCritical}
+		return &AddonError{fmt.Sprintf("Failed to save addon ConfigMap: %v", err), IsCritical}
 	}
 	log.Infof(ctx, "[addons] Executing deploy job %s", resourceName)
 	k8sClient, err := k8s.NewClient(c.LocalKubeConfigPath, c.K8sWrapTransport)
 	if err != nil {
-		return &addonError{fmt.Sprintf("%v", err), isCritical}
+		return &AddonError{fmt.Sprintf("%v", err), IsCritical}
 	}
 	node, err := k8s.GetNode(k8sClient, c.ControlPlaneHosts[0].HostnameOverride)
 	if err != nil {
-		return &addonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].HostnameOverride, err), isCritical}
+		return &AddonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].HostnameOverride, err), IsCritical}
 	}
 	addonJob, err := addons.GetAddonsExecuteJob(resourceName, node.Name, c.Services.KubeAPI.Image)
 	if err != nil {
-		return &addonError{fmt.Sprintf("Failed to generate addon execute job: %v", err), isCritical}
+		return &AddonError{fmt.Sprintf("Failed to generate addon execute job: %v", err), IsCritical}
 	}
 
 	if err = c.ApplySystemAddonExecuteJob(addonJob, addonUpdated); err != nil {
-		return &addonError{fmt.Sprintf("%v", err), isCritical}
+		return &AddonError{fmt.Sprintf("%v", err), IsCritical}
 	}
 	return nil
 }

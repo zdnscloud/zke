@@ -12,7 +12,7 @@ const (
 	ZcloudPredeployJobName      = "zcloud-predeploy-job"
 )
 
-func (c *Cluster) deployZcloudPre(ctx context.Context) error {
+func (c *Cluster) DeployZcloudPre(ctx context.Context) error {
 	log.Infof(ctx, "[ZcloudPre] Starting up ZcloudPredeply")
 	if err := c.doZcloudPreDeploy(ctx); err != nil {
 		return err

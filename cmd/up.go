@@ -9,6 +9,7 @@ import (
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/types"
 	"k8s.io/client-go/util/cert"
 	"os"
 	"strings"
@@ -165,7 +166,7 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-	err = cluster.ConfigureCluster(ctx, kubeCluster.ZcloudKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions, false)
+	err = ConfigureCluster(ctx, kubeCluster.ZcloudKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions, false)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -211,4 +212,44 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	}
 	_, _, _, _, _, err = ClusterUp(context.Background(), hosts.DialersOptions{}, flags)
 	return err
+}
+
+func ConfigureCluster(
+	ctx context.Context,
+	zkeConfig types.ZcloudKubernetesEngineConfig,
+	crtBundle map[string]pki.CertificatePKI,
+	flags cluster.ExternalFlags,
+	dailersOptions hosts.DialersOptions,
+	useKubectl bool) error {
+	// dialer factories are not needed here since we are not uses docker only k8s jobs
+	kubeCluster, err := cluster.InitClusterObject(ctx, &zkeConfig, flags)
+	if err != nil {
+		return err
+	}
+	if err := kubeCluster.SetupDialers(ctx, dailersOptions); err != nil {
+		return err
+	}
+	kubeCluster.UseKubectlDeploy = useKubectl
+	if len(kubeCluster.ControlPlaneHosts) > 0 {
+		kubeCluster.Certificates = crtBundle
+		if err := kubeCluster.DeployNetworkPlugin(ctx); err != nil {
+			if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
+				return err
+			}
+			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", cluster.NetworkPluginResourceName, err)
+		}
+		if err := kubeCluster.DeployStoragePlugin(ctx); err != nil {
+			return err
+		}
+		if err := kubeCluster.DeployAddons(ctx); err != nil {
+			return err
+		}
+		if err := kubeCluster.DeployZcloudPre(ctx); err != nil {
+			return err
+		}
+		if err := kubeCluster.DeployMonitoring(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
