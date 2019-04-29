@@ -21,7 +21,7 @@ const (
 	etcdRoleLabel         = "node-role.kubernetes.io/etcd"
 	controlplaneRoleLabel = "node-role.kubernetes.io/controlplane"
 	workerRoleLabel       = "node-role.kubernetes.io/worker"
-	storageRoleLabel      = "node-role.kubernetes.io/storage"
+	StorageRoleLabel      = "node-role.kubernetes.io/storage"
 	edgeRoleLabel         = "node-role.kubernetes.io/edge"
 	cloudConfigFileName   = "/etc/kubernetes/cloud-config"
 	authnWebhookFileName  = "/etc/kubernetes/kube-api-authn-webhook.yaml"
@@ -103,7 +103,7 @@ func (c *Cluster) InvertIndexHosts() error {
 				c.WorkerHosts = append(c.WorkerHosts, &newHost)
 			case services.StorageRole:
 				newHost.IsStorage = true
-				newHost.ToAddLabels[storageRoleLabel] = "true"
+				newHost.ToAddLabels[StorageRoleLabel] = "true"
 				c.StorageHosts = append(c.StorageHosts, &newHost)
 			case services.EdgeRole:
 				newHost.IsEdge = true
@@ -123,7 +123,7 @@ func (c *Cluster) InvertIndexHosts() error {
 			newHost.ToDelLabels[workerRoleLabel] = "true"
 		}
 		if !newHost.IsStorage {
-			newHost.ToDelLabels[storageRoleLabel] = "true"
+			newHost.ToDelLabels[StorageRoleLabel] = "true"
 		}
 		if !newHost.IsEdge {
 			newHost.ToDelLabels[edgeRoleLabel] = "true"
