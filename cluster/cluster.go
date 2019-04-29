@@ -314,7 +314,7 @@ func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZcloudKubernetesEn
 	return nil
 }
 
-func (c *Cluster) deployAddons(ctx context.Context) error {
+func (c *Cluster) DeployAddons(ctx context.Context) error {
 	if err := c.deployK8sAddOns(ctx); err != nil {
 		return err
 	}

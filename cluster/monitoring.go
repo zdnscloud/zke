@@ -31,7 +31,7 @@ const (
 	GrafanaIngressEndpoint                = "GrafanaIngressEndpoint"
 )
 
-func (c *Cluster) deployMonitoring(ctx context.Context) error {
+func (c *Cluster) DeployMonitoring(ctx context.Context) error {
 	log.Infof(ctx, "[Monitor] Setting up MonitoringPlugin")
 	if err := c.doPrometheusDeploy(ctx); err != nil {
 		return err

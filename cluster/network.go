@@ -103,7 +103,7 @@ var EtcdClientPortList = []string{
 	EtcdPort1,
 }
 
-func (c *Cluster) deployNetworkPlugin(ctx context.Context) error {
+func (c *Cluster) DeployNetworkPlugin(ctx context.Context) error {
 	log.Infof(ctx, "[network] Setting up network plugin: %s", c.Network.Plugin)
 	switch c.Network.Plugin {
 	case FlannelNetworkPlugin:

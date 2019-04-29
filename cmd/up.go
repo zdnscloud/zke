@@ -218,7 +218,7 @@ func ConfigureCluster(
 	ctx context.Context,
 	zkeConfig types.ZcloudKubernetesEngineConfig,
 	crtBundle map[string]pki.CertificatePKI,
-	flags ExternalFlags,
+	flags cluster.ExternalFlags,
 	dailersOptions hosts.DialersOptions,
 	useKubectl bool) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
@@ -232,22 +232,22 @@ func ConfigureCluster(
 	kubeCluster.UseKubectlDeploy = useKubectl
 	if len(kubeCluster.ControlPlaneHosts) > 0 {
 		kubeCluster.Certificates = crtBundle
-		if err := kubeCluster.deployNetworkPlugin(ctx); err != nil {
-			if err, ok := err.(*addonError); ok && err.isCritical {
+		if err := kubeCluster.DeployNetworkPlugin(ctx); err != nil {
+			if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
 				return err
 			}
-			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", NetworkPluginResourceName, err)
+			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", cluster.NetworkPluginResourceName, err)
 		}
-		if err := kubeCluster.deployStoragePlugin(ctx); err != nil {
+		if err := kubeCluster.DeployStoragePlugin(ctx); err != nil {
 			return err
 		}
-		if err := kubeCluster.deployAddons(ctx); err != nil {
+		if err := kubeCluster.DeployAddons(ctx); err != nil {
 			return err
 		}
-		if err := kubeCluster.deployZcloudPre(ctx); err != nil {
+		if err := kubeCluster.DeployZcloudPre(ctx); err != nil {
 			return err
 		}
-		if err := kubeCluster.deployMonitoring(ctx); err != nil {
+		if err := kubeCluster.DeployMonitoring(ctx); err != nil {
 			return err
 		}
 	}
