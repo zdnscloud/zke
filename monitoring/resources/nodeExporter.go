@@ -1,4 +1,4 @@
-package monitoring
+package resources
 
 const NodeExporterTemplate = `
 apiVersion: v1

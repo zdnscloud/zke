@@ -1,6 +1,6 @@
-package monitoring
+package resources
 
-const preDeployYaml = `
+const PreDeployYaml = `
 apiVersion: v1
 kind: Namespace
 metadata:

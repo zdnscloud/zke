@@ -5,6 +5,7 @@ import (
 	// "strings"
 
 	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/monitoring/resources"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/templates"
 )
@@ -82,7 +83,7 @@ func doPrometheusDeploy(ctx context.Context, c *cluster.Cluster) error {
 		PermetheusServerImage:            c.SystemImages.PrometheusServer,
 		PrometheusConfigMapReloaderImage: c.SystemImages.PrometheusConfigMapReloader,
 	}
-	prometheusYaml, err := templates.CompileTemplateFromMap(PrometheusTemplate, config)
+	prometheusYaml, err := templates.CompileTemplateFromMap(resources.PrometheusTemplate, config)
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func doNodeExporterDeploy(ctx context.Context, c *cluster.Cluster) error {
 	config := map[string]interface{}{
 		PermetheusNodeExporterImage: c.SystemImages.PrometheusNodeExporter,
 	}
-	configYaml, err := templates.CompileTemplateFromMap(NodeExporterTemplate, config)
+	configYaml, err := templates.CompileTemplateFromMap(resources.NodeExporterTemplate, config)
 	if err != nil {
 		return err
 	}
@@ -111,7 +112,7 @@ func doStateMetricsDeploy(ctx context.Context, c *cluster.Cluster) error {
 		cluster.RBACConfig:    c.Authorization.Mode,
 		KubeStateMetricsImage: c.SystemImages.KubeStateMetrics,
 	}
-	configYaml, err := templates.CompileTemplateFromMap(StateMetricsTemplate, config)
+	configYaml, err := templates.CompileTemplateFromMap(resources.StateMetricsTemplate, config)
 	if err != nil {
 		return err
 	}
@@ -128,7 +129,7 @@ func doAlertManagerDeploy(ctx context.Context, c *cluster.Cluster) error {
 		PrometheusConfigMapReloaderImage:      c.SystemImages.PrometheusConfigMapReloader,
 		PrometheusAlertManagerIngressEndpoint: c.Monitoring.PrometheusAlertManagerIngressEndpoint,
 	}
-	configYaml, err := templates.CompileTemplateFromMap(AlertManagerTemplate, config)
+	configYaml, err := templates.CompileTemplateFromMap(resources.AlertManagerTemplate, config)
 	if err != nil {
 		return err
 	}
@@ -145,10 +146,10 @@ func doGrafanaDeploy(ctx context.Context, c *cluster.Cluster) error {
 		GrafanaWatcherImage:    c.SystemImages.GrafanaWatcher,
 		GrafanaIngressEndpoint: c.Monitoring.GrafanaIngressEndpoint,
 	}
-	if err := c.DoAddonDeploy(ctx, GrafanaConfigMapYaml, GrafanaConfigmapDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, resources.GrafanaConfigMapYaml, GrafanaConfigmapDeployJobName, true); err != nil {
 		return err
 	}
-	configYaml, err := templates.CompileTemplateFromMap(GrafanaTemplate, config)
+	configYaml, err := templates.CompileTemplateFromMap(resources.GrafanaTemplate, config)
 	if err != nil {
 		return err
 	}
@@ -182,7 +183,7 @@ func doMetricServerDeploy(ctx context.Context, c *cluster.Cluster) error {
 */
 
 func doMonitoringPreDeploy(ctx context.Context, c *cluster.Cluster) error {
-	if err := c.DoAddonDeploy(ctx, preDeployYaml, MonitoringPreDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, resources.PreDeployYaml, MonitoringPreDeployJobName, true); err != nil {
 		return err
 	}
 	return nil

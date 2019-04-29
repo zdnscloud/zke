@@ -1,4 +1,4 @@
-package monitoring
+package resources
 
 const StateMetricsTemplate = `
 apiVersion: v1
