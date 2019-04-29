@@ -129,13 +129,13 @@ func (c *Cluster) doFlannelDeploy(ctx context.Context) error {
 			"Directrouting": c.Network.Options[FlannelBackendDirectrouting],
 		},
 		RBACConfig:     c.Authorization.Mode,
-		ClusterVersion: getTagMajorVersion(c.Version),
+		ClusterVersion: GetTagMajorVersion(c.Version),
 	}
 	pluginYaml, err := templates.GetManifest(flannelConfig, FlannelNetworkPlugin)
 	if err != nil {
 		return err
 	}
-	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
+	return c.DoAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
 
 func (c *Cluster) doCalicoDeploy(ctx context.Context) error {
@@ -153,7 +153,7 @@ func (c *Cluster) doCalicoDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
+	return c.DoAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
 
 func (c *Cluster) CheckClusterPorts(ctx context.Context, currentCluster *Cluster) error {

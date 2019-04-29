@@ -1,6 +1,6 @@
 package monitoring
 
-const GrafanaConfigMap = `
+const GrafanaConfigMapYaml = `
 apiVersion: v1
 kind: ConfigMap
 metadata:

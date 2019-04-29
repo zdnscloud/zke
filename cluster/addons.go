@@ -39,7 +39,6 @@ type MetricsServerOptions struct {
 	MetricsServerImage string
 	Version            string
 }
-
 type CoreDNSOptions struct {
 	RBACConfig             string
 	CoreDNSImage           string
@@ -73,12 +72,14 @@ func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
 		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider %s: %v", DNSAddonResourceName, err)
 
 	}
+
 	if err := c.deployMetricServer(ctx); err != nil {
 		if err, ok := err.(*AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", MetricsServerAddonResourceName, err)
 	}
+
 	if err := c.deployIngress(ctx); err != nil {
 		if err, ok := err.(*AddonError); ok && err.IsCritical {
 			return err
@@ -104,7 +105,7 @@ func (c *Cluster) deployDNS(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, coreDNSYaml, getAddonResourceName(c.DNS.Provider), false); err != nil {
+	if err := c.DoAddonDeploy(ctx, coreDNSYaml, getAddonResourceName(c.DNS.Provider), false); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[DNS] DNS provider %s deployed successfully", c.DNS.Provider)
@@ -119,20 +120,20 @@ func (c *Cluster) deployMetricServer(ctx context.Context) error {
 		MetricsServerImage: c.SystemImages.MetricsServer,
 		RBACConfig:         c.Authorization.Mode,
 		Options:            c.Monitoring.MetricsOptions,
-		Version:            getTagMajorVersion(versionTag),
+		Version:            GetTagMajorVersion(versionTag),
 	}
 	metricsYaml, err := templates.GetManifest(MetricsServerConfig, c.Monitoring.MetricsProvider)
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, metricsYaml, MetricsServerAddonResourceName, false); err != nil {
+	if err := c.DoAddonDeploy(ctx, metricsYaml, MetricsServerAddonResourceName, false); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[addons] %s deployed successfully", c.Monitoring.MetricsProvider)
 	return nil
 }
 
-func (c *Cluster) doAddonDeploy(ctx context.Context, addonYaml, resourceName string, IsCritical bool) error {
+func (c *Cluster) DoAddonDeploy(ctx context.Context, addonYaml, resourceName string, IsCritical bool) error {
 	addonUpdated, err := c.StoreAddonConfigMap(ctx, addonYaml, resourceName)
 	if err != nil {
 		return &AddonError{fmt.Sprintf("Failed to save addon ConfigMap: %v", err), IsCritical}
@@ -216,7 +217,7 @@ func (c *Cluster) deployIngress(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, ingressYaml, IngressAddonResourceName, false); err != nil {
+	if err := c.DoAddonDeploy(ctx, ingressYaml, IngressAddonResourceName, false); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[ingress] ingress controller %s deployed successfully", c.Ingress.Provider)

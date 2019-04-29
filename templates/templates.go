@@ -14,6 +14,7 @@ var tmpltMap map[string]string = map[string]string{
 	"flannel":          FlannelTemplate,
 	"coredns":          CoreDNSTemplate,
 	"nginx":            NginxIngressTemplate,
+	"metrics-server":   MetricsServerTemplate,
 	"lvm-storageclass": LVMStorageTemplate,
 	"nfs-storageclass": NFSStorageTemplate,
 	"zcloud-predeploy": ZcloudPreDeployTemplate,

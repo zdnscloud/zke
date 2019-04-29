@@ -67,7 +67,7 @@ func (c *Cluster) doLVMStorageDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, lvmstorageYaml, LVMStorageResourceName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, lvmstorageYaml, LVMStorageResourceName, true); err != nil {
 		return err
 	}
 	return nil
@@ -84,7 +84,7 @@ func (c *Cluster) doNFSStorageDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, nfsstorageYaml, NFSStorageResourceName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, nfsstorageYaml, NFSStorageResourceName, true); err != nil {
 		return err
 	}
 	return nil
