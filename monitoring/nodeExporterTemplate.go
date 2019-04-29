@@ -1,11 +1,11 @@
-package templates
+package monitoring
 
 const NodeExporterTemplate = `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-node-exporter
-  namespace: zcloud
+  namespace: kube-monitoring
 ---
 apiVersion: apps/v1beta2
 kind: DaemonSet
@@ -15,7 +15,7 @@ metadata:
     component: node-exporter
     release: prometheus
   name: prometheus-node-exporter
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   selector:
     matchLabels:
@@ -100,7 +100,7 @@ metadata:
     component: node-exporter
     release: prometheus
   name: prometheus-node-exporter
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   ports:
   - name: metrics

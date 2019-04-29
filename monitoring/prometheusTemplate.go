@@ -1,4 +1,4 @@
-package templates
+package monitoring
 
 const PrometheusTemplate = `
 apiVersion: v1
@@ -7,12 +7,12 @@ items:
   kind: ServiceAccount
   metadata:
     name: prometheus-pushgateway
-    namespace: zcloud
+    namespace: kube-monitoring
 - apiVersion: v1
   kind: ServiceAccount
   metadata:
     name: prometheus-server
-    namespace: zcloud
+    namespace: kube-monitoring
 kind: List
 metadata:
   resourceVersion: ""
@@ -78,7 +78,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-server
-  namespace: zcloud
+  namespace: kube-monitoring
 {{- end}}
 ---
 apiVersion: v1
@@ -89,7 +89,7 @@ metadata:
     component: server
     release: prometheus
   name: prometheus-server
-  namespace: zcloud
+  namespace: kube-monitoring
 data:
   alerts: |
     {}
@@ -265,7 +265,7 @@ data:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         relabel_configs:
         - source_labels: [__meta_kubernetes_namespace]
-          regex: zcloud
+          regex: kube-monitoring
           action: keep
         - source_labels: [__meta_kubernetes_pod_label_app]
           regex: prometheus
@@ -313,7 +313,7 @@ metadata:
     component: server
     release: prometheus
   name: prometheus-server
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -428,7 +428,7 @@ metadata:
     component: server
     release: prometheus
   name: prometheus-server
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   externalTrafficPolicy: Cluster
   ports:

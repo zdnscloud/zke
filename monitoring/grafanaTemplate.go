@@ -1,11 +1,11 @@
-package templates
+package monitoring
 
 const GrafanaTemplate = `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-grafana
-  namespace: zcloud
+  namespace: kube-monitoring
 ---
 {{- if eq .RBACConfig "rbac"}}
 ---
@@ -41,7 +41,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-grafana
-  namespace: zcloud
+  namespace: kube-monitoring
 {{- end}}
 ---
 apiVersion: v1
@@ -54,14 +54,14 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: zcloud
+  namespace: kube-monitoring
 type: Opaque
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: prometheus-grafana
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -187,7 +187,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   externalTrafficPolicy: Cluster
   ports:
@@ -209,7 +209,7 @@ metadata:
     app: grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   rules:
   - host: {{ .GrafanaIngressEndpoint }}

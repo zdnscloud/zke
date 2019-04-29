@@ -11,19 +11,12 @@ const (
 )
 
 var tmpltMap map[string]string = map[string]string{
-	"flannel":                       FlannelTemplate,
-	"coredns":                       CoreDNSTemplate,
-	"nginx":                         NginxIngressTemplate,
-	"metrics-server":                MetricsServerTemplate,
-	"lvm-storageclass":              LVMStorageTemplate,
-	"nfs-storageclass":              NFSStorageTemplate,
-	"monitoring-prometheus":         PrometheusTemplate,
-	"monitoring-alertmanager":       AlertManagerTemplate,
-	"monitoring-node-exporter":      NodeExporterTemplate,
-	"monitoring-kube-state-metrics": KubeStateMetricsTemplate,
-	"monitoring-grafana-conf":       GrafanaConfigMapTemplate,
-	"monitoring-grafana":            GrafanaTemplate,
-	"zcloud-predeploy":              ZcloudPreDeployTemplate,
+	"flannel":          FlannelTemplate,
+	"coredns":          CoreDNSTemplate,
+	"nginx":            NginxIngressTemplate,
+	"lvm-storageclass": LVMStorageTemplate,
+	"nfs-storageclass": NFSStorageTemplate,
+	"zcloud-predeploy": ZcloudPreDeployTemplate,
 }
 
 var VersionedTemplate = map[string]map[string]string{

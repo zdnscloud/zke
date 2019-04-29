@@ -1,11 +1,11 @@
-package templates
+package monitoring
 
 const AlertManagerTemplate = `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-alertmanager
-  namespace: zcloud
+  namespace: kube-monitoring
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -15,7 +15,7 @@ metadata:
     component: alertmanager
     release: prometheus
   name: prometheus-alertmanager
-  namespace: zcloud
+  namespace: kube-monitoring
 data:
   alertmanager.yml: |
     global: null
@@ -31,7 +31,7 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: prometheus-alertmanager
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -115,7 +115,7 @@ metadata:
     component: alertmanager
     release: prometheus
   name: prometheus-alertmanager
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   externalTrafficPolicy: Cluster
   ports:
@@ -140,7 +140,7 @@ metadata:
     component: alertmanager
     release: prometheus
   name: prometheus-alertmanager
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   rules:
   - host: {{ .PrometheusAlertManagerIngressEndpoint }}

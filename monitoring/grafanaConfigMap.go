@@ -1,6 +1,6 @@
-package templates
+package monitoring
 
-const GrafanaConfigMapTemplate = `
+const GrafanaConfigMap = `
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,7 +8,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana-resources
-  namespace: zcloud
+  namespace: kube-monitoring
 data:
   nodes-dashboard.json: |-
     {
@@ -1282,7 +1282,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: zcloud
+  namespace: kube-monitoring
 data:
   kubernetes-capacity-planning-dashboard.json: |-
     {

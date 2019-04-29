@@ -1,7 +1,8 @@
-package cluster
+package monitoring
 
 import (
 	"context"
+	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/templates"
 )
@@ -31,7 +32,7 @@ const (
 	GrafanaIngressEndpoint                = "GrafanaIngressEndpoint"
 )
 
-func (c *Cluster) deployMonitoring(ctx context.Context) error {
+func deployMonitoring(ctx context.Context, c *Cluster) error {
 	log.Infof(ctx, "[Monitor] Setting up MonitoringPlugin")
 	if err := c.doPrometheusDeploy(ctx); err != nil {
 		return err
@@ -51,7 +52,7 @@ func (c *Cluster) deployMonitoring(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) doPrometheusDeploy(ctx context.Context) error {
+func doPrometheusDeploy(ctx context.Context, c *Cluster) error {
 	config := map[string]interface{}{
 		RBACConfig:                       c.Authorization.Mode,
 		PermetheusServerImage:            c.SystemImages.PrometheusServer,
@@ -67,7 +68,7 @@ func (c *Cluster) doPrometheusDeploy(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) doNodeExporterDeploy(ctx context.Context) error {
+func doNodeExporterDeploy(ctx context.Context, c *Cluster) error {
 	config := map[string]interface{}{
 		PermetheusNodeExporterImage: c.SystemImages.PrometheusNodeExporter,
 	}
@@ -81,7 +82,7 @@ func (c *Cluster) doNodeExporterDeploy(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) doKubeStateMetricsDeploy(ctx context.Context) error {
+func doKubeStateMetricsDeploy(ctx context.Context, c *Cluster) error {
 	config := map[string]interface{}{
 		RBACConfig:            c.Authorization.Mode,
 		KubeStateMetricsImage: c.SystemImages.KubeStateMetrics,
@@ -96,7 +97,7 @@ func (c *Cluster) doKubeStateMetricsDeploy(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) doAlertManagerDeploy(ctx context.Context) error {
+func doAlertManagerDeploy(ctx context.Context, c *Cluster) error {
 	config := map[string]interface{}{
 		RBACConfig:                            c.Authorization.Mode,
 		PrometheusAlertManagerImage:           c.SystemImages.PrometheusAlertManager,
@@ -113,7 +114,7 @@ func (c *Cluster) doAlertManagerDeploy(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cluster) doGrafanaDeploy(ctx context.Context) error {
+func doGrafanaDeploy(ctx context.Context, c *Cluster) error {
 	config := map[string]interface{}{
 		RBACConfig:             c.Authorization.Mode,
 		GrafanaImage:           c.SystemImages.Grafana,

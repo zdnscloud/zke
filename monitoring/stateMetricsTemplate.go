@@ -1,11 +1,11 @@
-package templates
+package monitoring
 
-const KubeStateMetricsTemplate = `
+const StateMetricsTemplate = `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-kube-state-metrics
-  namespace: zcloud
+  namespace: kube-monitoring
 ---
 {{- if eq .RBACConfig "rbac"}}
 ---
@@ -85,7 +85,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-kube-state-metrics
-  namespace: zcloud
+  namespace: kube-monitoring
 {{- end}}
 ---
 apiVersion: apps/v1beta2
@@ -96,7 +96,7 @@ metadata:
     component: kube-state-metrics
     release: prometheus
   name: prometheus-kube-state-metrics
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -148,7 +148,7 @@ metadata:
     component: kube-state-metrics
     release: prometheus
   name: prometheus-kube-state-metrics
-  namespace: zcloud
+  namespace: kube-monitoring
 spec:
   ports:
   - name: http

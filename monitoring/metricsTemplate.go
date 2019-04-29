@@ -1,4 +1,4 @@
-package templates
+package monitoring
 
 const MetricsServerTemplate = `
 {{- if eq .RBACConfig "rbac"}}
@@ -14,13 +14,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: metrics-server
-  namespace: kube-system
+  namespace: kube-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
   name: metrics-server-auth-reader
-  namespace: kube-system
+  namespace: kube-monitoring
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -28,7 +28,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: metrics-server
-  namespace: kube-system
+  namespace: kube-monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -66,7 +66,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: metrics-server
-  namespace: kube-system
+  namespace: kube-monitoring
 {{- end }}
 ---
 apiVersion: apiregistration.k8s.io/v1beta1
@@ -76,7 +76,7 @@ metadata:
 spec:
   service:
     name: metrics-server
-    namespace: kube-system
+    namespace: kube-monitoring
   group: metrics.k8s.io
   version: v1beta1
   insecureSkipTLSVerify: true
@@ -87,13 +87,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: metrics-server
-  namespace: kube-system
+  namespace: kube-monitoring
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: metrics-server
-  namespace: kube-system
+  namespace: kube-monitoring
   labels:
     k8s-app: metrics-server
 spec:
@@ -128,7 +128,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: metrics-server
-  namespace: kube-system
+  namespace: kube-monitoring
   labels:
     kubernetes.io/name: "Metrics-server"
 spec:
