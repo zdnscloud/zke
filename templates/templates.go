@@ -7,7 +7,6 @@ import (
 )
 
 var tmpltMap map[string]string = map[string]string{
-	"nginx":          NginxIngressTemplate,
 	"metrics-server": MetricsServerTemplate,
 }
 

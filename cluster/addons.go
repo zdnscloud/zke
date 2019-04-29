@@ -23,16 +23,6 @@ const (
 	CoreDNSAddonAppName            = "coredns"
 )
 
-type ingressOptions struct {
-	RBACConfig     string
-	Options        map[string]string
-	NodeSelector   map[string]string
-	ExtraArgs      map[string]string
-	AlpineImage    string
-	IngressImage   string
-	IngressBackend string
-}
-
 type MetricsServerOptions struct {
 	RBACConfig         string
 	Options            map[string]string
@@ -60,14 +50,6 @@ func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", MetricsServerAddonResourceName, err)
-	}
-
-	if err := c.deployIngress(ctx); err != nil {
-		if err, ok := err.(*AddonError); ok && err.IsCritical {
-			return err
-		}
-		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", IngressAddonResourceName, err)
-
 	}
 	return nil
 }
@@ -150,36 +132,5 @@ func (c *Cluster) ApplySystemAddonExecuteJob(addonJob string, addonUpdated bool)
 	if err := k8s.ApplyK8sSystemJob(addonJob, c.LocalKubeConfigPath, c.K8sWrapTransport, c.AddonJobTimeout, addonUpdated); err != nil {
 		return err
 	}
-	return nil
-}
-
-func (c *Cluster) deployIngress(ctx context.Context) error {
-	log.Infof(ctx, "[ingress] Setting up %s ingress controller", c.Ingress.Provider)
-	ingressConfig := ingressOptions{
-		RBACConfig:     c.Authorization.Mode,
-		Options:        c.Ingress.Options,
-		NodeSelector:   c.Ingress.NodeSelector,
-		ExtraArgs:      c.Ingress.ExtraArgs,
-		IngressImage:   c.SystemImages.Ingress,
-		IngressBackend: c.SystemImages.IngressBackend,
-	}
-	// since nginx ingress controller 0.16.0, it can be run as non-root and doesn't require privileged anymore.
-	// So we can use securityContext instead of setting privileges via initContainer.
-	ingressSplits := strings.SplitN(c.SystemImages.Ingress, ":", 2)
-	if len(ingressSplits) == 2 {
-		version := strings.Split(ingressSplits[1], "-")[0]
-		if version < "0.16.0" {
-			ingressConfig.AlpineImage = c.SystemImages.Alpine
-		}
-	}
-	// Currently only deploying nginx ingress controller
-	ingressYaml, err := templates.GetManifest(ingressConfig, c.Ingress.Provider)
-	if err != nil {
-		return err
-	}
-	if err := c.DoAddonDeploy(ctx, ingressYaml, IngressAddonResourceName, false); err != nil {
-		return err
-	}
-	log.Infof(ctx, "[ingress] ingress controller %s deployed successfully", c.Ingress.Provider)
 	return nil
 }

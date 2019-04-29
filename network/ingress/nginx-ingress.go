@@ -1,4 +1,14 @@
-package templates
+package ingress
+
+type IngressOptions struct {
+	RBACConfig     string
+	Options        map[string]string
+	NodeSelector   map[string]string
+	ExtraArgs      map[string]string
+	AlpineImage    string
+	IngressImage   string
+	IngressBackend string
+}
 
 const NginxIngressTemplate = `
 apiVersion: v1
