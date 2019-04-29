@@ -1,13 +1,28 @@
-package templates
+package coredns
+
+type CoreDNSOptions struct {
+	RBACConfig             string
+	CoreDNSImage           string
+	CoreDNSAutoScalerImage string
+	ClusterDomain          string
+	ClusterDNSServer       string
+	ReverseCIDRs           []string
+	UpstreamNameservers    []string
+	NodeSelector           map[string]string
+}
 
 const CoreDNSTemplate = `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-network
 ---
 {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: coredns
-  namespace: kube-system
+  namespace: kube-network
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -42,14 +57,14 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: coredns
-  namespace: kube-system
+  namespace: kube-network
 {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: coredns
-  namespace: kube-system
+  namespace: kube-network
 data:
   Corefile: |
     .:53 {
@@ -80,7 +95,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: coredns
-  namespace: kube-system
+  namespace: kube-network
   labels:
     k8s-app: kube-dns
     kubernetes.io/name: "CoreDNS"
@@ -163,7 +178,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kube-dns
-  namespace: kube-system
+  namespace: kube-network
   annotations:
     prometheus.io/port: "9153"
     prometheus.io/scrape: "true"

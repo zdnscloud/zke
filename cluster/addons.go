@@ -39,16 +39,6 @@ type MetricsServerOptions struct {
 	MetricsServerImage string
 	Version            string
 }
-type CoreDNSOptions struct {
-	RBACConfig             string
-	CoreDNSImage           string
-	CoreDNSAutoScalerImage string
-	ClusterDomain          string
-	ClusterDNSServer       string
-	ReverseCIDRs           []string
-	UpstreamNameservers    []string
-	NodeSelector           map[string]string
-}
 
 type AddonError struct {
 	err        string
@@ -65,14 +55,6 @@ func getAddonResourceName(addon string) string {
 }
 
 func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
-	if err := c.deployDNS(ctx); err != nil {
-		if err, ok := err.(*AddonError); ok && err.IsCritical {
-			return err
-		}
-		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider %s: %v", DNSAddonResourceName, err)
-
-	}
-
 	if err := c.deployMetricServer(ctx); err != nil {
 		if err, ok := err.(*AddonError); ok && err.IsCritical {
 			return err
@@ -87,28 +69,6 @@ func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
 		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", IngressAddonResourceName, err)
 
 	}
-	return nil
-}
-
-func (c *Cluster) deployDNS(ctx context.Context) error {
-	log.Infof(ctx, "[DNS] Setting up DNS provider %s", c.DNS.Provider)
-	CoreDNSConfig := CoreDNSOptions{
-		CoreDNSImage:           c.SystemImages.CoreDNS,
-		CoreDNSAutoScalerImage: c.SystemImages.CoreDNSAutoscaler,
-		RBACConfig:             c.Authorization.Mode,
-		ClusterDomain:          c.ClusterDomain,
-		ClusterDNSServer:       c.ClusterDNSServer,
-		UpstreamNameservers:    c.DNS.UpstreamNameservers,
-		ReverseCIDRs:           c.DNS.ReverseCIDRs,
-	}
-	coreDNSYaml, err := templates.GetManifest(CoreDNSConfig, c.DNS.Provider)
-	if err != nil {
-		return err
-	}
-	if err := c.DoAddonDeploy(ctx, coreDNSYaml, getAddonResourceName(c.DNS.Provider), false); err != nil {
-		return err
-	}
-	log.Infof(ctx, "[DNS] DNS provider %s deployed successfully", c.DNS.Provider)
 	return nil
 }
 

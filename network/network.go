@@ -6,6 +6,7 @@ import (
 
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/network/calico"
+	"github.com/zdnscloud/zke/network/coredns"
 	"github.com/zdnscloud/zke/network/flannel"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
@@ -33,11 +34,24 @@ const (
 	CalicoCloudProvider = "calico_cloud_provider"
 	Calicoctl           = "Calicoctl"
 
+	CoreDNSResourceName = "zke-dns-plugin"
+
 	Image            = "Image"
 	CNIImage         = "CNIImage"
 	NodeImage        = "NodeImage"
 	ControllersImage = "ControllersImage"
 )
+
+func DeployNetwork(ctx context.Context, c *cluster.Cluster) error {
+	if err := DeployNetworkPlugin(ctx, c); err != nil {
+		return err
+	}
+
+	if err := deployDNSPlugin(ctx, c); err != nil {
+		return err
+	}
+	return nil
+}
 
 func DeployNetworkPlugin(ctx context.Context, c *cluster.Cluster) error {
 	log.Infof(ctx, "[network] Setting up network plugin: %s", c.Network.Plugin)
@@ -100,4 +114,36 @@ func doCalicoDeploy(ctx context.Context, c *cluster.Cluster) error {
 		return err
 	}
 	return c.DoAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
+}
+
+func deployDNSPlugin(ctx context.Context, c *cluster.Cluster) error {
+	if err := doCoreDNSDeploy(ctx, c); err != nil {
+		if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
+			return err
+		}
+		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider coredns: %v", err)
+	}
+	return nil
+}
+
+func doCoreDNSDeploy(ctx context.Context, c *cluster.Cluster) error {
+	log.Infof(ctx, "[DNS] Setting up DNS provider %s", c.DNS.Provider)
+	CoreDNSConfig := coredns.CoreDNSOptions{
+		CoreDNSImage:           c.SystemImages.CoreDNS,
+		CoreDNSAutoScalerImage: c.SystemImages.CoreDNSAutoscaler,
+		RBACConfig:             c.Authorization.Mode,
+		ClusterDomain:          c.ClusterDomain,
+		ClusterDNSServer:       c.ClusterDNSServer,
+		UpstreamNameservers:    c.DNS.UpstreamNameservers,
+		ReverseCIDRs:           c.DNS.ReverseCIDRs,
+	}
+	coreDNSYaml, err := templates.CompileTemplateFromMap(coredns.CoreDNSTemplate, CoreDNSConfig)
+	if err != nil {
+		return err
+	}
+	if err := c.DoAddonDeploy(ctx, coreDNSYaml, CoreDNSResourceName, false); err != nil {
+		return err
+	}
+	log.Infof(ctx, "[DNS] DNS provider coredns deployed successfully")
+	return nil
 }

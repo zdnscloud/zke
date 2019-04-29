@@ -236,23 +236,25 @@ func ConfigureCluster(
 	kubeCluster.UseKubectlDeploy = useKubectl
 	if len(kubeCluster.ControlPlaneHosts) > 0 {
 		kubeCluster.Certificates = crtBundle
-		//if err := kubeCluster.DeployNetworkPlugin(ctx); err != nil {
-		if err := network.DeployNetworkPlugin(ctx, kubeCluster); err != nil {
+		if err := network.DeployNetwork(ctx, kubeCluster); err != nil {
 			if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
 				return err
 			}
 			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", network.NetworkPluginResourceName, err)
 		}
-		//if err := kubeCluster.DeployStoragePlugin(ctx); err != nil {
+
 		if err := storage.DeployStoragePlugin(ctx, kubeCluster); err != nil {
 			return err
 		}
+
 		if err := kubeCluster.DeployAddons(ctx); err != nil {
 			return err
 		}
+
 		if err := zcloud.DeployZcloudManager(ctx, kubeCluster); err != nil {
 			return err
 		}
+
 		if err := monitoring.DeployMonitoring(ctx, kubeCluster); err != nil {
 			return err
 		}
