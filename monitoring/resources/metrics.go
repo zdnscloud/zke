@@ -1,4 +1,4 @@
-package templates
+package resources
 
 const MetricsServerTemplate = `
 {{- if eq .RBACConfig "rbac"}}

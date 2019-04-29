@@ -6,29 +6,13 @@ import (
 	"github.com/zdnscloud/zke/addons"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/templates"
-	"strings"
 	"time"
 )
 
 const (
-	UserAddonResourceName          = "zke-user-addon"
-	IngressAddonResourceName       = "zke-ingress-controller"
-	UserAddonsIncludeResourceName  = "zke-user-includes-addons"
-	DNSAddonResourceName           = "zke-coredns-addon"
-	IngressAddonJobName            = "zke-ingress-controller-deploy-job"
-	MetricsServerAddonJobName      = "zke-metrics-addon-deploy-job"
-	MetricsServerAddonResourceName = "zke-metrics-addon"
-	NginxIngressAddonAppName       = "ingress-nginx"
-	CoreDNSAddonAppName            = "coredns"
+	NginxIngressAddonAppName = "ingress-nginx"
+	CoreDNSAddonAppName      = "coredns"
 )
-
-type MetricsServerOptions struct {
-	RBACConfig         string
-	Options            map[string]string
-	MetricsServerImage string
-	Version            string
-}
 
 type AddonError struct {
 	err        string
@@ -37,42 +21,6 @@ type AddonError struct {
 
 func (e *AddonError) Error() string {
 	return e.err
-}
-
-func getAddonResourceName(addon string) string {
-	AddonResourceName := "zke-" + addon + "-addon"
-	return AddonResourceName
-}
-
-func (c *Cluster) deployK8sAddOns(ctx context.Context) error {
-	if err := c.deployMetricServer(ctx); err != nil {
-		if err, ok := err.(*AddonError); ok && err.IsCritical {
-			return err
-		}
-		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", MetricsServerAddonResourceName, err)
-	}
-	return nil
-}
-
-func (c *Cluster) deployMetricServer(ctx context.Context) error {
-	log.Infof(ctx, "[addons] Setting up %s", c.Monitoring.MetricsProvider)
-	s := strings.Split(c.SystemImages.MetricsServer, ":")
-	versionTag := s[len(s)-1]
-	MetricsServerConfig := MetricsServerOptions{
-		MetricsServerImage: c.SystemImages.MetricsServer,
-		RBACConfig:         c.Authorization.Mode,
-		Options:            c.Monitoring.MetricsOptions,
-		Version:            GetTagMajorVersion(versionTag),
-	}
-	metricsYaml, err := templates.GetManifest(MetricsServerConfig, c.Monitoring.MetricsProvider)
-	if err != nil {
-		return err
-	}
-	if err := c.DoAddonDeploy(ctx, metricsYaml, MetricsServerAddonResourceName, false); err != nil {
-		return err
-	}
-	log.Infof(ctx, "[addons] %s deployed successfully", c.Monitoring.MetricsProvider)
-	return nil
 }
 
 func (c *Cluster) DoAddonDeploy(ctx context.Context, addonYaml, resourceName string, IsCritical bool) error {

@@ -247,15 +247,11 @@ func ConfigureCluster(
 			return err
 		}
 
-		if err := kubeCluster.DeployAddons(ctx); err != nil {
+		if err := monitoring.DeployMonitoring(ctx, kubeCluster); err != nil {
 			return err
 		}
 
 		if err := zcloud.DeployZcloudManager(ctx, kubeCluster); err != nil {
-			return err
-		}
-
-		if err := monitoring.DeployMonitoring(ctx, kubeCluster); err != nil {
 			return err
 		}
 	}

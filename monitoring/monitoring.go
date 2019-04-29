@@ -2,7 +2,7 @@ package monitoring
 
 import (
 	"context"
-	// "strings"
+	"strings"
 
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/monitoring/resources"
@@ -17,8 +17,8 @@ const (
 	AlertManagerDeployJobName     = "zke-alertmanager-deploy-job"
 	GrafanaConfigmapDeployJobName = "zke-grafanaconf-deploy-job"
 	GrafanaDeployJobName          = "zke-grafana-deploy-job"
-	// MetricServerDeployJobName     = "zke-metricsServer-deploy-job"
-	MonitoringPreDeployJobName = "zke-monitoring-pre-deploy-job"
+	MetricServerDeployJobName     = "zke-metricsserver-deploy-job"
+	MonitoringPreDeployJobName    = "zke-monitoring-pre-deploy-job"
 
 	PrometheusAlertManagerImage           = "PrometheusAlertManagerImage"
 	PrometheusConfigMapReloaderImage      = "PrometheusConfigMapReloaderImage"
@@ -31,14 +31,12 @@ const (
 	GrafanaIngressEndpoint                = "GrafanaIngressEndpoint"
 )
 
-/*
-type MetricsServerOptions struct {
+type metricsServerOptions struct {
 	RBACConfig         string
 	Options            map[string]string
 	MetricsServerImage string
 	Version            string
 }
-*/
 
 func DeployMonitoring(ctx context.Context, c *cluster.Cluster) error {
 	log.Infof(ctx, "[Monitor] Setting up MonitoringPlugin")
@@ -46,14 +44,12 @@ func DeployMonitoring(ctx context.Context, c *cluster.Cluster) error {
 		return err
 	}
 
-	/*
-		if err := doMetricServerDeploy(ctx, c); err != nil {
-			if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
-				return err
-			}
-			log.Warnf(ctx, "Failed to deploy addon execute job [MetricServer]: %v", err)
+	if err := doMetricServerDeploy(ctx, c); err != nil {
+		if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
+			return err
 		}
-	*/
+		log.Warnf(ctx, "Failed to deploy addon execute job [MetricServer]: %v", err)
+	}
 
 	if err := doPrometheusDeploy(ctx, c); err != nil {
 		return err
@@ -159,18 +155,17 @@ func doGrafanaDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-/*
 func doMetricServerDeploy(ctx context.Context, c *cluster.Cluster) error {
 	log.Infof(ctx, "[addons] Setting up %s", c.Monitoring.MetricsProvider)
 	s := strings.Split(c.SystemImages.MetricsServer, ":")
 	versionTag := s[len(s)-1]
-	MetricsServerConfig := MetricsServerOptions{
+	MetricsServerConfig := metricsServerOptions{
 		MetricsServerImage: c.SystemImages.MetricsServer,
 		RBACConfig:         c.Authorization.Mode,
 		Options:            c.Monitoring.MetricsOptions,
 		Version:            cluster.GetTagMajorVersion(versionTag),
 	}
-	metricsYaml, err := templates.CompileTemplateFromMap(MetricsServerTemplate, MetricsServerConfig)
+	metricsYaml, err := templates.CompileTemplateFromMap(resources.MetricsServerTemplate, MetricsServerConfig)
 	if err != nil {
 		return err
 	}
@@ -180,7 +175,6 @@ func doMetricServerDeploy(ctx context.Context, c *cluster.Cluster) error {
 	log.Infof(ctx, "[addons] %s deployed successfully", c.Monitoring.MetricsProvider)
 	return nil
 }
-*/
 
 func doMonitoringPreDeploy(ctx context.Context, c *cluster.Cluster) error {
 	if err := c.DoAddonDeploy(ctx, resources.PreDeployYaml, MonitoringPreDeployJobName, true); err != nil {
