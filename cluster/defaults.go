@@ -266,6 +266,7 @@ func (c *Cluster) setClusterImageDefaults() error {
 		&c.SystemImages.StorageDriverRegistrar:    d(imageDefaults.StorageDriverRegistrar, privRegURL),
 		&c.SystemImages.StorageCSILvmplugin:       d(imageDefaults.StorageCSILvmplugin, privRegURL),
 		&c.SystemImages.StorageLvmd:               d(imageDefaults.StorageLvmd, privRegURL),
+		&c.SystemImages.ClusterAgent:              d(imageDefaults.ClusterAgent, privRegURL),
 	}
 
 	for k, v := range systemImagesDefaultsMap {

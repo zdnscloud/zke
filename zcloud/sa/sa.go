@@ -1,6 +1,6 @@
-package templates
+package zcloudsa
 
-const ZcloudPreDeployTemplate = `
+const SATemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:

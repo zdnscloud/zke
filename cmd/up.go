@@ -12,6 +12,7 @@ import (
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/storage"
 	"github.com/zdnscloud/zke/types"
+	"github.com/zdnscloud/zke/zcloud"
 	"k8s.io/client-go/util/cert"
 	"os"
 	"strings"
@@ -248,7 +249,7 @@ func ConfigureCluster(
 		if err := kubeCluster.DeployAddons(ctx); err != nil {
 			return err
 		}
-		if err := kubeCluster.DeployZcloudPre(ctx); err != nil {
+		if err := zcloud.DeployZcloudManager(ctx, kubeCluster); err != nil {
 			return err
 		}
 		if err := kubeCluster.DeployMonitoring(ctx); err != nil {

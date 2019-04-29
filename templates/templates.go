@@ -6,10 +6,6 @@ import (
 	"text/template"
 )
 
-const (
-	Calico = "calico"
-)
-
 var tmpltMap map[string]string = map[string]string{
 	"coredns":                       CoreDNSTemplate,
 	"nginx":                         NginxIngressTemplate,
@@ -20,7 +16,6 @@ var tmpltMap map[string]string = map[string]string{
 	"monitoring-kube-state-metrics": KubeStateMetricsTemplate,
 	"monitoring-grafana-conf":       GrafanaConfigMapTemplate,
 	"monitoring-grafana":            GrafanaTemplate,
-	"zcloud-predeploy":              ZcloudPreDeployTemplate,
 }
 
 func CompileTemplateFromMap(tmplt string, configMap interface{}) (string, error) {
