@@ -28,7 +28,7 @@ func (c *Cluster) doZcloudPreDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, configYaml, ZcloudPredeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, configYaml, ZcloudPredeployJobName, true); err != nil {
 		return err
 	}
 	return nil

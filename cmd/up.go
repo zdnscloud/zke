@@ -7,8 +7,10 @@ import (
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/network"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/storage"
 	"github.com/zdnscloud/zke/types"
 	"k8s.io/client-go/util/cert"
 	"os"
@@ -232,13 +234,15 @@ func ConfigureCluster(
 	kubeCluster.UseKubectlDeploy = useKubectl
 	if len(kubeCluster.ControlPlaneHosts) > 0 {
 		kubeCluster.Certificates = crtBundle
-		if err := kubeCluster.DeployNetworkPlugin(ctx); err != nil {
+		//if err := kubeCluster.DeployNetworkPlugin(ctx); err != nil {
+		if err := network.DeployNetworkPlugin(ctx, kubeCluster); err != nil {
 			if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
 				return err
 			}
-			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", cluster.NetworkPluginResourceName, err)
+			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", network.NetworkPluginResourceName, err)
 		}
-		if err := kubeCluster.DeployStoragePlugin(ctx); err != nil {
+		//if err := kubeCluster.DeployStoragePlugin(ctx); err != nil {
+		if err := storage.DeployStoragePlugin(ctx, kubeCluster); err != nil {
 			return err
 		}
 		if err := kubeCluster.DeployAddons(ctx); err != nil {

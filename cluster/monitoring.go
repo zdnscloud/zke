@@ -61,7 +61,7 @@ func (c *Cluster) doPrometheusDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, prometheusYaml, PrometheusDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, prometheusYaml, PrometheusDeployJobName, true); err != nil {
 		return err
 	}
 	return nil
@@ -75,7 +75,7 @@ func (c *Cluster) doNodeExporterDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, configYaml, NodeExporterDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, configYaml, NodeExporterDeployJobName, true); err != nil {
 		return err
 	}
 	return nil
@@ -90,7 +90,7 @@ func (c *Cluster) doKubeStateMetricsDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, configYaml, KubeStateMetricsDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, configYaml, KubeStateMetricsDeployJobName, true); err != nil {
 		return err
 	}
 	return nil
@@ -107,7 +107,7 @@ func (c *Cluster) doAlertManagerDeploy(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, configYaml, AlertManagerDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, configYaml, AlertManagerDeployJobName, true); err != nil {
 		return err
 	}
 	return nil
@@ -121,14 +121,14 @@ func (c *Cluster) doGrafanaDeploy(ctx context.Context) error {
 		GrafanaIngressEndpoint: c.Monitoring.GrafanaIngressEndpoint,
 	}
 	GrafanaConfigmapYaml := templates.GrafanaConfigMapTemplate
-	if err := c.doAddonDeploy(ctx, GrafanaConfigmapYaml, GrafanaConfigmapDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, GrafanaConfigmapYaml, GrafanaConfigmapDeployJobName, true); err != nil {
 		return err
 	}
 	configYaml, err := templates.GetManifest(config, GrafanaResourceName)
 	if err != nil {
 		return err
 	}
-	if err := c.doAddonDeploy(ctx, configYaml, GrafanaDeployJobName, true); err != nil {
+	if err := c.DoAddonDeploy(ctx, configYaml, GrafanaDeployJobName, true); err != nil {
 		return err
 	}
 	return nil

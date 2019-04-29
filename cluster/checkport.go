@@ -13,15 +13,11 @@ import (
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
-	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/templates"
 	"github.com/zdnscloud/zke/types"
 	"golang.org/x/sync/errgroup"
 )
 
 const (
-	NetworkPluginResourceName = "zke-network-plugin"
-
 	PortCheckContainer        = "zke-port-checker"
 	EtcdPortListenContainer   = "zke-etcd-port-listener"
 	CPPortListenContainer     = "zke-cp-port-listener"
@@ -41,13 +37,15 @@ const (
 
 	NoNetworkPlugin = "none"
 
-	FlannelNetworkPlugin        = "flannel"
+	FlannelNetworkPlugin = "flannel"
+	CalicoNetworkPlugin  = "calico"
+	CalicoCloudProvider  = "calico_cloud_provider"
+	FlannelInterface     = "FlannelInterface"
+	FlannelBackend       = "FlannelBackend"
+
 	FlannelIface                = "flannel_iface"
 	FlannelBackendType          = "flannel_backend_type"
 	FlannelBackendDirectrouting = "flannel_vxlan_directrouting"
-
-	CalicoNetworkPlugin = "calico"
-	CalicoCloudProvider = "calico_cloud_provider"
 
 	// List of map keys to be used with network templates
 
@@ -68,22 +66,8 @@ const (
 	ClientKeyPath  = "ClientKeyPath"
 	ClientCAPath   = "ClientCAPath"
 
-	KubeCfg = "KubeCfg"
-
-	ClusterCIDR = "ClusterCIDR"
-	// Images key names
-
-	Image            = "Image"
-	CNIImage         = "CNIImage"
-	NodeImage        = "NodeImage"
-	ControllersImage = "ControllersImage"
-
-	Calicoctl = "Calicoctl"
-
-	FlannelInterface = "FlannelInterface"
-	FlannelBackend   = "FlannelBackend"
-	RBACConfig       = "RBACConfig"
-	ClusterVersion   = "ClusterVersion"
+	RBACConfig     = "RBACConfig"
+	ClusterVersion = "ClusterVersion"
 )
 
 var EtcdPortList = []string{
@@ -101,59 +85,6 @@ var WorkerPortList = []string{
 
 var EtcdClientPortList = []string{
 	EtcdPort1,
-}
-
-func (c *Cluster) DeployNetworkPlugin(ctx context.Context) error {
-	log.Infof(ctx, "[network] Setting up network plugin: %s", c.Network.Plugin)
-	switch c.Network.Plugin {
-	case FlannelNetworkPlugin:
-		return c.doFlannelDeploy(ctx)
-	case CalicoNetworkPlugin:
-		return c.doCalicoDeploy(ctx)
-	case NoNetworkPlugin:
-		log.Infof(ctx, "[network] Not deploying a cluster network, expecting custom CNI")
-		return nil
-	default:
-		return fmt.Errorf("[network] Unsupported network plugin: %s", c.Network.Plugin)
-	}
-}
-
-func (c *Cluster) doFlannelDeploy(ctx context.Context) error {
-	flannelConfig := map[string]interface{}{
-		ClusterCIDR:      c.ClusterCIDR,
-		Image:            c.SystemImages.Flannel,
-		CNIImage:         c.SystemImages.FlannelCNI,
-		FlannelInterface: c.Network.Options[FlannelIface],
-		FlannelBackend: map[string]interface{}{
-			"Type":          c.Network.Options[FlannelBackendType],
-			"Directrouting": c.Network.Options[FlannelBackendDirectrouting],
-		},
-		RBACConfig:     c.Authorization.Mode,
-		ClusterVersion: getTagMajorVersion(c.Version),
-	}
-	pluginYaml, err := templates.GetManifest(flannelConfig, FlannelNetworkPlugin)
-	if err != nil {
-		return err
-	}
-	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
-}
-
-func (c *Cluster) doCalicoDeploy(ctx context.Context) error {
-	clientConfig := pki.GetConfigPath(pki.KubeNodeCertName)
-	calicoConfig := map[string]interface{}{
-		KubeCfg:       clientConfig,
-		ClusterCIDR:   c.ClusterCIDR,
-		CNIImage:      c.SystemImages.CalicoCNI,
-		NodeImage:     c.SystemImages.CalicoNode,
-		Calicoctl:     c.SystemImages.CalicoCtl,
-		CloudProvider: c.Network.Options[CalicoCloudProvider],
-		RBACConfig:    c.Authorization.Mode,
-	}
-	pluginYaml, err := templates.GetManifest(calicoConfig, CalicoNetworkPlugin, c.Version)
-	if err != nil {
-		return err
-	}
-	return c.doAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
 
 func (c *Cluster) CheckClusterPorts(ctx context.Context, currentCluster *Cluster) error {

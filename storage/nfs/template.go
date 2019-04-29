@@ -1,23 +1,23 @@
-package templates
+package nfs
 
 const NFSStorageTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: zcloud
+  name: kube-storage
 ---
 {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: nfs-provisioner
-  namespace: zcloud
+  namespace: kube-storage
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: nfs-provisioner-runner
-  namespace: zcloud
+  namespace: kube-storage
 rules:
   - apiGroups: [""]
     resources: ["persistentvolumes"]
@@ -43,11 +43,11 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: run-nfs-provisioner
-  namespace: zcloud
+  namespace: kube-storage
 subjects:
   - kind: ServiceAccount
     name: nfs-provisioner
-    namespace: zcloud
+    namespace: kube-storage
 roleRef:
   kind: ClusterRole
   name: nfs-provisioner-runner
@@ -56,7 +56,7 @@ roleRef:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: zcloud
+  namespace: kube-storage
   name: leader-locking-nfs-provisioner
 rules:
   - apiGroups: [""]
@@ -66,12 +66,12 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: zcloud
+  namespace: kube-storage
   name: leader-locking-nfs-provisioner
 subjects:
   - kind: ServiceAccount
     name: nfs-provisioner
-    namespace: zcloud
+    namespace: kube-storage
 roleRef:
   kind: Role
   name: leader-locking-nfs-provisioner
@@ -81,7 +81,7 @@ roleRef:
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: zcloud
+  namespace: kube-storage
   name: nfs-provisioner
   labels:
     app: nfs-provisioner
@@ -102,7 +102,7 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  namespace: zcloud
+  namespace: kube-storage
   name: nfs-provisioner
 spec:
   selector:
