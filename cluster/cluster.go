@@ -437,46 +437,6 @@ func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 	return nil
 }
 
-func ConfigureCluster(
-	ctx context.Context,
-	zkeConfig types.ZcloudKubernetesEngineConfig,
-	crtBundle map[string]pki.CertificatePKI,
-	flags ExternalFlags,
-	dailersOptions hosts.DialersOptions,
-	useKubectl bool) error {
-	// dialer factories are not needed here since we are not uses docker only k8s jobs
-	kubeCluster, err := InitClusterObject(ctx, &zkeConfig, flags)
-	if err != nil {
-		return err
-	}
-	if err := kubeCluster.SetupDialers(ctx, dailersOptions); err != nil {
-		return err
-	}
-	kubeCluster.UseKubectlDeploy = useKubectl
-	if len(kubeCluster.ControlPlaneHosts) > 0 {
-		kubeCluster.Certificates = crtBundle
-		if err := kubeCluster.deployNetworkPlugin(ctx); err != nil {
-			if err, ok := err.(*addonError); ok && err.isCritical {
-				return err
-			}
-			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", NetworkPluginResourceName, err)
-		}
-		if err := kubeCluster.deployStoragePlugin(ctx); err != nil {
-			return err
-		}
-		if err := kubeCluster.deployAddons(ctx); err != nil {
-			return err
-		}
-		if err := kubeCluster.deployZcloudPre(ctx); err != nil {
-			return err
-		}
-		if err := kubeCluster.deployMonitoring(ctx); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 	log.Infof(ctx, "Restarting network, ingress, and metrics pods")
 	// this will remove the pods created by ZKE and let the controller creates them again
