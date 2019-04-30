@@ -14,13 +14,13 @@ import (
 	ref "github.com/docker/distribution/reference"
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/sirupsen/logrus"
-	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/k8s"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/k8s"
+	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
-	"github.com/zdnscloud/zke/util"
 )
 
 const (
@@ -183,7 +183,7 @@ func (c *Cluster) BuildKubeAPIProcess(host *hosts.Host, prefixPath string) types
 		}
 	}
 	// check api server count for k8s v1.8
-	if getTagMajorVersion(c.Version) == "v1.8" {
+	if GetTagMajorVersion(c.Version) == "v1.8" {
 		CommandArgs["apiserver-count"] = strconv.Itoa(len(c.ControlPlaneHosts))
 	}
 
@@ -771,11 +771,11 @@ func BuildPortChecksFromPortList(host *hosts.Host, portList []string, proto stri
 }
 
 func (c *Cluster) GetKubernetesServicesOptions() types.KubernetesServicesOptions {
-	clusterMajorVersion := getTagMajorVersion(c.Version)
+	clusterMajorVersion := GetTagMajorVersion(c.Version)
 	NamedkK8sImage, _ := ref.ParseNormalizedNamed(c.SystemImages.Kubernetes)
 
 	k8sImageTag := NamedkK8sImage.(ref.Tagged).Tag()
-	k8sImageMajorVersion := getTagMajorVersion(k8sImageTag)
+	k8sImageMajorVersion := GetTagMajorVersion(k8sImageTag)
 
 	if clusterMajorVersion != k8sImageMajorVersion && k8sImageMajorVersion != "" {
 		clusterMajorVersion = k8sImageMajorVersion
@@ -788,7 +788,7 @@ func (c *Cluster) GetKubernetesServicesOptions() types.KubernetesServicesOptions
 	return types.KubernetesServicesOptions{}
 }
 
-func getTagMajorVersion(tag string) string {
+func GetTagMajorVersion(tag string) string {
 	splitTag := strings.Split(tag, ".")
 	if len(splitTag) < 2 {
 		return ""

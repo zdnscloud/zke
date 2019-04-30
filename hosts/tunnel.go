@@ -11,9 +11,9 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
-	"github.com/zdnscloud/zke/docker"
-	"github.com/zdnscloud/zke/log"
-	"github.com/zdnscloud/zke/util"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/util"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )

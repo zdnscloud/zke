@@ -141,6 +141,7 @@ type ZKESystemImages struct {
 	KubeStateMetrics            string `yaml:"kube_state_metrics" json:"kube_state_metrics"`
 	// Storage nfs image
 	StorageNFSProvisioner string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
+	ClusterAgent          string `yaml:"cluster_agent" json:"cluster_agent"`
 }
 
 type ZKEConfigNode struct {

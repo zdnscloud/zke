@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zdnscloud/zke/docker"
-	"github.com/zdnscloud/zke/k8s"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/k8s"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/templates"
 	"github.com/zdnscloud/zke/types"
-	"github.com/zdnscloud/zke/util"
 )
 
 const (
@@ -266,6 +266,7 @@ func (c *Cluster) setClusterImageDefaults() error {
 		&c.SystemImages.StorageDriverRegistrar:    d(imageDefaults.StorageDriverRegistrar, privRegURL),
 		&c.SystemImages.StorageCSILvmplugin:       d(imageDefaults.StorageCSILvmplugin, privRegURL),
 		&c.SystemImages.StorageLvmd:               d(imageDefaults.StorageLvmd, privRegURL),
+		&c.SystemImages.ClusterAgent:              d(imageDefaults.ClusterAgent, privRegURL),
 	}
 
 	for k, v := range systemImagesDefaultsMap {

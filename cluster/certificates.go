@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zdnscloud/zke/k8s"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/k8s"
+	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
 	"k8s.io/client-go/util/cert"
 )

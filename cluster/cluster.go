@@ -11,14 +11,14 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/authz"
-	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/k8s"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/k8s"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
-	"github.com/zdnscloud/zke/util"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
@@ -314,21 +314,6 @@ func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZcloudKubernetesEn
 	return nil
 }
 
-func (c *Cluster) deployAddons(ctx context.Context) error {
-	if err := c.deployK8sAddOns(ctx); err != nil {
-		return err
-	}
-	/*
-		if err := c.deployUserAddOns(ctx); err != nil {
-			if err, ok := err.(*addonError); ok && err.isCritical {
-				return err
-			}
-			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", UserAddonsIncludeResourceName, err)
-
-		}*/
-	return nil
-}
-
 func (c *Cluster) SyncLabelsAndTaints(ctx context.Context, currentCluster *Cluster) error {
 	if currentCluster != nil {
 		cpToDelete := hosts.GetToDeleteHosts(currentCluster.ControlPlaneHosts, c.ControlPlaneHosts, c.InactiveHosts)
@@ -434,46 +419,6 @@ func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 		return err
 	}
 	log.Infof(ctx, "Kubernetes images pulled successfully")
-	return nil
-}
-
-func ConfigureCluster(
-	ctx context.Context,
-	zkeConfig types.ZcloudKubernetesEngineConfig,
-	crtBundle map[string]pki.CertificatePKI,
-	flags ExternalFlags,
-	dailersOptions hosts.DialersOptions,
-	useKubectl bool) error {
-	// dialer factories are not needed here since we are not uses docker only k8s jobs
-	kubeCluster, err := InitClusterObject(ctx, &zkeConfig, flags)
-	if err != nil {
-		return err
-	}
-	if err := kubeCluster.SetupDialers(ctx, dailersOptions); err != nil {
-		return err
-	}
-	kubeCluster.UseKubectlDeploy = useKubectl
-	if len(kubeCluster.ControlPlaneHosts) > 0 {
-		kubeCluster.Certificates = crtBundle
-		if err := kubeCluster.deployNetworkPlugin(ctx); err != nil {
-			if err, ok := err.(*addonError); ok && err.isCritical {
-				return err
-			}
-			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", NetworkPluginResourceName, err)
-		}
-		if err := kubeCluster.deployStoragePlugin(ctx); err != nil {
-			return err
-		}
-		if err := kubeCluster.deployAddons(ctx); err != nil {
-			return err
-		}
-		if err := kubeCluster.deployZcloudPre(ctx); err != nil {
-			return err
-		}
-		if err := kubeCluster.deployMonitoring(ctx); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

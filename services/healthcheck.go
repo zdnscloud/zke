@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zdnscloud/zke/docker"
-	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/log"
-	"github.com/zdnscloud/zke/pki"
 	"github.com/sirupsen/logrus"
+	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pki"
 	"k8s.io/client-go/util/cert"
 )
 

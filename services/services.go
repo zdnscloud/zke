@@ -7,11 +7,11 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/sirupsen/logrus"
-	"github.com/zdnscloud/zke/docker"
 	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/log"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
-	"github.com/zdnscloud/zke/util"
 )
 
 const (
