@@ -10,7 +10,8 @@ import (
 	"github.com/zdnscloud/zke/cmd"
 )
 
-var VERSION = "v0.0.12-dev"
+var VERSION string
+var BUILD string
 var released = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
 
 func main() {
@@ -30,7 +31,7 @@ func mainErr() error {
 		if ctx.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-		logrus.Debugf("ZKE version %s", app.Version)
+		logrus.Debugf("ZKE version %s build at %s", app.Version, BUILD)
 		if released.MatchString(app.Version) {
 			return nil
 		}
