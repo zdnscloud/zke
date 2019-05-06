@@ -22,6 +22,7 @@ const (
 	DefaultClusterDomain         = "cluster.local"
 	DefaultClusterName           = "local"
 	DefaultClusterSSHKeyPath     = "~/.ssh/id_rsa"
+	DefaultClusterGlobalDns      = "114.114.114.114,223.5.5.5"
 
 	DefaultK8sVersion = types.DefaultK8s
 

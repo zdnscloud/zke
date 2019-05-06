@@ -197,6 +197,10 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.SystemImages = *systemImages
+	cluster.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
+	if err != nil{
+		return err
+	}
 	// Get Services Config
 	serviceConfig, err := getServiceConfig(reader)
 	if err != nil {
@@ -413,6 +417,19 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 	storageCfg.NFS.Size = size
 
 	return &storageCfg, nil
+}
+
+func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
+	globalDNS := []string{}
+	inputString, err := getConfig(reader, fmt.Sprintf("Cluster global dns,separated by commas"), cluster.DefaultClusterGlobalDns)
+	if err != nil {
+		return nil, err
+	}
+	servers := strings.Split(inputString, ",")
+	for _, server := range servers{
+	    globalDNS = append(globalDNS, server)
+	}
+	return globalDNS, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {
