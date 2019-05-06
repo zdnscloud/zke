@@ -71,7 +71,7 @@ var (
 			CoreDNS:                     m("coredns/coredns:1.2.6"),
 			CoreDNSAutoscaler:           m("gcr.io/google_containers/cluster-proportional-autoscaler-amd64:1.0.0"),
 			StorageCSIAttacher:          m("quay.io/k8scsi/csi-attacher:v1.0.0"),
-			StorageCSIProvisioner:       m("zdnscloud/csi-provisioner:v1.0.0"),
+			StorageCSIProvisioner:       m("quay.io/k8scsi/csi-provisioner:v1.0.0"),
 			StorageDriverRegistrar:      m("quay.io/k8scsi/csi-node-driver-registrar:v1.0.2"),
 			StorageCSILvmplugin:         m("zdnscloud/lvmplugin:v0.6"),
 			StorageLvmd:                 m("zdnscloud/lvmd:v0.1"),

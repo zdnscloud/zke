@@ -392,6 +392,7 @@ spec:
             - "--csi-address=$(ADDRESS)"
             - "--v=50"
             - "--logtostderr"
+            - "--feature-gates=Topology=true"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
