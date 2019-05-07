@@ -57,7 +57,7 @@ const (
 	DefaultEtcdElectionTimeoutValue   = "5000"
 
 	DefaultMonitoringMetricsProvider = "metrics-server"
-	DefaultMonitoringNamespace       = "zcloud"
+	DefaultMonitoringNamespace       = "kube-monitoring"
 )
 
 type ExternalFlags struct {
