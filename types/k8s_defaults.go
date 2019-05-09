@@ -74,7 +74,7 @@ var (
 			StorageCSIProvisioner:       m("quay.io/k8scsi/csi-provisioner:v1.0.0"),
 			StorageDriverRegistrar:      m("quay.io/k8scsi/csi-node-driver-registrar:v1.0.2"),
 			StorageCSILvmplugin:         m("zdnscloud/lvmplugin:v0.6"),
-			StorageLvmd:                 m("zdnscloud/lvmd:v0.1"),
+			StorageLvmd:                 m("zdnscloud/lvmd:v0.2"),
 			StorageNFSProvisioner:       m("quay.io/kubernetes_incubator/nfs-provisioner:v2.2.1-k8s1.12"),
 			PrometheusAlertManager:      m("zdnscloud/prometheus-alertmanager:v0.14.0"),
 			PrometheusConfigMapReloader: m("zdnscloud/prometheus-configmap-reload:v0.1"),
