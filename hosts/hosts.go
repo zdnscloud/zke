@@ -22,7 +22,7 @@ const CleanHeritageCMD = `
 	sudo docker rm -f $(docker ps -a -q);
 	sudo umount $(sudo df -HT | grep '/var/lib/kubelet/pods' | awk '{print $7}');
 	sudo rm -rf /var/lib/{kubelet,rancher} /var/run/flannel/subnet.env /opt/cni/bin/ /etc/cni/net.d/ /var/run/flannel/ /dev/mapper/k8s-pvc--* /dev/k8s/;
-	sudo for i in $(ip r |grep -E "10.42."|awk '{print $1}');do ip route del $i;done ;
+	for i in $(ip r |grep -E "10.42."|awk '{print $1}');do sudo ip route del $i;done ;
 	sudo docker volume prune -f;
 	sudo ip link delete flannel.1;
 	sudo ip link delete cni0;
