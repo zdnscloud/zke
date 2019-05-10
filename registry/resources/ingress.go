@@ -1,0 +1,58 @@
+package resources
+
+const IngressTemplate = `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-registry
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/proxy-body-size: "0"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  generation: 1
+  labels:
+    app: harbor
+  name: harbor-ingress
+  namespace: kube-registry
+spec:
+  rules:
+  - host: harbor.cluster.w
+    http:
+      paths:
+      - backend:
+          serviceName: harbor-portal
+          servicePort: 80
+        path: /
+      - backend:
+          serviceName: harbor-core
+          servicePort: 80
+        path: /api/
+      - backend:
+          serviceName: harbor-core
+          servicePort: 80
+        path: /service/
+      - backend:
+          serviceName: harbor-core
+          servicePort: 80
+        path: /v2/
+      - backend:
+          serviceName: harbor-core
+          servicePort: 80
+        path: /chartrepo/
+      - backend:
+          serviceName: harbor-core
+          servicePort: 80
+        path: /c/
+  - host: notary.harbor.cluster.w
+    http:
+      paths:
+      - backend:
+          serviceName: harbor-notary-server
+          servicePort: 4443
+        path: /
+`

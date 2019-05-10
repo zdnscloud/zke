@@ -8,6 +8,7 @@ import (
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/monitoring"
+	"github.com/zdnscloud/zke/registry"
 	"github.com/zdnscloud/zke/network"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
@@ -248,6 +249,10 @@ func ConfigureCluster(
 		}
 
 		if err := monitoring.DeployMonitoring(ctx, kubeCluster); err != nil {
+			return err
+		}
+
+		if err := registry.DeployRegistry(ctx, kubeCluster); err != nil {
 			return err
 		}
 
