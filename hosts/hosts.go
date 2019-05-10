@@ -3,11 +3,11 @@ package hosts
 import (
 	"context"
 	"fmt"
-	"path"
-
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
+	"path"
 
 	"github.com/docker/docker/client"
 	"github.com/zdnscloud/zke/pkg/docker"
@@ -17,6 +17,16 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 )
+
+const CleanHeritageCMD = `
+	sudo docker rm -f $(docker ps -a -q);
+	sudo umount $(sudo df -HT | grep '/var/lib/kubelet/pods' | awk '{print $7}');
+	sudo rm -rf /var/lib/{kubelet,rancher} /var/run/flannel/subnet.env /opt/cni/bin/ /etc/cni/net.d/ /var/run/flannel/ /dev/mapper/k8s-pvc--* /dev/k8s/;
+	sudo for i in $(ip r |grep -E "10.42."|awk '{print $1}');do ip route del $i;done ;
+	sudo docker volume prune -f;
+	sudo ip link delete flannel.1;
+	sudo ip link delete cni0;
+	`
 
 type Host struct {
 	types.ZKEConfigNode
@@ -133,6 +143,10 @@ func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage 
 	}
 	log.Infof(ctx, "[hosts] Removing dead container logs on host [%s]", h.Address)
 	if err := DoRunLogCleaner(ctx, h, cleanerImage, prsMap); err != nil {
+		return err
+	}
+	log.Infof(ctx, "[hosts] Removing cluster container and generated files on host [%s]", h.Address)
+	if err := DoCleanHeritage(ctx, h); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[hosts] Successfully cleaned up host [%s]", h.Address)
@@ -322,6 +336,31 @@ func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap
 		return err
 	}
 	logrus.Debugf("[cleanup] Successfully cleaned up log links on host [%s]", host.Address)
+	return nil
+}
+
+func DoCleanHeritage(ctx context.Context, host *Host) error {
+	d, err := newDialer(host, "docker")
+	if err != nil {
+		return err
+	}
+	cfg, err := getSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
+	if err != nil {
+		return err
+	}
+	addr := host.Address + ":22"
+	client, err := ssh.Dial("tcp", addr, cfg)
+	if err != nil {
+		return err
+	}
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+	//session.Stdout = os.Stdout
+	//session.Stderr = os.Stderr
+	session.Run(CleanHeritageCMD)
 	return nil
 }
 
