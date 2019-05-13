@@ -48,7 +48,7 @@ spec:
       - envFrom:
         - secretRef:
             name: harbor-database
-        image: goharbor/harbor-db:v1.7.5
+        image: {{ .DatabaseImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
@@ -81,7 +81,7 @@ spec:
         - rm
         - -Rf
         - /var/lib/postgresql/data/lost+found
-        image: goharbor/harbor-db:v1.7.5
+        image: {{ .DatabaseImage}}
         imagePullPolicy: IfNotPresent
         name: remove-lost-found
         resources: {}
@@ -102,7 +102,7 @@ spec:
   - metadata:
       labels:
         app: harbor
-        component: database
+        chart: database
       name: database-data
     spec:
       accessModes:
@@ -110,7 +110,7 @@ spec:
       dataSource: null
       resources:
         requests:
-          storage: 1Gi
+          storage: {{ .DatabaseDiskCapacity}}
       volumeMode: Filesystem
 ---
 apiVersion: v1

@@ -8,18 +8,6 @@ metadata:
 ---
 apiVersion: v1
 data:
-  secret: eGVpWGRtOUwyS2hCWVROVw==
-kind: Secret
-metadata:
-  labels:
-    app: harbor
-    component: jobservice
-  name: harbor-jobservice
-  namespace: kube-registry
-type: Opaque
----
-apiVersion: v1
-data:
   config.yml: |
     protocol: "http"
     port: 8080
@@ -52,6 +40,18 @@ metadata:
   namespace: kube-registry
 ---
 apiVersion: v1
+data:
+  secret: TlFieVNXdDlWb0pzdFVjdQ==
+kind: Secret
+metadata:
+  labels:
+    app: harbor
+    component: jobservice
+  name: harbor-jobservice
+  namespace: kube-registry
+type: Opaque
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   annotations:
@@ -69,7 +69,7 @@ spec:
   dataSource: null
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ .JobserviceDiskCapacity}}
   storageClassName: lvm
   volumeMode: Filesystem
 ---
@@ -101,7 +101,8 @@ spec:
     metadata:
       annotations:
         checksum/configmap: 65a06469e8f69f18602f9d9083d4706b2e9c84b0ee71cec263f6068be30ae03d
-        checksum/secret: 0753567495b60e6d987b409967efa260f95a213fe9fde8862c4925d18c888607
+        checksum/secret: a5b5f87462f05fd9b75a7c285e7e80b99f6a2fcdfcc96d23b17d883dad74dd6a
+      creationTimestamp: null
       labels:
         app: harbor
         component: jobservice
@@ -124,7 +125,7 @@ spec:
           value: http://harbor-registry:8080
         - name: LOG_LEVEL
           value: debug
-        image: goharbor/harbor-jobservice:v1.7.5
+        image: {{ .JobserviceImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3

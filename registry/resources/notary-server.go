@@ -10,71 +10,71 @@ apiVersion: v1
 data:
   notary-signer-ca.crt: |
     -----BEGIN CERTIFICATE-----
-    MIIDAzCCAeugAwIBAgIRAOAhivwD9W/TqfqLqdzfFT0wDQYJKoZIhvcNAQELBQAw
-    GzEZMBcGA1UEAxMQaGFyYm9yLW5vdGFyeS1jYTAeFw0xOTA1MDcwOTEyNDVaFw0y
-    MDA1MDYwOTEyNDVaMBsxGTAXBgNVBAMTEGhhcmJvci1ub3RhcnktY2EwggEiMA0G
-    CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDrY2CFDnv55fDKP5zcUnbpTwv9o4+K
-    U7a39aOr8TFDkYd1zs4w8WWPDjrCOTFvJzG63ieCrGhUizwDxFyh7BSY4WD/rjBn
-    RaXHWvMJz4nj8obIAE+WVPWx3Hy8U8NIpb1d+5b7acYZlSA8a+OJt48e2XmFAC7f
-    y57yQOIi/oww2OKJut5DEtRzkCuukQwc8NepCNHoW6nSn+es0WZRwPuUipvy1r0G
-    22r4tijBT4TgMh8DDSY/z7Xeqi0DNRK5KSbci6Zdtop0JNztleVNwpt0sEXdqmaq
-    LJryHDMNMrnGazYWkL+mpKxRYgvRiHJVkfk+4ni8HYD1lM5dnCDCkPKVAgMBAAGj
+    MIIDAzCCAeugAwIBAgIRAO5ZGsMfcfIrCCx93tA0QdwwDQYJKoZIhvcNAQELBQAw
+    GzEZMBcGA1UEAxMQaGFyYm9yLW5vdGFyeS1jYTAeFw0xOTA1MTAwMjU1MDlaFw0y
+    MDA1MDkwMjU1MDlaMBsxGTAXBgNVBAMTEGhhcmJvci1ub3RhcnktY2EwggEiMA0G
+    CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMYlgco4yYlYTCn6uEy6ynahPj470P
+    F69dL22JIeLabuR95NbtMovQXrAnXeSvX9z0Zo4FS2CN2AMrX09iZ3d/xoVDMLX6
+    cESpQzSOHI4Pc/B7Uu8AxWws5Uh8bp/Xu6zjH+/UVXoJyXcoWq38qzR9B5tAH/Hn
+    uVss3JyN9BcWqRcREOIYc11VovIXrVfUv2LyOJ5/vhvYn7uJmXU90mzKgzor1V+y
+    Gtg7uD319mMv6kjxurAJ50jH+I8WtGxqdkUrRihbVEK5gATiDv742ztqQHfWedyP
+    RBP1aUQsHJVphoZM2tx03cp4xZWjWo5vc3ev4FefiEwR+mQBFX8+O5T7AgMBAAGj
     QjBAMA4GA1UdDwEB/wQEAwICpDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUH
-    AwIwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEA2phTqYvNt0VO
-    o01g2Fp5AqnxUNeLOjJhf8i6lgvtQsgj46zOxjVvqHrtXXpPBeccX6ST2BzRAJ1a
-    EnDZzQ2o/OP8J/lNJCznzjxl32EzuRPGeZcMS5gOrj8Gyquv6ocbBVawf9fSwOGE
-    bVC9HWylCd/b90am4H/rsmHArWjOQoABZwHBT8ilZf6XFjwI4mo3UwuCw7U5PHr4
-    f+UCRmZAF9XsOIb/qDrXGrCCA11zmvTVCn5+MNm7Sd6VWTsZrQMJVD9mpNjmgrrj
-    ARjRdqZthtk+VrDPECMPdRGwSScESfWIryel9at2Jhz5ECWcYH35THL0XbyaVi7G
-    qOfUbxFZcQ==
+    AwIwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAXUwsCfrRRnWn
+    sla22F5NuYI/BPe09o9iWQqxRRWV6BQ2I17n17VkooV8pTh1mgbcrK45G9RP/Flz
+    aYj2IJ5uu4b++SHjq4jlIfIchloZdbxbM7BRM+5IZ+q715W8789X7WyPobL63n7b
+    3n2MIVitbxVPwhMRPlC7r5Nb14MCTLBJ52f9agwNXAuZUqWWqs0NNVe3Z5Ba/WF0
+    Q6iGRrkIQ6qRLCHqgM8fNn50vhijej8QO3C3JfbD2BZqH87695r9tmWDIFF6Dv4z
+    qUuXgqyMsoFV9Si1tJrUgcnz7YGlcCBgXE3ohyLydfrJLFq+lEASEHODCn5oa9/6
+    y84AWFgiWw==
     -----END CERTIFICATE-----
   notary-signer.crt: |
     -----BEGIN CERTIFICATE-----
-    MIIDCjCCAfKgAwIBAgIQDBc7164TZy3BkSasdNVKfDANBgkqhkiG9w0BAQsFADAb
-    MRkwFwYDVQQDExBoYXJib3Itbm90YXJ5LWNhMB4XDTE5MDUwNzA5MTI0NloXDTIw
-    MDUwNjA5MTI0NlowJjEkMCIGA1UEAxMbaGFyYm9yLWhhcmJvci1ub3Rhcnktc2ln
-    bmVyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1XyWiarcH0aWgk45
-    7iZ16NBCnGiYzhotA2nLShFpgvkgQMH4AHcvvYrwhVcDLplM8bIk6VEmCPZc3AWU
-    08Qfmm7e+2cGAZwyalW2R7a6vBqWn3Rxo2SeDwPNUYfm61ZTlJ91bbXAXBu9njt6
-    mT2fKMdEnfzArlSRmCAwynaccybFkaRrpwU/IqNYDOblaTtmMRzfhxvtjvcbyGp+
-    StzbqCgLJfhTtq/HHWPmBgVwyiuAlpDiNw6TEjJChk9tNplngG5COEdtwXdmTrAo
-    P3IF0OYOChEsIiHxH9L5hpqA558U4qHSvK/M7JIwn8QJlZkcpILxaU9ex7sp2FBC
-    HXjB3wIDAQABoz8wPTAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYwFAYIKwYBBQUH
-    AwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQELBQADggEBAEqi
-    jtq27YgaWI4Tqy62BHuV4mlFARBDj6nU2hjA1bFyVicQR2eFd9o36ErwPLhuWvGR
-    78K5s/C6YyCHbj5CfiRLMFjp0s3k4t+b1caaS9uA9fCh2Q9B5lJyJQUTMQl3saFi
-    dHt/9azvX7AQ2NiGg6Iq87pP3ufyctfdiYcNJszObqfs2ENu9iNH/wtx7ykFSHl8
-    vxEw3Z9ccqYa7mKARktW1TfdmRU4SlZXIVd1pcH/noA6iU88TYw1inguo6VfsHni
-    exYV3kzG6a81/jv8IUgIgaUKlHlj3oZSSfhP7EF03NlWeZ72InPS2dgLzZUbkpCm
-    hByLWAhIp9CDW7oXTA8=
+    MIIDCzCCAfOgAwIBAgIRAPh8MvY9CjzK/SSu7zR5+ZIwDQYJKoZIhvcNAQELBQAw
+    GzEZMBcGA1UEAxMQaGFyYm9yLW5vdGFyeS1jYTAeFw0xOTA1MTAwMjU1MDlaFw0y
+    MDA1MDkwMjU1MDlaMCYxJDAiBgNVBAMTG2hhcmJvci1oYXJib3Itbm90YXJ5LXNp
+    Z25lcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMULYH/g7xBt8Vr/
+    LZ8p/PJ8y7sTZnqWMQsVu4FMu3ZeuvaW/o6eZdXu3KhUTSa80xfkIcpNlUnD0M7W
+    bem6MUMowRgXdf6sFdO5RoznaMmeF7JL0WjUvEebh3Z8TGn1oz7LscZXRjM8Qjb6
+    CQ0bwMeyoAttBpboDSkTr3LMyYZcJ35yR3IFPcHzGrIj+CPpu1cNa3Btb7JabD+C
+    IAbNTYzNF+4khwurDkIA7BVKbfPocnFN+a1U77UoKjvdl3pTUVmRo6P9YmnQiWw1
+    d2RGacs9eKswCTU4pRjTNR++hFq8dWVKipLrLgCDC2JNFwk0iXpE0uVRtZA3pqdV
+    KZtCCc8CAwEAAaM/MD0wDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUF
+    BwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4IBAQB2
+    oYLSWCUTCelMEZGhG50PkY1+6KT5uTOdJ4GqzIl1VbgA16cPkkcfNHaQPb7gHZcI
+    QQ1nrR1p63kGySd9GRCw09QV8n23iVki8xLMJ8EIjC9qIHhqAhzxDF3jlWWxlVjA
+    XQw3hiGJIBKfJMDNyTFVjNg3Z6OiaHmRh1Vbvh71iXWcCoBf8+/MCusp8x7o0rEH
+    wMhtOU3GI/y6a9FlhNrNSL6Sf5DYyZ6ekp1dWMCbuFop+/d3TmrMN1S7n0XE0Sgd
+    lB9njJlWjQdbrNkIKmPW8fJP7ZpOR9kPecZHb+1LZQcl6+Uf74N1ZkP6GUBobvn4
+    TZ2vmBTYm4dUp+1qAJOG
     -----END CERTIFICATE-----
   notary-signer.key: |
     -----BEGIN RSA PRIVATE KEY-----
-    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
+    MIIEowIBAAKCAQEAxQtgf+DvEG3xWv8tnyn88nzLuxNmepYxCxW7gUy7dl669pb+
+    jp5l1e7cqFRNJrzTF+Qhyk2VScPQztZt6boxQyjBGBd1/qwV07lGjOdoyZ4XskvR
+    aNS8R5uHdnxMafWjPsuxxldGMzxCNvoJDRvAx7KgC20GlugNKROvcszJhlwnfnJH
+    cgU9wfMasiP4I+m7Vw1rcG1vslpsP4IgBs1NjM0X7iSHC6sOQgDsFUpt8+hycU35
+    rVTvtSgqO92XelNRWZGjo/1iadCJbDV3ZEZpyz14qzAJNTilGNM1H76EWrx1ZUqK
+    kusuAIMLYk0XCTSJekTS5VG1kDemp1Upm0IJzwIDAQABAoIBAQCP6uZZoHWb32FI
+    YFb3CJjql4HKKrpP0QETIpVoNB47r6cI0nIswr6IicT64U/UelgH/CU9+HqQfQg2
+    +mEfNFIkxlB6gzA4iYILuSgxZBeiIukV3dCeq7q05oEDZnf9cF8CT46R2k64v0tx
+    kiAoRdwBP5MrpT8J24U5OlqME80hZ0dYpjrpT8YKnsq8sZexOpnZpYEM/ZE3OPie
+    uKqeRhciyuqYS9jCOdt+SrErl8M6MpEX6aQ7n2lIaQyC+cehVrSpz9i/28KnpFgz
+    zzAYJlga3EQIN4qIj+vbGrF/rg2gbLsD7+MPR8M7mfzkzFWI1UGNI07CLGEHpLSh
+    uHScyc5xAoGBANil1Ugnu1H6uvGmYUGycsnQJR8YPnhe46xaQP7KvJTlmwR9Z4TG
+    gLMoX30d+q0C/kvvq5zV4XfovIFTGEPqbpeO1Nes82LpBt2Gya7T+didSYKfWpRU
+    41XhWSaTMzdcv8IOzjfPld+BpHVax/8iRRsLeyzDK8sF/jftsUdzkNnHAoGBAOjV
+    +/d6nycSMM9gUCiVndcUPFyyS+jCP/VnymNpuVtnQhdx7Fm07CiJszwoNyR3DYFo
+    B1h/W7IolABXOYGlf4noPDPobNhftEDBfXRKgNwndrPe9xDP04+f1nLCu+iRPGJM
+    j1t9hPdz1GfnF8PA3OdAMgIMrK7kUhuAEns+ng+5AoGAdyzKJXYNuiv1uEZxC6Wx
+    NUj1kqRQgQCZt06yoDZABJxFaPPfBQ/47hTQalAafB/AaV8/BPg2njJ9t5pRJ9MG
+    4QImHTo7bHaJW0TxHuXmc30aWet09VG4+J4M34ZrzxGLPqHMWLEtXZTANfopODTO
+    1PC84kO+jGEQlg1/zrFIxjMCgYB6YK40n0Czen4pIUhAbJMvjrVDS3tWdXLEe68G
+    nXUNM7KrO/esFsnhbK7GOaTyB5kToSfrPdVmSKmxnCbfm6rzQxsRdWJwP60wNALK
+    crZUAHIFjHVzYqih3rMKUowNavi/+dmHjuuqXDkR+4akHuR8r2MZbKv+qIb3aVNN
+    b9YIEQKBgBywbi9mTWesKIWROXUwzTNwkDoXZPTb6BHOZEao6e6KFfxi7NnqRRNB
+    U+yrEsUW2bGlq96TyzSc/Hov6lKK69oC40glPUyV29id6rIjIrFfGX15zJIwpCy6
+    v081YWYml3zVkLHMMxJZ70KxVkjwm9aa9SKtmnYF1iSMOAdZDex8
     -----END RSA PRIVATE KEY-----
   server-config.postgres.json: |
     {
@@ -98,7 +98,7 @@ data:
       "auth": {
           "type": "token",
           "options": {
-              "realm": "https://harbor.cluster.w/service/token",
+              "realm": "https://{{ .RegistryIngressURL}}/service/token",
               "service": "harbor-notary",
               "issuer": "harbor-token-issuer",
               "rootcertbundle": "/root.crt"
@@ -156,7 +156,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configmap: 9dd0ef0ed8079083135c784c1016b56326d45a506bfc4194e0e33f2ffa0f7be2
+        checksum/configmap: 27e5fa3f9c03881532c72b494d782dc95371e467d7d069f81abac3a3678f7508
       labels:
         app: harbor
         component: notary-server
@@ -167,7 +167,7 @@ spec:
           value: migrations/server/postgresql
         - name: DB_URL
           value: postgres://postgres:changeit@harbor-database:5432/notaryserver?sslmode=disable
-        image: goharbor/notary-server-photon:v0.6.1-v1.7.5
+        image: {{ .NotaryServerImage}}
         imagePullPolicy: IfNotPresent
         name: notary-server
         resources: {}

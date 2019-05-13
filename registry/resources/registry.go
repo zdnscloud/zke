@@ -8,24 +8,12 @@ metadata:
 ---
 apiVersion: v1
 data:
-  REGISTRY_HTTP_SECRET: MnpXMkwzUlNOSVc3Zm1MNQ==
-kind: Secret
-metadata:
-  labels:
-    app: harbor
-    component: registry
-  name: harbor-registry
-  namespace: kube-registry
-type: Opaque
----
-apiVersion: v1
-data:
   config.yml: "version: 0.1\nlog:\n  level: debug\n  fields:\n    service: registry\nstorage:\n
     \ filesystem:\n    rootdirectory: /storage\n  cache:\n    layerinfo: redis\n  maintenance:\n
     \   uploadpurging:\n      enabled: false\n  delete:\n    enabled: true\nredis:\n
     \ addr: \"harbor-redis:6379\"\n  password: \n  db: 2\nhttp:\n  addr: :5000\n
     \ # set via environment variable\n  # secret: placeholder\n  debug:\n    addr:
-    localhost:5001\nauth:\n  token:\n    issuer: harbor-token-issuer\n    realm: \"https://harbor.cluster.w/service/token\"\n
+    localhost:5001\nauth:\n  token:\n    issuer: harbor-token-issuer\n    realm: \"https://{{ .RegistryIngressURL}}/service/token\"\n
     \   rootcertbundle: /etc/registry/root.crt\n    service: harbor-registry\nnotifications:\n
     \ endpoints:\n    - name: harbor\n      disabled: false\n      url: http://harbor-core/service/notifications\n
     \     timeout: 3000ms\n      threshold: 5\n      backoff: 1s\n"
@@ -41,6 +29,18 @@ metadata:
     component: registry
   name: harbor-registry
   namespace: kube-registry
+---
+apiVersion: v1
+data:
+  REGISTRY_HTTP_SECRET: SGxlZG02TE9TOVp4RVNKVw==
+kind: Secret
+metadata:
+  labels:
+    app: harbor
+    component: registry
+  name: harbor-registry
+  namespace: kube-registry
+type: Opaque
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -60,7 +60,7 @@ spec:
   dataSource: null
   resources:
     requests:
-      storage: 5Gi
+      storage: {{ .RegistryDiskCapacity}}
   storageClassName: lvm
   volumeMode: Filesystem
 ---
@@ -91,9 +91,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configmap: d31ec1993e974889cecec80317081c34bdd81982bc7630af18aa97a11e79f230
-        checksum/secret: 23c448540f2784f6ae4f0330d9d6a41aef34bc515d197a1cfd3e354b992eb8f1
-      creationTimestamp: null
+        checksum/configmap: 03ff3a19cf52c6e28bc1a8e1363a69bced38a092c2de016e459679c6e86c1bb8
+        checksum/secret: df96f191f774eca0e36e64468a61980b1db01467deb5f80a0b43c0626fb4f1c8
       labels:
         app: harbor
         component: registry
@@ -105,7 +104,7 @@ spec:
         envFrom:
         - secretRef:
             name: harbor-registry
-        image: goharbor/registry-photon:v2.6.2-v1.7.5
+        image: {{ .RegistryImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -162,7 +161,7 @@ spec:
         envFrom:
         - secretRef:
             name: harbor-registry
-        image: goharbor/harbor-registryctl:v1.7.5
+        image: {{ .RegistryctlImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3

@@ -24,66 +24,75 @@ const (
 	RegistryDeployJobName     = "zke-registry-registry-deploy-job"
 )
 
-var adminServerConfig = map[string]interface{}{}
-var chartMuseumConfig = map[string]interface{}{}
-var clairConfig = map[string]interface{}{}
-var coreConfig = map[string]interface{}{}
-var databaseConfig = map[string]interface{}{}
-var ingressConfig = map[string]interface{}{}
-var jobserviceConfig = map[string]interface{}{}
-var notaryServerConfig = map[string]interface{}{}
-var notarySignerConfig = map[string]interface{}{}
-var portalConfig = map[string]interface{}{}
-var redisConfig = map[string]interface{}{}
-var registryConfig = map[string]interface{}{}
-
 func DeployRegistry(ctx context.Context, c *cluster.Cluster) error {
 	log.Infof(ctx, "[Registry] Setting up Registry Plugin")
-	if err := doOneDeploy(ctx, c, redisConfig, resources.RedisTemplate, RedisDeployJobName); err != nil {
+	config := map[string]interface{}{
+		"RedisImage":             c.SystemImages.HarborRedis,
+		"RedisDiskCapacity":      c.Registry.RedisDiskCapacity,
+		"DatabaseImage":          c.SystemImages.HarborDatabase,
+		"DatabaseDiskCapacity":   c.Registry.DatabaseDiskCapacity,
+		"CoreImage":              c.SystemImages.HarborCore,
+		"RegistryImage":          c.SystemImages.HarborRegistry,
+		"RegistryctlImage":       c.SystemImages.HarborRegistryctl,
+		"RegistryDiskCapacity":   c.Registry.RegistryDiskCapacity,
+		"NotaryServerImage":      c.SystemImages.HarborNotaryServer,
+		"NotarySignerImage":      c.SystemImages.HarborNotarySigner,
+		"ChartmuseumImage":       c.SystemImages.HarborChartmuseum,
+		"ChartmuseumCapacity":    c.Registry.ChartmuseumDiskCapacity,
+		"ClairImage":             c.SystemImages.HarborClair,
+		"JobserviceImage":        c.SystemImages.HarborJobservice,
+		"JobserviceDiskCapacity": c.Registry.JobserviceDiskCapacity,
+		"PortalImage":            c.SystemImages.HarborPortal,
+		"AdminserverImage":       c.SystemImages.HarborAdminserver,
+		"RegistryIngressURL":     c.Registry.RegistryIngressURL,
+		"NotaryIngressURL":       c.Registry.NotaryIngressURL,
+	}
+
+	if err := doOneDeploy(ctx, c, config, resources.RedisTemplate, RedisDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, databaseConfig, resources.DatabaseTemplate, DatabaseDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.DatabaseTemplate, DatabaseDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, coreConfig, resources.CoreTemplate, CoreDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.CoreTemplate, CoreDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, registryConfig, resources.RegistryTemplate, RegistryDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.RegistryTemplate, RegistryDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, notaryServerConfig, resources.NotaryServerTemplate, NotaryServerDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.NotaryServerTemplate, NotaryServerDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, notarySignerConfig, resources.NotarySignerTemplate, NotarySignerDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.NotarySignerTemplate, NotarySignerDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, chartMuseumConfig, resources.ChartMuseumTemplate, ChartMuseumDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.ChartMuseumTemplate, ChartMuseumDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, clairConfig, resources.ClairTemplate, ClairDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.ClairTemplate, ClairDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, jobserviceConfig, resources.JobserviceTemplate, JobserviceDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.JobserviceTemplate, JobserviceDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, portalConfig, resources.PortalTemplate, PortalDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.PortalTemplate, PortalDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, adminServerConfig, resources.AdminServerTemplate, AdminServerDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.AdminServerTemplate, AdminServerDeployJobName); err != nil {
 		return err
 	}
 
-	if err := doOneDeploy(ctx, c, ingressConfig, resources.IngressTemplate, IngressDeployJobName); err != nil {
+	if err := doOneDeploy(ctx, c, config, resources.IngressTemplate, IngressDeployJobName); err != nil {
 		return err
 	}
 	return nil

@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configmap: d67064d07e39447f3fba0902d40d76df20dc9dbbb3d55accfc0e669b751b356b
+        checksum/configmap: 2bb057fd71711cedd31bd4aea1d1d0301e34a17204392888973a5a287063c2a3
       labels:
         app: harbor
         component: notary-signer
@@ -46,7 +46,7 @@ spec:
           value: postgres://postgres:changeit@harbor-database:5432/notarysigner?sslmode=disable
         - name: NOTARY_SIGNER_DEFAULTALIAS
           value: defaultalias
-        image: goharbor/notary-signer-photon:v0.6.1-v1.7.5
+        image: {{ .NotarySignerImage}}
         imagePullPolicy: IfNotPresent
         name: notary-signer
         resources: {}

@@ -69,6 +69,7 @@ spec:
     metadata:
       annotations:
         checksum/configmap: 6276aba6568a256b0ae8faf4722952f4528fb91d5a5287ff165c07d3caf8297c
+      creationTimestamp: null
       labels:
         app: harbor
         component: clair
@@ -80,7 +81,7 @@ spec:
         env:
         - name: NO_PROXY
           value: harbor-registry,harbor-core
-        image: goharbor/clair-photon:v2.0.8-v1.7.5
+        image: {{ .ClairImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -132,7 +133,7 @@ kind: Service
 metadata:
   labels:
     app: harbor
-    component: clair
+    chart: clair
   name: harbor-clair
   namespace: kube-registry
 spec:

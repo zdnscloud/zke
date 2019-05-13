@@ -31,7 +31,7 @@ spec:
         component: redis
     spec:
       containers:
-      - image: goharbor/redis-photon:v1.7.5
+      - image: {{ .RedisImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -77,7 +77,7 @@ spec:
       dataSource: null
       resources:
         requests:
-          storage: 1Gi
+          storage: {{ .RedisDiskCapacity}}
       volumeMode: Filesystem
 ---
 apiVersion: v1

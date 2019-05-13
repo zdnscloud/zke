@@ -8,21 +8,6 @@ metadata:
 ---
 apiVersion: v1
 data:
-  CLAIR_DB_PASSWORD: Y2hhbmdlaXQ=
-  HARBOR_ADMIN_PASSWORD: SGFyYm9yMTIzNDU=
-  POSTGRESQL_PASSWORD: Y2hhbmdlaXQ=
-  secretKey: bm90LWEtc2VjdXJlLWtleQ==
-kind: Secret
-metadata:
-  labels:
-    app: harbor
-    component: adminserver
-  name: harbor-adminserver
-  namespace: kube-registry
-type: Opaque
----
-apiVersion: v1
-data:
   ADMIRAL_URL: NA
   AUTH_MODE: db_auth
   CFG_EXPIRATION: "5"
@@ -38,7 +23,7 @@ data:
   EMAIL_FROM: admin <sample_admin@mydomain.com>
   EMAIL_HOST: smtp.mydomain.com
   EMAIL_PORT: "25"
-  EXT_ENDPOINT: https://harbor.cluster.w
+  EXT_ENDPOINT: https://{{ .RegistryIngressURL}}
   IMAGE_STORE_PATH: /
   JOBSERVICE_URL: http://harbor-jobservice
   LOG_LEVEL: debug
@@ -70,6 +55,21 @@ metadata:
   name: harbor-adminserver
   namespace: kube-registry
 ---
+apiVersion: v1
+data:
+  CLAIR_DB_PASSWORD: Y2hhbmdlaXQ=
+  HARBOR_ADMIN_PASSWORD: SGFyYm9yMTIzNDU=
+  POSTGRESQL_PASSWORD: Y2hhbmdlaXQ=
+  secretKey: bm90LWEtc2VjdXJlLWtleQ==
+kind: Secret
+metadata:
+  labels:
+    app: harbor
+    component: adminserver
+  name: harbor-adminserver
+  namespace: kube-registry
+type: Opaque
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -97,10 +97,11 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configmap: 049f3f89a0f736e612cc0dc30d93be8883ec30ab030e3b4d9fa0c03eaf052477
+        checksum/configmap: 5e70e2963c7555917cfd3b791faecb66bfae9e22a6fb4923f41719086f4f3087
         checksum/secret: 1ec1bce946a4884b14334d24464b9fbba2652bfabf3da1dcca8901d1a86313ba
-        checksum/secret-core: 4894968bd85028eeb6a94bf8e4b0acd1b01e5300a2955a4c70b8f2c903e0f2ca
-        checksum/secret-jobservice: 39d9f61a0c4e05110951162a49f703b55925977e92a7a088e07735975ed20619
+        checksum/secret-core: 4be836c62e52d36aa3325ce5b1b5da8d6d275153aaf1a652faff1dc82953f19d
+        checksum/secret-jobservice: 8411e2ed3c2e5bf512ffc60788cfcf5600757a6ad2f5ff9d44c2a237c2ffc92c
+      creationTimestamp: null
       labels:
         app: harbor
         component: adminserver
@@ -128,7 +129,7 @@ spec:
             name: harbor-adminserver
         - secretRef:
             name: harbor-adminserver
-        image: goharbor/harbor-adminserver:v1.7.5
+        image: {{ .AdminserverImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3

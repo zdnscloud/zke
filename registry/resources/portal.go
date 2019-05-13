@@ -37,7 +37,7 @@ spec:
         component: portal
     spec:
       containers:
-      - image: goharbor/harbor-portal:v1.7.5
+      - image: {{ .PortalImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -77,7 +77,7 @@ kind: Service
 metadata:
   labels:
     app: harbor
-    component: portal
+    chart: portal
   name: harbor-portal
   namespace: kube-registry
 spec:

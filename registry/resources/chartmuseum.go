@@ -8,18 +8,6 @@ metadata:
 ---
 apiVersion: v1
 data:
-  CACHE_REDIS_PASSWORD: ""
-kind: Secret
-metadata:
-  labels:
-    app: harbor
-    chart: harbor
-  name: harbor-chartmuseum
-  namespace: kube-registry
-type: Opaque
----
-apiVersion: v1
-data:
   ALLOW_OVERWRITE: "true"
   AUTH_ANONYMOUS_GET: "false"
   BASIC_AUTH_USER: chart_controller
@@ -53,6 +41,18 @@ metadata:
   namespace: kube-registry
 ---
 apiVersion: v1
+data:
+  CACHE_REDIS_PASSWORD: ""
+kind: Secret
+metadata:
+  labels:
+    app: harbor
+    component: clartmuseum
+  name: harbor-chartmuseum
+  namespace: kube-registry
+type: Opaque
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   annotations:
@@ -70,7 +70,7 @@ spec:
   dataSource: null
   resources:
     requests:
-      storage: 5Gi
+      storage: {{ .ChartmuseumDiskCapacity}}
   storageClassName: lvm
   volumeMode: Filesystem
 ---
@@ -103,6 +103,7 @@ spec:
       annotations:
         checksum/configmap: 750928f282f9bef8056e91bfc8e42b3a687396aeadf193032a219632dadad001
         checksum/secret: 4e65b2fa8b4ab04c4627cf1b1132453622716fd8e5bcb808adc8a2eadaabfd1a
+      creationTimestamp: null
       labels:
         app: harbor
         component: chartmuseum
@@ -119,7 +120,7 @@ spec:
             name: harbor-chartmuseum
         - secretRef:
             name: harbor-chartmuseum
-        image: goharbor/chartmuseum-photon:v0.8.1-v1.7.5
+        image: {{ .ChartmuseumImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3

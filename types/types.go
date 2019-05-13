@@ -52,6 +52,8 @@ type ZcloudKubernetesEngineConfig struct {
 	Restore RestoreConfig `yaml:"restore" json:"restore,omitempty"`
 	// DNS Config
 	DNS DNSConfig `yaml:"dns" json:"dns,omitempty"`
+	// Harbor Registry Config
+	Registry RegistryConfig `yaml:"registry" json:"registry,omitempty"`
 }
 
 type BastionHost struct {
@@ -142,6 +144,19 @@ type ZKESystemImages struct {
 	// Storage nfs image
 	StorageNFSProvisioner string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
 	ClusterAgent          string `yaml:"cluster_agent" json:"cluster_agent"`
+	// Harbor Registry images
+	HarborAdminserver     string `yaml:"harbor_adminserver" json:"harbor_adminserver"`
+	HarborChartmuseum     string `yaml:"harbor_chartmuseum" json:"harbor_chartmuseum"`
+	HarborClair           string `yaml:"harbor_clair" json:"harbor_clair"`
+	HarborCore            string `yaml:"harbor_core" json:"harbor_core"`
+	HarborDatabase        string `yaml:"harbor_database" json:"harbor_database"`
+	HarborJobservice      string `yaml:"harbor_jobservice" json:"harbor_jobservice"`
+	HarborNotaryServer    string `yaml:"harbor_notaryserver" json:"harbor_notaryserver"`
+	HarborNotarySigner    string `yaml:"harbor_notarysigner" json:"harbor_notarysigner"`
+	HarborPortal          string `yaml:"harbor_portal" json:"harbor_portal"`
+	HarborRedis           string `yaml:"harbor_redis" json:"harbor_redis"`
+	HarborRegistry        string `yaml:"harbor_registry" json:"harbor_registry"`
+	HarborRegistryctl     string `yaml:"harbor_registryctl" json:"harbor_registryctl"`
 }
 
 type ZKEConfigNode struct {
@@ -457,4 +472,14 @@ type BackupConfig struct {
 	IntervalHours int `yaml:"interval_hours" json:"intervalHours,omitempty" norman:"default=12"`
 	// Number of backups to keep
 	Retention int `yaml:"retention" json:"retention,omitempty" norman:"default=6"`
+}
+
+type RegistryConfig struct {
+	RegistryIngressURL string `yaml:"registry_ingress_url" json:"registry_ingress_url"`
+	NotaryIngressURL string `yaml:"notary_ingress_url" json:"notary_ingress_url"`
+	RegistryDiskCapacity string `yaml:"registry_disk_capacity" json:"registry_disk_capacity"`
+	DatabaseDiskCapacity string `yaml:"database_disk_capacity" json:"database_disk_capacity"`
+	RedisDiskCapacity string `yaml:"redis_disk_capacity" json:"redis_disk_capacity"`
+	ChartmuseumDiskCapacity string `yaml:"Chartmuseum_disk_capacity" json:"Chartmuseum_disk_capacity"`
+	JobserviceDiskCapacity string `yaml:"jobservice_disk_capacity" json:"jobservice_disk_capacity"`
 }
