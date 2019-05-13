@@ -25,27 +25,31 @@ const (
 )
 
 func DeployRegistry(ctx context.Context, c *cluster.Cluster) error {
+	if c.Registry.Isenabled == false {
+		log.Infof(ctx, "[Registry] Not enable registry plugin, skip it")
+		return nil
+	}
 	log.Infof(ctx, "[Registry] Setting up Registry Plugin")
 	config := map[string]interface{}{
-		"RedisImage":             c.SystemImages.HarborRedis,
-		"RedisDiskCapacity":      c.Registry.RedisDiskCapacity,
-		"DatabaseImage":          c.SystemImages.HarborDatabase,
-		"DatabaseDiskCapacity":   c.Registry.DatabaseDiskCapacity,
-		"CoreImage":              c.SystemImages.HarborCore,
-		"RegistryImage":          c.SystemImages.HarborRegistry,
-		"RegistryctlImage":       c.SystemImages.HarborRegistryctl,
-		"RegistryDiskCapacity":   c.Registry.RegistryDiskCapacity,
-		"NotaryServerImage":      c.SystemImages.HarborNotaryServer,
-		"NotarySignerImage":      c.SystemImages.HarborNotarySigner,
-		"ChartmuseumImage":       c.SystemImages.HarborChartmuseum,
-		"ChartmuseumCapacity":    c.Registry.ChartmuseumDiskCapacity,
-		"ClairImage":             c.SystemImages.HarborClair,
-		"JobserviceImage":        c.SystemImages.HarborJobservice,
-		"JobserviceDiskCapacity": c.Registry.JobserviceDiskCapacity,
-		"PortalImage":            c.SystemImages.HarborPortal,
-		"AdminserverImage":       c.SystemImages.HarborAdminserver,
-		"RegistryIngressURL":     c.Registry.RegistryIngressURL,
-		"NotaryIngressURL":       c.Registry.NotaryIngressURL,
+		"RedisImage":              c.SystemImages.HarborRedis,
+		"RedisDiskCapacity":       c.Registry.RedisDiskCapacity,
+		"DatabaseImage":           c.SystemImages.HarborDatabase,
+		"DatabaseDiskCapacity":    c.Registry.DatabaseDiskCapacity,
+		"CoreImage":               c.SystemImages.HarborCore,
+		"RegistryImage":           c.SystemImages.HarborRegistry,
+		"RegistryctlImage":        c.SystemImages.HarborRegistryctl,
+		"RegistryDiskCapacity":    c.Registry.RegistryDiskCapacity,
+		"NotaryServerImage":       c.SystemImages.HarborNotaryServer,
+		"NotarySignerImage":       c.SystemImages.HarborNotarySigner,
+		"ChartmuseumImage":        c.SystemImages.HarborChartmuseum,
+		"ChartmuseumDiskCapacity": c.Registry.ChartmuseumDiskCapacity,
+		"ClairImage":              c.SystemImages.HarborClair,
+		"JobserviceImage":         c.SystemImages.HarborJobservice,
+		"JobserviceDiskCapacity":  c.Registry.JobserviceDiskCapacity,
+		"PortalImage":             c.SystemImages.HarborPortal,
+		"AdminserverImage":        c.SystemImages.HarborAdminserver,
+		"RegistryIngressURL":      c.Registry.RegistryIngressURL,
+		"NotaryIngressURL":        c.Registry.NotaryIngressURL,
 	}
 
 	if err := doOneDeploy(ctx, c, config, resources.RedisTemplate, RedisDeployJobName); err != nil {
@@ -104,6 +108,7 @@ func doOneDeploy(ctx context.Context, c *cluster.Cluster, config map[string]inte
 	if err != nil {
 		return err
 	}
+
 	if err := c.DoAddonDeploy(ctx, configYaml, deployJobName, true); err != nil {
 		return err
 	}

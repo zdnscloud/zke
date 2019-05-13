@@ -58,6 +58,11 @@ const (
 
 	DefaultMonitoringMetricsProvider = "metrics-server"
 	DefaultMonitoringNamespace       = "kube-monitoring"
+
+	DefaultRegistryRedisDiskCapacity = "1Gi"
+	DefaultRegistryDatabaseDiskCapacity = "5Gi"
+	DefaultRegistryJobserviceDiskCapacity = "1Gi"
+	DefaultRegistryChartmuseumDiskCapacity = "5Gi"
 )
 
 type ExternalFlags struct {
@@ -168,14 +173,6 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	c.setClusterServicesDefaults()
 	c.setClusterNetworkDefaults()
 	c.setClusterAuthnDefaults()
-
-	c.Registry.RegistryIngressURL = "core.harbor.cluster.w"
-	c.Registry.NotaryIngressURL = "notary.harbor.cluster.w"
-	c.Registry.RedisDiskCapacity = "1Gi"
-	c.Registry.JobserviceDiskCapacity = "1Gi"
-	c.Registry.ChartmuseumDiskCapacity = "5Gi"
-	c.Registry.DatabaseDiskCapacity = "5Gi"
-	c.Registry.RegistryDiskCapacity = "50Gi"
 
 	return nil
 }

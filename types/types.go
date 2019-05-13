@@ -475,6 +475,7 @@ type BackupConfig struct {
 }
 
 type RegistryConfig struct {
+	Isenabled bool `yaml:"isenabled" json:"isenabled,omitempty"`
 	RegistryIngressURL string `yaml:"registry_ingress_url" json:"registry_ingress_url"`
 	NotaryIngressURL string `yaml:"notary_ingress_url" json:"notary_ingress_url"`
 	RegistryDiskCapacity string `yaml:"registry_disk_capacity" json:"registry_disk_capacity"`
@@ -483,3 +484,4 @@ type RegistryConfig struct {
 	ChartmuseumDiskCapacity string `yaml:"Chartmuseum_disk_capacity" json:"Chartmuseum_disk_capacity"`
 	JobserviceDiskCapacity string `yaml:"jobservice_disk_capacity" json:"jobservice_disk_capacity"`
 }
+
