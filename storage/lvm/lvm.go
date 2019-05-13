@@ -157,48 +157,6 @@ roleRef:
   name: csi-lvmplugin
   apiGroup: rbac.authorization.k8s.io  
 {{- end}}
-{{range .LVMList}}
----
-kind: Deployment
-apiVersion: apps/v1
-metadata:
-  name: csi-lvmd-{{.Host}}
-  namespace: kube-storage
-spec:
-  selector:
-    matchLabels:
-      app: csi-lvmd-{{.Host}}
-  template:
-    metadata:
-      labels:
-        app: csi-lvmd-{{.Host}}
-    spec:
-      nodeName: "{{.Host}}"
-      hostNetwork: true
-      containers:
-      - name: lvmd
-        image: {{$.StorageLvmdImage}}
-        command: ["/lvmd.sh"]
-        env:
-          - name: MOUNT_PATH
-            value: "/host/dev"
-          - name: VG_NAME
-            value: "k8s"
-          - name: DEVICE
-            value: "{{.Devs}}"
-        securityContext:
-          privileged: true
-          capabilities:
-            add: ["SYS_ADMIN"]
-          allowPrivilegeEscalation: true
-        volumeMounts:
-          - mountPath: /host/dev
-            name: host-dev
-      volumes:
-        - name: host-dev
-          hostPath:
-            path: /dev
-{{end}}
 ---
 kind: DaemonSet
 apiVersion: apps/v1
