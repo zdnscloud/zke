@@ -52,7 +52,6 @@ const (
 )
 
 func DeployStoragePlugin(ctx context.Context, c *cluster.Cluster) error {
-	return nil
 	if len(c.Storage.Lvm) > 0 {
 		if err := doLVMDDeploy(ctx, c); err != nil {
 			return err
