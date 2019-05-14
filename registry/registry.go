@@ -2,11 +2,16 @@ package registry
 
 import (
 	"context"
+	"crypto/rsa"
+	"encoding/base64"
 
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/registry/resources"
 	"github.com/zdnscloud/zke/templates"
+
+	"k8s.io/client-go/util/cert"
 )
 
 const (
@@ -22,6 +27,7 @@ const (
 	PortalDeployJobName       = "zke-registry-portal-deploy-job"
 	RedisDeployJobName        = "zke-registry-redis-deploy-job"
 	RegistryDeployJobName     = "zke-registry-registry-deploy-job"
+	RegistryCertsCN           = "harbor"
 )
 
 func DeployRegistry(ctx context.Context, c *cluster.Cluster) error {
@@ -30,6 +36,11 @@ func DeployRegistry(ctx context.Context, c *cluster.Cluster) error {
 		return nil
 	}
 	log.Infof(ctx, "[Registry] Setting up Registry Plugin")
+
+	IngresscaCertBase64, IngresstlsCertBase64, IngresstlsKeyBase64, err := generateIngressCertsBase64(c, RegistryCertsCN)
+	if err != nil {
+		return err
+	}
 	config := map[string]interface{}{
 		"RedisImage":              c.SystemImages.HarborRedis,
 		"RedisDiskCapacity":       c.Registry.RedisDiskCapacity,
@@ -50,6 +61,9 @@ func DeployRegistry(ctx context.Context, c *cluster.Cluster) error {
 		"AdminserverImage":        c.SystemImages.HarborAdminserver,
 		"RegistryIngressURL":      c.Registry.RegistryIngressURL,
 		"NotaryIngressURL":        c.Registry.NotaryIngressURL,
+		"IngresscaCertBase64":     IngresscaCertBase64,
+		"IngresstlsCertBase64":    IngresstlsCertBase64,
+		"IngresstlsKeyBase64":     IngresstlsKeyBase64,
 	}
 
 	if err := doOneDeploy(ctx, c, config, resources.RedisTemplate, RedisDeployJobName); err != nil {
@@ -113,4 +127,29 @@ func doOneDeploy(ctx context.Context, c *cluster.Cluster, config map[string]inte
 		return err
 	}
 	return nil
+}
+
+func generateIngressCertsBase64(c *cluster.Cluster, commonName string) (string, string, string, error) {
+	caCert, caKey, err := pki.GenerateCACertAndKey(commonName, nil)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	ca := pki.ToCertObject("", commonName, commonName, caCert, caKey, nil)
+
+	var tlsTmpKey *rsa.PrivateKey
+	tlsAltNames := cert.AltNames{}
+	tlsAltNames.DNSNames = append(tlsAltNames.DNSNames, c.Registry.RegistryIngressURL)
+	tlsAltNames.DNSNames = append(tlsAltNames.DNSNames, c.Registry.NotaryIngressURL)
+	tlsCert, tlsKey, err := pki.GenerateSignedCertAndKey(ca.Certificate, ca.Key, true,
+		c.Registry.RegistryIngressURL, &tlsAltNames, tlsTmpKey, nil)
+	if err != nil {
+		return "", "", "", err
+	}
+	tls := pki.ToCertObject("", "", "", tlsCert, tlsKey, nil)
+
+	caCertPEMBase64 := base64.StdEncoding.EncodeToString([]byte(ca.CertificatePEM))
+	tlsCertPEMBase64 := base64.StdEncoding.EncodeToString([]byte(tls.CertificatePEM))
+	tlsKeyPEMBase64 := base64.StdEncoding.EncodeToString([]byte(tls.KeyPEM))
+	return caCertPEMBase64, tlsCertPEMBase64, tlsKeyPEMBase64, nil
 }
