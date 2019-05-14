@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
+	"os"
 	"path"
 
 	"github.com/docker/docker/client"
@@ -20,8 +21,9 @@ import (
 
 const CleanHeritageCMD = `
 	sudo docker rm -f $(docker ps -a -q);
-	sudo umount $(sudo df -HT | grep '/var/lib/kubelet/pods' | awk '{print $7}');
-	sudo rm -rf /var/lib/{kubelet,rancher} /var/run/flannel/subnet.env /opt/cni/bin/ /etc/cni/net.d/ /var/run/flannel/ /dev/mapper/k8s-pvc--* /dev/k8s/;
+	sudo sleep 5;
+	sudo umount $(sudo mount | grep '/var/lib/kubelet/pods' | awk '{print $3}');
+	sudo rm -rf /var/lib/{kubelet,rancher,zdnscloud} /var/run/flannel/subnet.env /opt/cni/bin/ /opt/zke /etc/cni/net.d/ /var/run/flannel/ /dev/mapper/k8s-pvc--* /dev/k8s/;
 	for i in $(ip r |grep -E "10.42."|awk '{print $1}');do sudo ip route del $i;done ;
 	sudo docker volume prune -f;
 	sudo ip link delete flannel.1;
@@ -358,8 +360,8 @@ func DoCleanHeritage(ctx context.Context, host *Host) error {
 		return err
 	}
 	defer session.Close()
-	//session.Stdout = os.Stdout
-	//session.Stderr = os.Stderr
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
 	session.Run(CleanHeritageCMD)
 	return nil
 }
@@ -372,3 +374,33 @@ func IsNodeInList(host *Host, hostList []*Host) bool {
 	}
 	return false
 }
+
+/*
+func cleanHostContainers(ctx context.Context, host *Host) error {
+	const(
+		RmContainersCMD = `sudo docker rm -f $(docker ps -a -q)`
+		GetContainersCMD = `sudo docker ps -a -q`
+	)
+	d, err := newDialer(host, "docker")
+	if err != nil {
+		return err
+	}
+	cfg, err := getSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
+	if err != nil {
+		return err
+	}
+	addr := host.Address + ":22"
+	client, err := ssh.Dial("tcp", addr, cfg)
+	if err != nil {
+		return err
+	}
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+	session.Stdout
+	session.Stderr = os.Stderr
+	session.Run(CleanHeritageCMD)
+	return nil
+}*/
