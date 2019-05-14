@@ -22,6 +22,7 @@ const (
 	DefaultClusterDomain         = "cluster.local"
 	DefaultClusterName           = "local"
 	DefaultClusterSSHKeyPath     = "~/.ssh/id_rsa"
+	DefaultClusterGlobalDns      = "114.114.114.114,223.5.5.5"
 
 	DefaultK8sVersion = types.DefaultK8s
 
@@ -56,7 +57,12 @@ const (
 	DefaultEtcdElectionTimeoutValue   = "5000"
 
 	DefaultMonitoringMetricsProvider = "metrics-server"
-	DefaultMonitoringNamespace       = "zcloud"
+	DefaultMonitoringNamespace       = "kube-monitoring"
+
+	DefaultRegistryRedisDiskCapacity = "1Gi"
+	DefaultRegistryDatabaseDiskCapacity = "5Gi"
+	DefaultRegistryJobserviceDiskCapacity = "1Gi"
+	DefaultRegistryChartmuseumDiskCapacity = "5Gi"
 )
 
 type ExternalFlags struct {

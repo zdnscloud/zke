@@ -197,12 +197,23 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.SystemImages = *systemImages
+	cluster.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
+	if err != nil{
+		return err
+	}
 	// Get Services Config
 	serviceConfig, err := getServiceConfig(reader)
 	if err != nil {
 		return err
 	}
 	cluster.Services = *serviceConfig
+	cluster.Monitoring.GrafanaIngressEndpoint = "grafana.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
+	cluster.Monitoring.PrometheusAlertManagerIngressEndpoint = "alertmanager.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
+	registryConfig, err := getRegistryConfig(reader, &cluster)
+	if err != nil {
+	    return err
+	}
+	cluster.Registry = *registryConfig
 	return writeConfig(&cluster, configFile, print)
 }
 
@@ -413,6 +424,51 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 	storageCfg.NFS.Size = size
 
 	return &storageCfg, nil
+}
+
+func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
+	globalDNS := []string{}
+	inputString, err := getConfig(reader, fmt.Sprintf("Cluster global dns,separated by commas"), cluster.DefaultClusterGlobalDns)
+	if err != nil {
+		return nil, err
+	}
+	servers := strings.Split(inputString, ",")
+	for _, server := range servers{
+	    globalDNS = append(globalDNS, server)
+	}
+	return globalDNS, nil
+}
+
+func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.RegistryConfig, error){
+	registryCfg := types.RegistryConfig{}
+	isenabled, err := getConfig(reader, fmt.Sprintf("Is enabled harbor registry (y/n)?"), "y")
+	if err != nil {
+		return nil, err
+	}
+	if isenabled == "y" || isenabled == "Y"{
+		registryCfg.Isenabled = true
+		if len(c.Storage.Lvm) == 0 {
+			return nil, fmt.Errorf("None available lvm storge!")
+		}
+		registryDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster registry redis disk capacity"), "50Gi")
+		if err != nil {
+			return nil, err
+		}
+		registryCfg.RegistryDiskCapacity = registryDiskCapacity
+
+		registryIngressURL, err := getConfig(reader, fmt.Sprintf("Cluster registry ingress url"), "registry.kube-registry."+c.Services.Kubelet.ClusterDomain)
+		if err != nil {
+			return nil, err
+		}
+		registryCfg.RegistryIngressURL = registryIngressURL
+
+		registryCfg.NotaryIngressURL = "notary.kube-registry."+c.Services.Kubelet.ClusterDomain
+		registryCfg.RedisDiskCapacity = cluster.DefaultRegistryRedisDiskCapacity
+		registryCfg.DatabaseDiskCapacity = cluster.DefaultRegistryDatabaseDiskCapacity
+		registryCfg.JobserviceDiskCapacity = cluster.DefaultRegistryJobserviceDiskCapacity
+		registryCfg.ChartmuseumDiskCapacity = cluster.DefaultRegistryChartmuseumDiskCapacity
+	}
+    return &registryCfg, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {

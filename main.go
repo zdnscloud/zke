@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"regexp"
 
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
@@ -10,8 +9,8 @@ import (
 	"github.com/zdnscloud/zke/cmd"
 )
 
-var VERSION = "v0.0.12-dev"
-var released = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+var VERSION = "v1.0.0"
+var BUILD string
 
 func main() {
 	logrus.SetOutput(colorable.NewColorableStdout())
@@ -30,10 +29,7 @@ func mainErr() error {
 		if ctx.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-		logrus.Debugf("ZKE version %s", app.Version)
-		if released.MatchString(app.Version) {
-			return nil
-		}
+		logrus.Debugf("ZKE version %s build at %s", app.Version, BUILD)
 		return nil
 	}
 	app.Author = "ZdnsCloud"

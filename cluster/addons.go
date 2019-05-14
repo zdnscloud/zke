@@ -3,9 +3,11 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"github.com/zdnscloud/zke/addons"
+    "strconv"
+
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/templates"
 	"time"
 )
 
@@ -37,7 +39,7 @@ func (c *Cluster) DoAddonDeploy(ctx context.Context, addonYaml, resourceName str
 	if err != nil {
 		return &AddonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].HostnameOverride, err), IsCritical}
 	}
-	addonJob, err := addons.GetAddonsExecuteJob(resourceName, node.Name, c.Services.KubeAPI.Image)
+	addonJob, err := GetAddonsExecuteJob(resourceName, node.Name, c.Services.KubeAPI.Image)
 	if err != nil {
 		return &AddonError{fmt.Sprintf("Failed to generate addon execute job: %v", err), IsCritical}
 	}
@@ -81,4 +83,17 @@ func (c *Cluster) ApplySystemAddonExecuteJob(addonJob string, addonUpdated bool)
 		return err
 	}
 	return nil
+}
+
+func GetAddonsExecuteJob(addonName, nodeName, image string) (string, error) {
+	getAddonJob := func(addonName, nodeName, image string, isDelete bool) (string, error) {
+		jobConfig := map[string]string{
+			"AddonName": addonName,
+			"NodeName":  nodeName,
+			"Image":     image,
+			"DeleteJob": strconv.FormatBool(isDelete),
+		}
+		return templates.CompileTemplateFromMap(templates.AddonJobTemplate, jobConfig)
+	}
+	return getAddonJob(addonName, nodeName, image, false)
 }
