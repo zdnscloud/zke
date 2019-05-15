@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/k8s"
@@ -12,6 +11,8 @@ import (
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
+
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/cert"
 )

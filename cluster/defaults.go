@@ -10,7 +10,6 @@ import (
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/services"
-	"github.com/zdnscloud/zke/templates"
 	"github.com/zdnscloud/zke/types"
 )
 
@@ -32,7 +31,25 @@ const (
 	DefaultAuthStrategy      = "x509"
 	DefaultAuthorizationMode = "rbac"
 
-	DefaultAuthnWebhookFile  = templates.AuthnWebhook
+	DefaultAuthnWebhookFile = `
+	apiVersion: v1
+	kind: Config
+	clusters:
+	- name: Default
+	  cluster:
+		insecure-skip-tls-verify: true
+		server: http://127.0.0.1:6440/v1/authenticate
+	users:
+	- name: Default
+	  user:
+		insecure-skip-tls-verify: true
+	current-context: webhook
+	contexts:
+	- name: webhook
+	  context:
+		user: Default
+		cluster: Default
+	`
 	DefaultAuthnCacheTimeout = "5s"
 
 	DefaultNetworkPlugin      = "flannel"
@@ -59,9 +76,9 @@ const (
 	DefaultMonitoringMetricsProvider = "metrics-server"
 	DefaultMonitoringNamespace       = "kube-monitoring"
 
-	DefaultRegistryRedisDiskCapacity = "1Gi"
-	DefaultRegistryDatabaseDiskCapacity = "5Gi"
-	DefaultRegistryJobserviceDiskCapacity = "1Gi"
+	DefaultRegistryRedisDiskCapacity       = "1Gi"
+	DefaultRegistryDatabaseDiskCapacity    = "5Gi"
+	DefaultRegistryJobserviceDiskCapacity  = "1Gi"
 	DefaultRegistryChartmuseumDiskCapacity = "5Gi"
 )
 

@@ -1,7 +1,7 @@
-package templates
+package authz
 
 const (
-	SystemNodeClusterRoleBinding = `
+	systemNodeClusterRoleBinding = `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -19,14 +19,14 @@ subjects:
   name: system:nodes
   apiGroup: rbac.authorization.k8s.io`
 
-	JobDeployerServiceAccount = `
+	jobDeployerServiceAccount = `
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: zke-job-deployer
   namespace: kube-system`
 
-	JobDeployerClusterRoleBinding = `
+	jobDeployerClusterRoleBinding = `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -40,7 +40,7 @@ subjects:
   namespace: kube-system
   name: zke-job-deployer`
 
-	DefaultPodSecurityPolicy = `
+	defaultPodSecurityPolicy = `
 apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
@@ -70,7 +70,7 @@ spec:
   fsGroup:
     rule: 'RunAsAny'`
 
-	DefaultPodSecurityRole = `
+	defaultPodSecurityRole = `
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -83,7 +83,7 @@ rules:
   resourceNames:
   - default-psp`
 
-	DefaultPodSecurityRoleBinding = `
+	defaultPodSecurityRoleBinding = `
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:

@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/types"
+
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 )

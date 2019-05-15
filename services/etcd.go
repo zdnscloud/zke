@@ -1,23 +1,23 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"strings"
 	"time"
 
-	"context"
-
-	etcdclient "github.com/coreos/etcd/client"
-	"github.com/docker/docker/api/types/container"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/types"
+
+	etcdclient "github.com/coreos/etcd/client"
+	"github.com/docker/docker/api/types/container"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/util/cert"
 )

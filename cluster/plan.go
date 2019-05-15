@@ -3,17 +3,13 @@ package cluster
 import (
 	"context"
 	"crypto/md5"
+	b64 "encoding/base64"
 	"fmt"
 	"net"
 	"path"
 	"strconv"
 	"strings"
 
-	b64 "encoding/base64"
-
-	ref "github.com/docker/distribution/reference"
-	dockertypes "github.com/docker/docker/api/types"
-	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/k8s"
@@ -21,6 +17,10 @@ import (
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
+
+	ref "github.com/docker/distribution/reference"
+	dockertypes "github.com/docker/docker/api/types"
+	"github.com/sirupsen/logrus"
 )
 
 const (

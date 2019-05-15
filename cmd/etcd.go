@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/types"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 func EtcdCommand() cli.Command {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/templates"
 )
 
 func ApplyJobDeployerServiceAccount(ctx context.Context, kubeConfigPath string, k8sWrapTransport k8s.WrapTransport) error {
@@ -14,10 +13,10 @@ func ApplyJobDeployerServiceAccount(ctx context.Context, kubeConfigPath string, 
 	if err != nil {
 		return err
 	}
-	if err := k8s.UpdateClusterRoleBindingFromYaml(k8sClient, templates.JobDeployerClusterRoleBinding); err != nil {
+	if err := k8s.UpdateClusterRoleBindingFromYaml(k8sClient, jobDeployerClusterRoleBinding); err != nil {
 		return err
 	}
-	if err := k8s.UpdateServiceAccountFromYaml(k8sClient, templates.JobDeployerServiceAccount); err != nil {
+	if err := k8s.UpdateServiceAccountFromYaml(k8sClient, jobDeployerServiceAccount); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[authz] zke-job-deployer ServiceAccount created successfully")
@@ -30,7 +29,7 @@ func ApplySystemNodeClusterRoleBinding(ctx context.Context, kubeConfigPath strin
 	if err != nil {
 		return err
 	}
-	if err := k8s.UpdateClusterRoleBindingFromYaml(k8sClient, templates.SystemNodeClusterRoleBinding); err != nil {
+	if err := k8s.UpdateClusterRoleBindingFromYaml(k8sClient, systemNodeClusterRoleBinding); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[authz] system:node ClusterRoleBinding created successfully")

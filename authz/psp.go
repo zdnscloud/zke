@@ -5,7 +5,6 @@ import (
 
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/templates"
 )
 
 func ApplyDefaultPodSecurityPolicy(ctx context.Context, kubeConfigPath string, k8sWrapTransport k8s.WrapTransport) error {
@@ -14,7 +13,7 @@ func ApplyDefaultPodSecurityPolicy(ctx context.Context, kubeConfigPath string, k
 	if err != nil {
 		return err
 	}
-	if err := k8s.UpdatePodSecurityPolicyFromYaml(k8sClient, templates.DefaultPodSecurityPolicy); err != nil {
+	if err := k8s.UpdatePodSecurityPolicyFromYaml(k8sClient, defaultPodSecurityPolicy); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[authz] Default PodSecurityPolicy applied successfully")
@@ -27,10 +26,10 @@ func ApplyDefaultPodSecurityPolicyRole(ctx context.Context, kubeConfigPath strin
 	if err != nil {
 		return err
 	}
-	if err := k8s.UpdateRoleFromYaml(k8sClient, templates.DefaultPodSecurityRole); err != nil {
+	if err := k8s.UpdateRoleFromYaml(k8sClient, defaultPodSecurityRole); err != nil {
 		return err
 	}
-	if err := k8s.UpdateRoleBindingFromYaml(k8sClient, templates.DefaultPodSecurityRoleBinding); err != nil {
+	if err := k8s.UpdateRoleBindingFromYaml(k8sClient, defaultPodSecurityRoleBinding); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[authz] Default PodSecurityPolicy Role and RoleBinding applied successfully")

@@ -19,9 +19,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/types"
+
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/util/cert"
 )
 

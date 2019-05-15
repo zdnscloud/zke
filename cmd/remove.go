@@ -4,15 +4,17 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"os"
+	"strings"
+
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/types"
-	"os"
-	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 func RemoveCommand() cli.Command {

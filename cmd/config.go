@@ -3,19 +3,21 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
-	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/pkg/util"
-	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/services"
-	"github.com/zdnscloud/zke/types"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/pkg/util"
+	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/services"
+	"github.com/zdnscloud/zke/types"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -198,7 +200,7 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 	cluster.SystemImages = *systemImages
 	cluster.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	// Get Services Config
@@ -211,7 +213,7 @@ func clusterConfig(ctx *cli.Context) error {
 	cluster.Monitoring.PrometheusAlertManagerIngressEndpoint = "alertmanager.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
 	registryConfig, err := getRegistryConfig(reader, &cluster)
 	if err != nil {
-	    return err
+		return err
 	}
 	cluster.Registry = *registryConfig
 	return writeConfig(&cluster, configFile, print)
@@ -433,19 +435,19 @@ func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 		return nil, err
 	}
 	servers := strings.Split(inputString, ",")
-	for _, server := range servers{
-	    globalDNS = append(globalDNS, server)
+	for _, server := range servers {
+		globalDNS = append(globalDNS, server)
 	}
 	return globalDNS, nil
 }
 
-func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.RegistryConfig, error){
+func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.RegistryConfig, error) {
 	registryCfg := types.RegistryConfig{}
 	isenabled, err := getConfig(reader, fmt.Sprintf("Is enabled harbor registry (y/n)?"), "y")
 	if err != nil {
 		return nil, err
 	}
-	if isenabled == "y" || isenabled == "Y"{
+	if isenabled == "y" || isenabled == "Y" {
 		registryCfg.Isenabled = true
 		if len(c.Storage.Lvm) == 0 {
 			return nil, fmt.Errorf("None available lvm storge!")
@@ -462,13 +464,13 @@ func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConf
 		}
 		registryCfg.RegistryIngressURL = registryIngressURL
 
-		registryCfg.NotaryIngressURL = "notary.kube-registry."+c.Services.Kubelet.ClusterDomain
+		registryCfg.NotaryIngressURL = "notary.kube-registry." + c.Services.Kubelet.ClusterDomain
 		registryCfg.RedisDiskCapacity = cluster.DefaultRegistryRedisDiskCapacity
 		registryCfg.DatabaseDiskCapacity = cluster.DefaultRegistryDatabaseDiskCapacity
 		registryCfg.JobserviceDiskCapacity = cluster.DefaultRegistryJobserviceDiskCapacity
 		registryCfg.ChartmuseumDiskCapacity = cluster.DefaultRegistryChartmuseumDiskCapacity
 	}
-    return &registryCfg, nil
+	return &registryCfg, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {

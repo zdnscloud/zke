@@ -11,8 +11,8 @@ import (
 	"github.com/zdnscloud/zke/network/flannel"
 	"github.com/zdnscloud/zke/network/ingress"
 	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/templates"
 )
 
 const (

@@ -3,14 +3,16 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/urfave/cli"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+
+	"github.com/urfave/cli"
 )
 
 var commonFlags = []cli.Flag{

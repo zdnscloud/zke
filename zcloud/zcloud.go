@@ -2,9 +2,10 @@ package zcloud
 
 import (
 	"context"
+
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/templates"
+	"github.com/zdnscloud/zke/pkg/templates"
 	clusteragent "github.com/zdnscloud/zke/zcloud/cluster-agent"
 	zcloudsa "github.com/zdnscloud/zke/zcloud/sa"
 )

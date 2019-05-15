@@ -1,19 +1,19 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"context"
-
-	dockertypes "github.com/docker/docker/api/types"
-	"github.com/sirupsen/logrus"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
+
+	dockertypes "github.com/docker/docker/api/types"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 

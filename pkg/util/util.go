@@ -6,8 +6,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/coreos/go-semver/semver"
 	"github.com/zdnscloud/zke/types"
+
+	"github.com/coreos/go-semver/semver"
 )
 
 const (

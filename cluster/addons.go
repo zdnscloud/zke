@@ -3,12 +3,12 @@ package cluster
 import (
 	"context"
 	"fmt"
-    "strconv"
+	"strconv"
+	"time"
 
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/templates"
-	"time"
+	"github.com/zdnscloud/zke/pkg/templates"
 )
 
 const (
@@ -93,7 +93,63 @@ func GetAddonsExecuteJob(addonName, nodeName, image string) (string, error) {
 			"Image":     image,
 			"DeleteJob": strconv.FormatBool(isDelete),
 		}
-		return templates.CompileTemplateFromMap(templates.AddonJobTemplate, jobConfig)
+		return templates.CompileTemplateFromMap(addonJobTemplate, jobConfig)
 	}
 	return getAddonJob(addonName, nodeName, image, false)
 }
+
+const addonJobTemplate = `
+{{- $addonName := .AddonName }}
+{{- $nodeName := .NodeName }}
+{{- $image := .Image }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+{{- if eq .DeleteJob "true" }}
+  name: {{$addonName}}-delete-job
+{{- else }}
+  name: {{$addonName}}-deploy-job
+{{- end }}
+  namespace: kube-system
+spec:
+  backoffLimit: 10
+  template:
+    metadata:
+       name: zke-deploy
+    spec:
+        tolerations:
+        - key: node-role.kubernetes.io/controlplane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/etcd
+          operator: Exists
+          effect: NoExecute
+        hostNetwork: true
+        serviceAccountName: zke-job-deployer
+        nodeName: {{$nodeName}}
+        containers:
+          {{- if eq .DeleteJob "true" }}
+          - name: {{$addonName}}-delete-pod
+          {{- else }}
+          - name: {{$addonName}}-pod
+          {{- end }}
+            image: {{$image}}
+            {{- if eq .DeleteJob "true" }}
+            command: ["/bin/sh"]
+            args: ["-c" ,"kubectl get --ignore-not-found=true -f /etc/config/{{$addonName}}.yaml -o name | xargs kubectl delete --ignore-not-found=true"]
+            {{- else }}
+            command: [ "kubectl", "apply", "-f" , "/etc/config/{{$addonName}}.yaml"]
+            {{- end }}
+            volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+        volumes:
+          - name: config-volume
+            configMap:
+              # Provide the name of the ConfigMap containing the files you want
+              # to add to the container
+              name: {{$addonName}}
+              items:
+                - key: {{$addonName}}
+                  path: {{$addonName}}.yaml
+        restartPolicy: Never`

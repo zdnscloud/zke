@@ -7,7 +7,7 @@ import (
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/monitoring/resources"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/templates"
+	"github.com/zdnscloud/zke/pkg/templates"
 )
 
 const (

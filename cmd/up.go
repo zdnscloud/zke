@@ -3,21 +3,23 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"os"
+	"strings"
+
 	"github.com/zdnscloud/zke/cluster"
 	"github.com/zdnscloud/zke/hosts"
 	"github.com/zdnscloud/zke/monitoring"
-	"github.com/zdnscloud/zke/registry"
 	"github.com/zdnscloud/zke/network"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
+	"github.com/zdnscloud/zke/registry"
 	"github.com/zdnscloud/zke/storage"
 	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/zcloud"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	"k8s.io/client-go/util/cert"
-	"os"
-	"strings"
 )
 
 const DINDWaitTime = 3
