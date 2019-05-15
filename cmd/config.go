@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -31,6 +32,8 @@ const (
 	DefaultClusterDockerSockPath = "/var/run/docker.sock"
 
 	IngressSelectLabel = "node-role.kubernetes.io/edge"
+
+	StorageHostLabel = "zke.zcloud.cn/storageclass"
 )
 
 type clusterCommonCfg struct {
@@ -75,6 +78,24 @@ func ConfigCommand() cli.Command {
 	}
 }
 
+func GetConfig(reader *bufio.Reader, text, def string) (string, error) {
+	for {
+		if def == "" {
+			fmt.Printf("[+] %s [%s]: ", text, "none")
+		} else {
+			fmt.Printf("[+] %s [%s]: ", text, def)
+		}
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return "", err
+		}
+		input = strings.TrimSpace(input)
+		if input != "" {
+			return input, nil
+		}
+		return def, nil
+	}
+}
 func getConfig(reader *bufio.Reader, text, def string) (string, error) {
 	for {
 		if def == "" {
@@ -179,6 +200,7 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Storage = *storageConfig
+
 	// Get Authentication Config
 	authnConfig, err := getAuthnConfig(reader)
 	if err != nil {
@@ -198,7 +220,7 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 	cluster.SystemImages = *systemImages
 	cluster.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	// Get Services Config
@@ -389,36 +411,121 @@ func getIngressConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 }
 
 func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types.StorageConfig, error) {
-	storageCfg := types.StorageConfig{}
-	if len(storageCfg.Lvm) < 1 {
-		storageCfg.Lvm = make([]types.Lvmconf, 0)
-	}
+	storageinfo := make(map[string][]string)
 	for _, n := range nodes {
 		for _, v := range n.Role {
 			if v == services.StorageRole {
-				lvmConfig := types.Lvmconf{}
-				if n.HostnameOverride != "" {
-					lvmConfig.Host = n.HostnameOverride
-				} else {
-					lvmConfig.Host = n.Address
-				}
+				var Host string
 				devices, err := getConfig(reader, fmt.Sprintf("Storage disk partitions on host (%s),separated by commas", n.Address), "")
 				if err != nil {
 					return nil, err
 				}
-				lvmConfig.Devs = strings.Split(devices, ",")
-				storageCfg.Lvm = append(storageCfg.Lvm, lvmConfig)
+				if n.HostnameOverride != "" {
+					Host = n.HostnameOverride
+				} else {
+					Host = n.Address
+				}
+				storageinfo[Host] = strings.Split(devices, ",")
 			}
 		}
 	}
-	nfssize, err := getConfig(reader, fmt.Sprintf("Network storage NFS service disk capacity(G)"), "")
-	if err != nil {
-		return nil, err
+	storageCfg := types.StorageConfig{}
+	hostsequence := promptStorage(storageinfo)
+	storagetypes := []string{"Lvm", "Nfs", "Ceph"}
+	for _, t := range storagetypes {
+		cfg, err := allocateStorage(reader, storageinfo, t, hostsequence)
+		if err != nil {
+			return nil, err
+		}
+		/*
+			for _, v := range cfg {
+				for _, n := range nodes {
+					if v.Host == n.HostnameOverride {
+						if len(n.Labels) == 0 {
+							n.Labels = make(map[string]string)
+						}
+						fmt.Println("##############", v.Host)
+						n.Labels[StorageHostLabel] = t
+						fmt.Println(n.Labels)
+						fmt.Println(nodes)
+					}
+				}
+			}*/
+		switch t {
+		case "Lvm":
+			storageCfg.Lvm = cfg
+		case "Nfs":
+			storageCfg.Nfs = cfg
+		case "Ceph":
+			storageCfg.Ceph = cfg
+		}
 	}
-	size, err := strconv.Atoi(nfssize)
-	storageCfg.NFS.Size = size
-
 	return &storageCfg, nil
+}
+
+func promptStorage(storageinfo map[string][]string) map[int]string {
+	hostsequence := make(map[int]string)
+	var keys []string
+	for k := range storageinfo {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for i, k := range keys {
+		fmt.Printf("%d: %s\n", i+1, k)
+		hostsequence[i+1] = k
+	}
+	return hostsequence
+}
+
+func allocateStorage(reader *bufio.Reader, storageinfo map[string][]string, t string, hostsequence map[int]string) ([]types.Deviceconf, error) {
+	hosts := make([]string, 0)
+	for {
+		hostnums, err := GetConfig(reader, fmt.Sprintf("Host number used for %s storage,separated by commas", t), "")
+		if err != nil {
+			return nil, err
+		}
+		if hostnums == "" {
+			break
+		}
+		nums := strings.Split(strings.TrimSuffix(hostnums, ","), ",")
+		var flag bool
+		var validnum []int
+		for _, v := range nums {
+			num, _ := strconv.Atoi(v)
+			_, ok := hostsequence[num]
+			fmt.Println(hostsequence)
+			if ok {
+				validnum = append(validnum, num)
+				flag = true
+			} else {
+				fmt.Printf("The host not exist or has been allocated, please change input!\n")
+				validnum = validnum[0:0]
+				flag = false
+				break
+			}
+		}
+		if flag {
+			for _, v := range validnum {
+				hosts = append(hosts, hostsequence[v])
+				delete(hostsequence, v)
+			}
+			break
+		} else {
+			continue
+		}
+	}
+	nodelabels := make(map[string]string)
+	nodelabels[StorageHostLabel] = t
+	devicecfgs := make([]types.Deviceconf, 0)
+	for _, h := range hosts {
+		c := types.Deviceconf{
+			NodeSelector: nodelabels,
+			Host:         h,
+			Devs:         storageinfo[h],
+		}
+		devicecfgs = append(devicecfgs, c)
+	}
+	return devicecfgs, nil
 }
 
 func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
@@ -428,8 +535,8 @@ func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 		return nil, err
 	}
 	servers := strings.Split(inputString, ",")
-	for _, server := range servers{
-	    globalDNS = append(globalDNS, server)
+	for _, server := range servers {
+		globalDNS = append(globalDNS, server)
 	}
 	return globalDNS, nil
 }

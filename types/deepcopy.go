@@ -776,7 +776,21 @@ func (in *StorageConfig) DeepCopyInto(out *StorageConfig) {
 	*out = *in
 	if in.Lvm != nil {
 		in, out := &in.Lvm, &out.Lvm
-		*out = make([]Lvmconf, len(*in))
+		*out = make([]Deviceconf, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.Nfs != nil {
+		in, out := &in.Nfs, &out.Nfs
+		*out = make([]Deviceconf, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.Ceph != nil {
+		in, out := &in.Ceph, &out.Ceph
+		*out = make([]Deviceconf, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -793,7 +807,7 @@ func (in *StorageConfig) DeepCopy() *StorageConfig {
 	return out
 }
 
-func (in *Lvmconf) DeepCopyInto(out *Lvmconf) {
+func (in *Deviceconf) DeepCopyInto(out *Deviceconf) {
 	*out = *in
 	if in.Devs != nil {
 		in, out := &in.Devs, &out.Devs
@@ -803,25 +817,11 @@ func (in *Lvmconf) DeepCopyInto(out *Lvmconf) {
 	return
 }
 
-func (in *Lvmconf) DeepCopy() *Lvmconf {
+func (in *Deviceconf) DeepCopy() *Deviceconf {
 	if in == nil {
 		return nil
 	}
-	out := new(Lvmconf)
-	in.DeepCopyInto(out)
-	return out
-}
-
-func (in *NFSconf) DeepCopyInto(out *NFSconf) {
-	*out = *in
-	return
-}
-
-func (in *NFSconf) DeepCopy() *NFSconf {
-	if in == nil {
-		return nil
-	}
-	out := new(NFSconf)
+	out := new(Deviceconf)
 	in.DeepCopyInto(out)
 	return out
 }

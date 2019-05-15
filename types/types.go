@@ -281,17 +281,15 @@ type NetworkConfig struct {
 }
 
 type StorageConfig struct {
-	Lvm []Lvmconf `yaml:"lvm" json:lvm,omitempty`
-	NFS NFSconf   `yaml:"nfs" json:nfs,omitempty`
+	Lvm  []Deviceconf `yaml:"lvm" json:lvm,omitempty`
+	Nfs  []Deviceconf `yaml:"nfs" json:nfs,omitempty`
+	Ceph []Deviceconf `yaml:"ceph" json:ceph,omitempty`
 }
 
-type Lvmconf struct {
-	Host string   `yaml:"host" json:"host,omitempty"`
-	Devs []string `yaml:"devs" json:"devs,omitempty"`
-}
-
-type NFSconf struct {
-	Size int `yaml:"size" json:"size,omitempty"`
+type Deviceconf struct {
+	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector,omitempty"`
+	Host         string            `yaml:"host" json:"host,omitempty"`
+	Devs         []string          `yaml:"devs" json:"devs,omitempty"`
 }
 
 type AuthWebhookConfig struct {

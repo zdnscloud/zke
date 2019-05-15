@@ -340,11 +340,11 @@ func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap
 }
 
 func DoCleanHeritage(ctx context.Context, host *Host) error {
-	d, err := newDialer(host, "docker")
+	d, err := NewDialer(host, "docker")
 	if err != nil {
 		return err
 	}
-	cfg, err := getSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
+	cfg, err := GetSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
 	if err != nil {
 		return err
 	}

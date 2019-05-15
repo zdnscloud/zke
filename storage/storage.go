@@ -9,8 +9,13 @@ import (
 	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/storage/lvm"
 	"github.com/zdnscloud/zke/storage/lvmd"
-	"github.com/zdnscloud/zke/storage/nfs"
+	"github.com/zdnscloud/zke/types"
+	//"github.com/zdnscloud/zke/storage/nfs"
+	"github.com/zdnscloud/gok8s/client"
+	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/zke/templates"
+	corev1 "k8s.io/api/core/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"net"
 	"strings"
 	"time"
@@ -43,38 +48,91 @@ const (
 	NFSStorageClassName    = "nfs"
 	Size                   = "Size"
 
+	CephStorageResourceName = "zke-storage-plugin-ceph"
+	CephResourceName        = "ceph-storageclass"
+	CephStorageClassName    = "ceph"
+
 	StorageCSIAttacherImage     = "StorageCSIAttacherImage"
 	StorageCSIProvisionerImage  = "StorageCSIProvisionerImage"
 	StorageDriverRegistrarImage = "StorageDriverRegistrarImage"
 	StorageCSILvmpluginImage    = "StorageCSILvmpluginImage"
 	StorageLvmdImage            = "StorageLvmdImage"
 	StorageNFSProvisionerImage  = "StorageNFSProvisionerImage"
+
+	StorageTypeLabels = "storage.zcloud.cn/Storagetype"
 )
 
 func DeployStoragePlugin(ctx context.Context, c *cluster.Cluster) error {
+	if err := doAddLabelsDeploy(ctx, c); err != nil {
+		return err
+	}
+
 	if len(c.Storage.Lvm) > 0 {
 		if err := doLVMDDeploy(ctx, c); err != nil {
 			return err
 		}
-		var ready bool
-		for i := 0; i < LVMDCheckTimes; i++ {
-			if checkLvmdReady(ctx, c) {
-				ready = true
-				break
-			}
-			time.Sleep(time.Duration(LVMDCheckInterval) * time.Second)
+	}
+	var ready bool
+	for i := 0; i < LVMDCheckTimes; i++ {
+		if checkLvmdReady(ctx, c) {
+			ready = true
+			break
 		}
-		if !ready {
-			return ErrLvmdNotReady
-		}
-		if err := doLVMStorageDeploy(ctx, c); err != nil {
+		time.Sleep(time.Duration(LVMDCheckInterval) * time.Second)
+	}
+	if !ready {
+		return ErrLvmdNotReady
+	}
+	if err := doLVMStorageDeploy(ctx, c); err != nil {
+		return err
+	}
+	/*
+		if err := doCephDeploy(ctx, c); err != nil {
 			return err
 		}
-		if c.Storage.NFS.Size > 0 {
-			if err := doNFSStorageDeploy(ctx, c); err != nil {
+			if err := doCephStorageDeploy(ctx, c); err != nil {
+				return err
+			}*/
+	return nil
+}
+
+func doAddLabelsDeploy(ctx context.Context, c *cluster.Cluster) error {
+	config, err := config.GetConfig()
+	cli, err := client.New(config, client.Options{})
+	if err != nil {
+		fmt.Println(err)
+	}
+	var storageCfgMap = map[string][]types.Deviceconf{
+		"Lvm":  c.Storage.Lvm,
+		"Nfs":  c.Storage.Nfs,
+		"Ceph": c.Storage.Ceph,
+	}
+	storagetypes := []string{"Lvm", "Nfs", "Ceph"}
+	for _, t := range storagetypes {
+		cfg, ok := storageCfgMap[t]
+		if !ok || len(cfg) == 0 {
+			return nil
+		}
+		for _, s := range cfg {
+			fmt.Println("===========", s.Host)
+			if err = doUpdateNode(cli, s.Host, t); err != nil {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+func doUpdateNode(cli client.Client, name string, t string) error {
+	node := corev1.Node{}
+	err := cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, &node)
+	if err != nil {
+		return err
+	}
+	node.Labels[StorageTypeLabels] = t
+	err = cli.Update(context.TODO(), &node)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -101,6 +159,41 @@ func doLVMDDeploy(ctx context.Context, c *cluster.Cluster) error {
 	}
 	return nil
 }
+
+func doCephDeploy(ctx context.Context, c *cluster.Cluster) error {
+	log.Infof(ctx, "[storage] Setting up Ceph Cluster")
+	var arr = make([]map[string]string, 0)
+	for _, v := range c.Storage.Ceph {
+		var m = make(map[string]string)
+		m[Host] = v.Host
+		m[Devs] = strings.Replace(strings.Trim(fmt.Sprint(v.Devs), "[]"), " ", " ", -1)
+		arr = append(arr, m)
+	}
+	return nil
+}
+
+/*
+func doCephStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
+	log.Infof(ctx, "[storage] Setting up StoragePlugin : %s", CephStorageClassName)
+	var arr = make([]map[string]string, 0)
+	for _, v := range c.Storage.Ceph {
+		var m = make(map[string]string)
+		m[Host] = v.Host
+		m[Devs] = strings.Replace(strings.Trim(fmt.Sprint(v.Devs), "[]"), " ", " ", -1)
+		arr = append(arr, m)
+	}
+	cephConfig := map[string]interface{}{
+		CephList: arr,
+	}
+	lvmdYaml, err := templates.CompileTemplateFromMap(lvmd.LVMDTemplate, lvmdConfig)
+	if err != nil {
+		return err
+	}
+	if err := c.DoAddonDeploy(ctx, lvmdYaml, LVMDResourceName, true); err != nil {
+		return err
+	}
+	return nil
+}*/
 
 func doLVMStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up StoragePlugin : %s", LVMStorageClassName)
@@ -129,6 +222,7 @@ func doLVMStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
+/*
 func doNFSStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up StoragePlugin : %s", NFSStorageClassName)
 	nfsstorageConfig := map[string]interface{}{
@@ -144,7 +238,7 @@ func doNFSStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 		return err
 	}
 	return nil
-}
+}*/
 
 func checkLvmdReady(ctx context.Context, c *cluster.Cluster) bool {
 	for _, n := range c.Nodes {

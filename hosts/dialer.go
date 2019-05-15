@@ -44,7 +44,7 @@ func GetDialerOptions(d, l DialerFactory, w k8s.WrapTransport) DialersOptions {
 	}
 }
 
-func newDialer(h *Host, kind string) (*dialer, error) {
+func NewDialer(h *Host, kind string) (*dialer, error) {
 	// Check for Bastion host connection
 	var bastionDialer *dialer
 	if len(h.BastionHost.Address) > 0 {
@@ -111,12 +111,12 @@ func newDialer(h *Host, kind string) (*dialer, error) {
 }
 
 func SSHFactory(h *Host) (func(network, address string) (net.Conn, error), error) {
-	dialer, err := newDialer(h, "docker")
+	dialer, err := NewDialer(h, "docker")
 	return dialer.Dial, err
 }
 
 func LocalConnFactory(h *Host) (func(network, address string) (net.Conn, error), error) {
-	dialer, err := newDialer(h, "network")
+	dialer, err := NewDialer(h, "network")
 	return dialer.Dial, err
 }
 
@@ -160,7 +160,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 }
 
 func (d *dialer) getSSHTunnelConnection() (*ssh.Client, error) {
-	cfg, err := getSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
+	cfg, err := GetSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
 	if err != nil {
 		return nil, fmt.Errorf("Error configuring SSH: %v", err)
 	}
@@ -190,7 +190,7 @@ func (h *Host) newHTTPClient(dialerFactory DialerFactory) (*http.Client, error) 
 }
 
 func (d *dialer) getBastionHostTunnelConn() (*ssh.Client, error) {
-	bastionCfg, err := getSSHConfig(d.bastionDialer.username, d.bastionDialer.sshKeyString, d.bastionDialer.sshCertString, d.bastionDialer.useSSHAgentAuth)
+	bastionCfg, err := GetSSHConfig(d.bastionDialer.username, d.bastionDialer.sshKeyString, d.bastionDialer.sshCertString, d.bastionDialer.useSSHAgentAuth)
 	if err != nil {
 		return nil, fmt.Errorf("Error configuring SSH for bastion host [%s]: %v", d.bastionDialer.sshAddress, err)
 	}
@@ -202,7 +202,7 @@ func (d *dialer) getBastionHostTunnelConn() (*ssh.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to the host [%s]: %v", d.sshAddress, err)
 	}
-	cfg, err := getSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
+	cfg, err := GetSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
 	if err != nil {
 		return nil, fmt.Errorf("Error configuring SSH for host [%s]: %v", d.sshAddress, err)
 	}
