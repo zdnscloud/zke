@@ -7,7 +7,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
-	"os"
 	"path"
 
 	"github.com/docker/docker/client"
@@ -360,8 +359,8 @@ func DoCleanHeritage(ctx context.Context, host *Host) error {
 		return err
 	}
 	defer session.Close()
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
+	// session.Stdout = os.Stdout
+	// session.Stderr = os.Stderr
 	session.Run(CleanHeritageCMD)
 	return nil
 }
