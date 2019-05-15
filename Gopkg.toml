@@ -1,0 +1,15 @@
+[[constraint]]
+  branch = "master"
+  name = "github.com/zdnscloud/gok8s"
+
+[[constraint]]
+  branch = "release-1.13"
+  name = "k8s.io/api"
+
+[[constraint]]
+  revision = "a9fbbdc8dd8794b20af358382ab780559bca589d"
+  name = "github.com/docker/docker"
+
+[[override]]
+ branch = "release-1.13"
+ name = "k8s.io/metrics"

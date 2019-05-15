@@ -1,29 +1,6 @@
-## v3.4.0 (TBD)
+## [v3.3.0](https://github.com/coreos/etcd/releases/tag/v3.3.0)
 
-**v3.4.0 is not yet released.**
-
-### Added(`etcd`)
-
-- Add [`watch_id` field to `etcdserverpb.WatchCreateRequest`](https://github.com/coreos/etcd/pull/9065), allow user-provided watch ID to `mvcc`.
-  - Corresponding `watch_id` is returned via `etcdserverpb.WatchResponse`, if any.
-
-### Improved(`etcd/raft`)
-
-- [Improve `becomeLeader` and `stepLeader`](https://github.com/coreos/etcd/pull/9073) by keeping track of latest `pb.EntryConfChange` index.
-  - Previously record `pendingConf` boolean field scanning the entire tail of the log, which can delay hearbeat send.
-
-
-## [v3.3.0](https://github.com/coreos/etcd/releases/tag/v3.3.0) (2018-01-??)
-
-**v3.3.0 is not yet released; expected to be released in January 2018.**
-
-## [v3.3.0-rc.1](https://github.com/coreos/etcd/releases/tag/v3.3.0-rc.1) (2018-01-02)
-
-See [code changes](https://github.com/coreos/etcd/compare/v3.3.0-rc.0...v3.3.0-rc.1) and [v3.3 upgrade guide](https://github.com/coreos/etcd/blob/master/Documentation/upgrades/upgrade_3_3.md) for any breaking changes.
-
-## [v3.3.0-rc.0](https://github.com/coreos/etcd/releases/tag/v3.3.0-rc.0) (2017-12-20)
-
-See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) and [v3.3 upgrade guide](https://github.com/coreos/etcd/blob/master/Documentation/upgrades/upgrade_3_3.md) for any breaking changes.
+See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0) and [v3.3 upgrade guide](https://github.com/coreos/etcd/blob/master/Documentation/upgrades/upgrade_3_3.md) for any breaking changes.
 
 ### Improved
 
@@ -40,7 +17,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 - Require [Go 1.9+](https://github.com/coreos/etcd/issues/6174).
   - Compile with *Go 1.9.2*.
   - Deprecate [`golang.org/x/net/context`](https://github.com/coreos/etcd/pull/8511).
-- Require [`google.golang.org/grpc`](https://github.com/grpc/grpc-go/releases) [**`v1.7.4`**](https://github.com/grpc/grpc-go/releases/tag/v1.7.4) or [**`v1.7.5+`**](https://github.com/grpc/grpc-go/releases/tag/v1.7.5).
+- Require [`google.golang.org/grpc`](https://github.com/grpc/grpc-go/releases) [**`v1.7.4`**](https://github.com/grpc/grpc-go/releases/tag/v1.7.4) or [**`v1.7.5+`**](https://github.com/grpc/grpc-go/releases/tag/v1.7.5):
   - Deprecate [`metadata.Incoming/OutgoingContext`](https://github.com/coreos/etcd/pull/7896).
   - Deprecate `grpclog.Logger`, upgrade to [`grpclog.LoggerV2`](https://github.com/coreos/etcd/pull/8533).
   - Deprecate [`grpc.ErrClientConnTimeout`](https://github.com/coreos/etcd/pull/8505) errors in `clientv3`.
@@ -74,7 +51,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 - Provide [error information in `/health`](https://github.com/coreos/etcd/pull/8312).
   - e.g. `{"health":false,"errors":["NOSPACE"]}`.
 - Move [logging setup to embed package](https://github.com/coreos/etcd/pull/8810)
-  - Disable gRPC server info-level logs by default (can be enabled with `etcd --debug` flag).
+  - Disable gRPC server log by default.
 - Use [monotonic time in Go 1.9](https://github.com/coreos/etcd/pull/8507) for `lease` package.
 - Warn on [empty hosts in advertise URLs](https://github.com/coreos/etcd/pull/8384).
   - Address [advertise client URLs accepts empty hosts](https://github.com/coreos/etcd/issues/8379).
@@ -99,7 +76,6 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 - Add [`MaxCallSendMsgSize` and `MaxCallRecvMsgSize`](https://github.com/coreos/etcd/pull/9047) fields to [`clientv3.Config`](https://godoc.org/github.com/coreos/etcd/clientv3#Config).
   - Fix [exceeded response size limit error in client-side](https://github.com/coreos/etcd/issues/9043).
   - Address [kubernetes#51099](https://github.com/kubernetes/kubernetes/issues/51099).
-    - In previous versions(v3.2.10, v3.2.11), client response size was limited to only 4 MiB.
   - `MaxCallSendMsgSize` default value is 2 MiB, if not configured.
   - `MaxCallRecvMsgSize` default value is `math.MaxInt32`, if not configured.
 - Accept [`Compare_LEASE`](https://github.com/coreos/etcd/pull/8324) in [`clientv3.Compare`](https://godoc.org/github.com/coreos/etcd/clientv3#Compare).
@@ -121,7 +97,6 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 - Add [`lease keep-alive --once`](https://github.com/coreos/etcd/pull/8775) flag.
 - Make [`lease timetolive LEASE_ID`](https://github.com/coreos/etcd/issues/9028) on expired lease print [`lease LEASE_ID already expired`](https://github.com/coreos/etcd/pull/9047).
   - <=3.2 prints `lease LEASE_ID granted with TTL(0s), remaining(-1s)`.
-- Add [`snapshot restore --wal-dir`](https://github.com/coreos/etcd/pull/9124) flag.
 - Add [`defrag --data-dir`](https://github.com/coreos/etcd/pull/8367) flag.
 - Add [`move-leader`](https://github.com/coreos/etcd/pull/8153) command.
 - Add [`endpoint hashkv`](https://github.com/coreos/etcd/pull/8351) command.
@@ -147,7 +122,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 
 ### Added(`grpc-proxy`)
 
-- Add [`grpc-proxy start --experimental-leasing-prefix`](https://github.com/coreos/etcd/pull/8341) flag.
+- Add [`grpc-proxy start --experimental-leasing-prefix`](https://github.com/coreos/etcd/pull/8341) flag:
   - For disconnected linearized reads.
   - Based on [V system leasing](https://github.com/coreos/etcd/issues/6065).
   - See ["Disconnected consistent reads with etcd" blog post](https://coreos.com/blog/coreos-labs-disconnected-consistent-reads-with-etcd).
@@ -176,7 +151,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 ### Added/Fixed(Security/Auth)
 
 - Add [CRL based connection rejection](https://github.com/coreos/etcd/pull/8124) to manage [revoked certs](https://github.com/coreos/etcd/issues/4034).
-- Document [TLS authentication changes](https://github.com/coreos/etcd/pull/8895).
+- Document [TLS authentication changes](https://github.com/coreos/etcd/pull/8895):
   - [Server accepts connections if IP matches, without checking DNS entries](https://github.com/coreos/etcd/pull/8223). For instance, if peer cert contains IP addresses and DNS names in Subject Alternative Name (SAN) field, and the remote IP address matches one of those IP addresses, server just accepts connection without further checking the DNS names.
   - [Server supports reverse-lookup on wildcard DNS `SAN`](https://github.com/coreos/etcd/pull/8281). For instance, if peer cert contains only DNS names (no IP addresses) in Subject Alternative Name (SAN) field, server first reverse-lookups the remote IP address to get a list of names mapping to that address (e.g. `nslookup IPADDR`). Then accepts the connection if those names have a matching name with peer cert's DNS names (either by exact or wildcard match). If none is matched, server forward-lookups each DNS entry in peer cert (e.g. look up `example.default.svc` when the entry is `*.example.default.svc`), and accepts connection only when the host's resolved addresses have the matching IP address with the peer's remote IP address.
 - Add [`etcd --peer-require-cn`](https://github.com/coreos/etcd/pull/8616) flag.
@@ -195,7 +170,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 
 ### Fixed(v3)
 
-- Fix [range/put/delete operation metrics](https://github.com/coreos/etcd/pull/8054) with transaction.
+- Fix [range/put/delete operation metrics](https://github.com/coreos/etcd/pull/8054) with transaction:
   - `etcd_debugging_mvcc_range_total`
   - `etcd_debugging_mvcc_put_total`
   - `etcd_debugging_mvcc_delete_total`
@@ -226,22 +201,12 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.0...v3.3.0-rc.0) 
 ### Other
 
 - Support previous two minor versions (see our [new release policy](https://github.com/coreos/etcd/pull/8805)).
-- `v3.3.x` is the last release cycle that supports `ACI`.
-  - [AppC was officially suspended](https://github.com/appc/spec#-disclaimer-), as of late 2016.
+- `v3.3.x` is the last release cycle that supports `ACI`:
+  - AppC was [officially suspended](https://github.com/appc/spec#-disclaimer-), as of late 2016.
   - [`acbuild`](https://github.com/containers/build#this-project-is-currently-unmaintained) is not maintained anymore.
   - `*.aci` files won't be available from etcd `v3.4` release.
 - Add container registry [`gcr.io/etcd-development/etcd`](https://gcr.io/etcd-development/etcd).
   - [quay.io/coreos/etcd](https://quay.io/coreos/etcd) is still supported as secondary.
-
-
-## [v3.2.13](https://github.com/coreos/etcd/releases/tag/v3.2.13) (2018-01-02)
-
-See [code changes](https://github.com/coreos/etcd/compare/v3.2.12...v3.2.13) and [v3.2 upgrade guide](https://github.com/coreos/etcd/blob/master/Documentation/upgrades/upgrade_3_2.md) for any breaking changes.
-
-### Fixed
-
-- Remove [verbose error messages on stream cancel and gRPC info-level logs](https://github.com/coreos/etcd/pull/9080) in server-side.
-- Fix [gRPC server panic on `GracefulStop` TLS-enabled server](https://github.com/coreos/etcd/pull/8987).
 
 
 ## [v3.2.12](https://github.com/coreos/etcd/releases/tag/v3.2.12) (2017-12-20)
@@ -252,12 +217,11 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.11...v3.2.12) and
 
 - Fix [error message of `Revision` compactor](https://github.com/coreos/etcd/pull/8999) in server-side.
 
-### Added(`etcd/clientv3`)
+### Added(`etcd/clientv3`,`etcdctl/v3`)
 
 - Add [`MaxCallSendMsgSize` and `MaxCallRecvMsgSize`](https://github.com/coreos/etcd/pull/9047) fields to [`clientv3.Config`](https://godoc.org/github.com/coreos/etcd/clientv3#Config).
   - Fix [exceeded response size limit error in client-side](https://github.com/coreos/etcd/issues/9043).
   - Address [kubernetes#51099](https://github.com/kubernetes/kubernetes/issues/51099).
-    - In previous versions(v3.2.10, v3.2.11), client response size was limited to only 4 MiB.
   - `MaxCallSendMsgSize` default value is 2 MiB, if not configured.
   - `MaxCallRecvMsgSize` default value is `math.MaxInt32`, if not configured.
 
@@ -273,7 +237,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.10...v3.2.11) and
 
 ### Fixed
 
-- Fix racey grpc-go's server handler transport `WriteStatus` call to prevent [TLS-enabled etcd server crash](https://github.com/coreos/etcd/issues/8904).
+- Fix racey grpc-go's server handler transport `WriteStatus` call to prevent [TLS-enabled etcd server crash](https://github.com/coreos/etcd/issues/8904):
   - Upgrade [`google.golang.org/grpc`](https://github.com/grpc/grpc-go/releases) `v1.7.3` to `v1.7.4`.
   - Add [gRPC RPC failure warnings](https://github.com/coreos/etcd/pull/8939) to help debug such issues in the future.
 - Remove `--listen-metrics-urls` flag in monitoring document (non-released in `v3.2.x`, planned for `v3.3.x`).
@@ -300,7 +264,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.9...v3.2.10) and 
 ### Fixed
 
 - Replace backend key-value database `boltdb/bolt` with [`coreos/bbolt`](https://github.com/coreos/bbolt/releases) to address [backend database size issue](https://github.com/coreos/etcd/issues/8009).
-- Fix `clientv3` balancer to handle [network partitions](https://github.com/coreos/etcd/issues/8711).
+- Fix `clientv3` balancer to handle [network partitions](https://github.com/coreos/etcd/issues/8711):
   - Upgrade [`google.golang.org/grpc`](https://github.com/grpc/grpc-go/releases) `v1.2.1` to `v1.7.3`.
   - Upgrade [`github.com/grpc-ecosystem/grpc-gateway`](https://github.com/grpc-ecosystem/grpc-gateway/releases) `v1.2` to `v1.3`.
 - Revert [discovery SRV auth `ServerName` with `*.{ROOT_DOMAIN}`](https://github.com/coreos/etcd/pull/8651) to support non-wildcard subject alternative names in the certs (see [issue #8445](https://github.com/coreos/etcd/issues/8445) for more contexts).
@@ -420,7 +384,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.2.1...v3.2.2) and [
 
 ### Fixed
 
-- Use user-provided listen address to connect to gRPC gateway.
+- Use user-provided listen address to connect to gRPC gateway:
   - `net.Listener` rewrites IPv4 0.0.0.0 to IPv6 [::], breaking IPv6 disabled hosts.
   - Only v3.2.0, v3.2.1 are affected.
 - Accept connection with matched IP SAN but no DNS match.
@@ -634,7 +598,7 @@ See [code changes](https://github.com/coreos/etcd/compare/v3.0.0...v3.1.0) and [
 
 ### Changed
 
-- Deprecated following gRPC metrics in favor of [go-grpc-prometheus](https://github.com/grpc-ecosystem/go-grpc-prometheus).
+- Deprecated following gRPC metrics in favor of [go-grpc-prometheus](https://github.com/grpc-ecosystem/go-grpc-prometheus):
   - `etcd_grpc_requests_total`
   - `etcd_grpc_requests_failed_total`
   - `etcd_grpc_active_streams`

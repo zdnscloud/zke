@@ -16,6 +16,8 @@ import:
   - daemon
   - journal
   - util
+- package: go.uber.org/zap
+  version: v1.7.1
 - package: github.com/coreos/pkg
   version: v3
   subpackages:
@@ -45,7 +47,7 @@ import:
 - package: github.com/google/btree
   version: 925471ac9e2131377a91e1595defec898166fe49
 - package: github.com/grpc-ecosystem/grpc-gateway
-  version: v1.3.1
+  version: v1.3.0
   subpackages:
   - runtime
   - runtime/internal
