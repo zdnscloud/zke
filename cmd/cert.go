@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/types"
@@ -43,7 +43,7 @@ func generateCSRFromCli(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
 	}
-	zkeConfig, err := cluster.ParseConfig(clusterFile)
+	zkeConfig, err := core.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
 	}
@@ -52,23 +52,23 @@ func generateCSRFromCli(ctx *cli.Context) error {
 		return err
 	}
 	// setting up the flags
-	externalFlags := cluster.GetExternalFlags(false, "", filePath)
+	externalFlags := core.GetExternalFlags(false, "", filePath)
 	externalFlags.CertificateDir = ctx.String("cert-dir")
 	externalFlags.CustomCerts = ctx.Bool("custom-certs")
 	return GenerateZKECSRs(context.Background(), zkeConfig, externalFlags)
 }
 
-func GenerateZKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags cluster.ExternalFlags) error {
+func GenerateZKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags core.ExternalFlags) error {
 	log.Infof(ctx, "Generating Kubernetes cluster CSR certificates")
 	if len(flags.CertificateDir) == 0 {
-		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
+		flags.CertificateDir = core.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
 	}
 	certBundle, err := pki.ReadCSRsAndKeysFromDir(flags.CertificateDir)
 	if err != nil {
 		return err
 	}
 	// initialze the cluster object from the config file
-	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
+	kubeCluster, err := core.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}

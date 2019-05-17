@@ -1,4 +1,4 @@
-package cluster
+package core
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zdnscloud/zke/cluster/authz"
-	"github.com/zdnscloud/zke/cluster/services"
+	"github.com/zdnscloud/zke/core/authz"
+	"github.com/zdnscloud/zke/core/services"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/k8s"

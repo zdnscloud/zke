@@ -83,7 +83,7 @@ var (
 			Grafana:                     m("zdnscloud/grafana:5.0.0"),
 			GrafanaWatcher:              m("zdnscloud/grafana-watcher:v0.0.8"),
 			KubeStateMetrics:            m("zdnscloud/kube-state-metrics:v1.3.1"),
-			ClusterAgent:                m("zdnscloud/cluster-agent:v0.7"),
+			ClusterAgent:                m("zdnscloud/cluster-agent:v0.10"),
 			HarborAdminserver:           ("goharbor/harbor-adminserver:v1.7.5"),
 			HarborChartmuseum:           ("goharbor/chartmuseum-photon:v0.8.1-v1.7.5"),
 			HarborClair:                 ("goharbor/clair-photon:v2.0.8-v1.7.5"),

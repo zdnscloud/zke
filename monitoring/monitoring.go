@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/monitoring/resources"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
@@ -38,14 +38,14 @@ type metricsServerOptions struct {
 	Version            string
 }
 
-func DeployMonitoring(ctx context.Context, c *cluster.Cluster) error {
+func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[Monitor] Setting up MonitoringPlugin")
 	if err := doMonitoringPreDeploy(ctx, c); err != nil {
 		return err
 	}
 
 	if err := doMetricServerDeploy(ctx, c); err != nil {
-		if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
+		if err, ok := err.(*core.AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [MetricServer]: %v", err)
@@ -73,9 +73,9 @@ func DeployMonitoring(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doPrometheusDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doPrometheusDeploy(ctx context.Context, c *core.Cluster) error {
 	config := map[string]interface{}{
-		cluster.RBACConfig:               c.Authorization.Mode,
+		core.RBACConfig:                  c.Authorization.Mode,
 		PermetheusServerImage:            c.SystemImages.PrometheusServer,
 		PrometheusConfigMapReloaderImage: c.SystemImages.PrometheusConfigMapReloader,
 	}
@@ -89,7 +89,7 @@ func doPrometheusDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doNodeExporterDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doNodeExporterDeploy(ctx context.Context, c *core.Cluster) error {
 	config := map[string]interface{}{
 		PermetheusNodeExporterImage: c.SystemImages.PrometheusNodeExporter,
 	}
@@ -103,9 +103,9 @@ func doNodeExporterDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doStateMetricsDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doStateMetricsDeploy(ctx context.Context, c *core.Cluster) error {
 	config := map[string]interface{}{
-		cluster.RBACConfig:    c.Authorization.Mode,
+		core.RBACConfig:       c.Authorization.Mode,
 		KubeStateMetricsImage: c.SystemImages.KubeStateMetrics,
 	}
 	configYaml, err := templates.CompileTemplateFromMap(resources.StateMetricsTemplate, config)
@@ -118,9 +118,9 @@ func doStateMetricsDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doAlertManagerDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doAlertManagerDeploy(ctx context.Context, c *core.Cluster) error {
 	config := map[string]interface{}{
-		cluster.RBACConfig:                    c.Authorization.Mode,
+		core.RBACConfig:                       c.Authorization.Mode,
 		PrometheusAlertManagerImage:           c.SystemImages.PrometheusAlertManager,
 		PrometheusConfigMapReloaderImage:      c.SystemImages.PrometheusConfigMapReloader,
 		PrometheusAlertManagerIngressEndpoint: c.Monitoring.PrometheusAlertManagerIngressEndpoint,
@@ -135,9 +135,9 @@ func doAlertManagerDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doGrafanaDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doGrafanaDeploy(ctx context.Context, c *core.Cluster) error {
 	config := map[string]interface{}{
-		cluster.RBACConfig:     c.Authorization.Mode,
+		core.RBACConfig:        c.Authorization.Mode,
 		GrafanaImage:           c.SystemImages.Grafana,
 		GrafanaWatcherImage:    c.SystemImages.GrafanaWatcher,
 		GrafanaIngressEndpoint: c.Monitoring.GrafanaIngressEndpoint,
@@ -155,7 +155,7 @@ func doGrafanaDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doMetricServerDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doMetricServerDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[addons] Setting up %s", c.Monitoring.MetricsProvider)
 	s := strings.Split(c.SystemImages.MetricsServer, ":")
 	versionTag := s[len(s)-1]
@@ -163,7 +163,7 @@ func doMetricServerDeploy(ctx context.Context, c *cluster.Cluster) error {
 		MetricsServerImage: c.SystemImages.MetricsServer,
 		RBACConfig:         c.Authorization.Mode,
 		Options:            c.Monitoring.MetricsOptions,
-		Version:            cluster.GetTagMajorVersion(versionTag),
+		Version:            core.GetTagMajorVersion(versionTag),
 	}
 	metricsYaml, err := templates.CompileTemplateFromMap(resources.MetricsServerTemplate, MetricsServerConfig)
 	if err != nil {
@@ -176,7 +176,7 @@ func doMetricServerDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doMonitoringPreDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doMonitoringPreDeploy(ctx context.Context, c *core.Cluster) error {
 	if err := c.DoAddonDeploy(ctx, resources.PreDeployYaml, MonitoringPreDeployJobName, true); err != nil {
 		return err
 	}

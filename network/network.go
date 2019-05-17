@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/network/calico"
 	"github.com/zdnscloud/zke/network/coredns"
 	"github.com/zdnscloud/zke/network/flannel"
@@ -46,7 +46,7 @@ const (
 	ControllersImage = "ControllersImage"
 )
 
-func DeployNetwork(ctx context.Context, c *cluster.Cluster) error {
+func DeployNetwork(ctx context.Context, c *core.Cluster) error {
 	if err := DeployNetworkPlugin(ctx, c); err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func DeployNetwork(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func DeployNetworkPlugin(ctx context.Context, c *cluster.Cluster) error {
+func DeployNetworkPlugin(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[network] Setting up network plugin: %s", c.Network.Plugin)
 	switch c.Network.Plugin {
 	case FlannelNetworkPlugin:
@@ -76,7 +76,7 @@ func DeployNetworkPlugin(ctx context.Context, c *cluster.Cluster) error {
 	}
 }
 
-func doFlannelDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doFlannelDeploy(ctx context.Context, c *core.Cluster) error {
 	flannelConfig := map[string]interface{}{
 		ClusterCIDR:      c.ClusterCIDR,
 		Image:            c.SystemImages.Flannel,
@@ -87,7 +87,7 @@ func doFlannelDeploy(ctx context.Context, c *cluster.Cluster) error {
 			"Directrouting": c.Network.Options[FlannelBackendDirectrouting],
 		},
 		RBACConfig:     c.Authorization.Mode,
-		ClusterVersion: cluster.GetTagMajorVersion(c.Version),
+		ClusterVersion: core.GetTagMajorVersion(c.Version),
 	}
 	//pluginYaml, err := templates.GetManifest(flannelConfig, FlannelNetworkPlugin)
 	pluginYaml, err := templates.CompileTemplateFromMap(flannel.FlannelTemplate, flannelConfig)
@@ -97,7 +97,7 @@ func doFlannelDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return c.DoAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
 
-func doCalicoDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doCalicoDeploy(ctx context.Context, c *core.Cluster) error {
 	clientConfig := pki.GetConfigPath(pki.KubeNodeCertName)
 	calicoConfig := map[string]interface{}{
 		KubeCfg:       clientConfig,
@@ -124,9 +124,9 @@ func doCalicoDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return c.DoAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
 }
 
-func deployDNSPlugin(ctx context.Context, c *cluster.Cluster) error {
+func deployDNSPlugin(ctx context.Context, c *core.Cluster) error {
 	if err := doCoreDNSDeploy(ctx, c); err != nil {
-		if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
+		if err, ok := err.(*core.AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider coredns: %v", err)
@@ -134,7 +134,7 @@ func deployDNSPlugin(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doCoreDNSDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doCoreDNSDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[DNS] Setting up DNS provider %s", c.DNS.Provider)
 	CoreDNSConfig := coredns.CoreDNSOptions{
 		CoreDNSImage:           c.SystemImages.CoreDNS,
@@ -156,9 +156,9 @@ func doCoreDNSDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func deployIngressPlugin(ctx context.Context, c *cluster.Cluster) error {
+func deployIngressPlugin(ctx context.Context, c *core.Cluster) error {
 	if err := doIngressDeploy(ctx, c); err != nil {
-		if err, ok := err.(*cluster.AddonError); ok && err.IsCritical {
+		if err, ok := err.(*core.AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", IngressResourceName, err)
@@ -166,7 +166,7 @@ func deployIngressPlugin(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doIngressDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doIngressDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[ingress] Setting up %s ingress controller", c.Ingress.Provider)
 	ingressConfig := ingress.IngressOptions{
 		RBACConfig:     c.Authorization.Mode,

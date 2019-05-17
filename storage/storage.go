@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/cluster/services"
+	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/services"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/storage/lvm"
@@ -52,7 +52,7 @@ const (
 	StorageNFSProvisionerImage  = "StorageNFSProvisionerImage"
 )
 
-func DeployStoragePlugin(ctx context.Context, c *cluster.Cluster) error {
+func DeployStoragePlugin(ctx context.Context, c *core.Cluster) error {
 	if len(c.Storage.Lvm) > 0 {
 		if err := doLVMDDeploy(ctx, c); err != nil {
 			return err
@@ -80,7 +80,7 @@ func DeployStoragePlugin(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doLVMDDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doLVMDDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up StorageAgent: %s", LVMD)
 	var arr = make([]map[string]string, 0)
 	for _, v := range c.Storage.Lvm {
@@ -103,7 +103,7 @@ func doLVMDDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doLVMStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doLVMStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up StoragePlugin : %s", LVMStorageClassName)
 	var arr = make([]map[string]string, 0)
 	for _, v := range c.Storage.Lvm {
@@ -118,7 +118,7 @@ func doLVMStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 		StorageCSIProvisionerImage:  c.SystemImages.StorageCSIProvisioner,
 		StorageDriverRegistrarImage: c.SystemImages.StorageDriverRegistrar,
 		StorageCSILvmpluginImage:    c.SystemImages.StorageCSILvmplugin,
-		NodeSelector:                cluster.StorageRoleLabel,
+		NodeSelector:                core.StorageRoleLabel,
 	}
 	lvmstorageYaml, err := templates.CompileTemplateFromMap(lvm.LVMStorageTemplate, lvmstorageConfig)
 	if err != nil {
@@ -130,7 +130,7 @@ func doLVMStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doNFSStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doNFSStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up StoragePlugin : %s", NFSStorageClassName)
 	nfsstorageConfig := map[string]interface{}{
 		RBACConfig:                 c.Authorization.Mode,
@@ -147,7 +147,7 @@ func doNFSStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func checkLvmdReady(ctx context.Context, c *cluster.Cluster) bool {
+func checkLvmdReady(ctx context.Context, c *core.Cluster) bool {
 	for _, n := range c.Nodes {
 		for _, v := range n.Role {
 			if v == services.StorageRole {

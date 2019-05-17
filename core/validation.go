@@ -1,10 +1,10 @@
-package cluster
+package core
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/zdnscloud/zke/cluster/services"
+	"github.com/zdnscloud/zke/core/services"
 
 	"k8s.io/apimachinery/pkg/util/validation"
 )

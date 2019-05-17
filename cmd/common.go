@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
@@ -56,15 +56,15 @@ func setOptionsFromCLI(c *cli.Context, zkeConfig *types.ZcloudKubernetesEngineCo
 	return zkeConfig, nil
 }
 
-func ClusterInit(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, dialersOptions hosts.DialersOptions, flags cluster.ExternalFlags) error {
+func ClusterInit(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, dialersOptions hosts.DialersOptions, flags core.ExternalFlags) error {
 	log.Infof(ctx, "Initiating Kubernetes cluster")
-	var fullState *cluster.FullState
-	stateFilePath := cluster.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir)
+	var fullState *core.FullState
+	stateFilePath := core.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir)
 	if len(flags.CertificateDir) == 0 {
-		flags.CertificateDir = cluster.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
+		flags.CertificateDir = core.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
 	}
-	zkeFullState, _ := cluster.ReadStateFile(ctx, stateFilePath)
-	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
+	zkeFullState, _ := core.ReadStateFile(ctx, stateFilePath)
+	kubeCluster, err := core.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}
@@ -75,11 +75,11 @@ func ClusterInit(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCon
 	if err != nil {
 		log.Warnf(ctx, "[state] can't fetch legacy cluster state from Kubernetes")
 	}
-	fullState, err = cluster.RebuildState(ctx, &kubeCluster.ZcloudKubernetesEngineConfig, zkeFullState, flags)
+	fullState, err = core.RebuildState(ctx, &kubeCluster.ZcloudKubernetesEngineConfig, zkeFullState, flags)
 	if err != nil {
 		return err
 	}
-	zkeState := cluster.FullState{
+	zkeState := core.FullState{
 		DesiredState: fullState.DesiredState,
 		CurrentState: fullState.CurrentState,
 	}

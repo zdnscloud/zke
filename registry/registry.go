@@ -5,7 +5,7 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 
-	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/pki"
@@ -30,7 +30,7 @@ const (
 	RegistryCertsCN           = "harbor"
 )
 
-func DeployRegistry(ctx context.Context, c *cluster.Cluster) error {
+func DeployRegistry(ctx context.Context, c *core.Cluster) error {
 	if c.Registry.Isenabled == false {
 		log.Infof(ctx, "[Registry] Not enable registry plugin, skip it")
 		return nil
@@ -117,7 +117,7 @@ func DeployRegistry(ctx context.Context, c *cluster.Cluster) error {
 
 }
 
-func doOneDeploy(ctx context.Context, c *cluster.Cluster, config map[string]interface{}, resourcesTemplate string, deployJobName string) error {
+func doOneDeploy(ctx context.Context, c *core.Cluster, config map[string]interface{}, resourcesTemplate string, deployJobName string) error {
 	configYaml, err := templates.CompileTemplateFromMap(resourcesTemplate, config)
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func doOneDeploy(ctx context.Context, c *cluster.Cluster, config map[string]inte
 	return nil
 }
 
-func generateIngressCertsBase64(c *cluster.Cluster, commonName string) (string, string, string, error) {
+func generateIngressCertsBase64(c *core.Cluster, commonName string) (string, string, string, error) {
 	caCert, caKey, err := pki.GenerateCACertAndKey(commonName, nil)
 	if err != nil {
 		return "", "", "", err

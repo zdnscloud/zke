@@ -3,7 +3,7 @@ package zcloud
 import (
 	"context"
 
-	"github.com/zdnscloud/zke/cluster"
+	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
 	clusteragent "github.com/zdnscloud/zke/zcloud/cluster-agent"
@@ -22,7 +22,7 @@ const (
 	StorageNFSProvisionerImage = "StorageNFSProvisionerImage"
 )
 
-func DeployZcloudManager(ctx context.Context, c *cluster.Cluster) error {
+func DeployZcloudManager(ctx context.Context, c *core.Cluster) error {
 	if err := doSADeploy(ctx, c); err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func DeployZcloudManager(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doSADeploy(ctx context.Context, c *cluster.Cluster) error {
+func doSADeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[zcloud] Setting up ZcloudSADeploy : %s", SAResourceName)
 	saconfig := map[string]interface{}{
 		RBACConfig: c.Authorization.Mode,
@@ -47,7 +47,7 @@ func doSADeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doClusterAgentDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doClusterAgentDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[zcloud] Setting up ClusterAgentDeploy : %s", ClusterAgentResourceName)
 	clusteragentConfig := map[string]interface{}{
 		Image: c.SystemImages.ClusterAgent,

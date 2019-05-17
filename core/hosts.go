@@ -1,11 +1,11 @@
-package cluster
+package core
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	"github.com/zdnscloud/zke/cluster/services"
+	"github.com/zdnscloud/zke/core/services"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
