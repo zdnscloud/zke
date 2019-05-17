@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zdnscloud/zke/authz"
+	"github.com/zdnscloud/zke/cluster/authz"
 	"github.com/zdnscloud/zke/cluster/services"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
