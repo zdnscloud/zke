@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zdnscloud/zke/services"
+	"github.com/zdnscloud/zke/cluster/services"
 
 	"k8s.io/apimachinery/pkg/util/validation"
 )

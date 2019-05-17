@@ -374,33 +374,3 @@ func IsNodeInList(host *Host, hostList []*Host) bool {
 	}
 	return false
 }
-
-/*
-func cleanHostContainers(ctx context.Context, host *Host) error {
-	const(
-		RmContainersCMD = `sudo docker rm -f $(docker ps -a -q)`
-		GetContainersCMD = `sudo docker ps -a -q`
-	)
-	d, err := newDialer(host, "docker")
-	if err != nil {
-		return err
-	}
-	cfg, err := getSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
-	if err != nil {
-		return err
-	}
-	addr := host.Address + ":22"
-	client, err := ssh.Dial("tcp", addr, cfg)
-	if err != nil {
-		return err
-	}
-	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-	session.Stdout
-	session.Stderr = os.Stderr
-	session.Run(CleanHeritageCMD)
-	return nil
-}*/

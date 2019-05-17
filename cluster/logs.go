@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 
-	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/util"
 
 	"golang.org/x/sync/errgroup"

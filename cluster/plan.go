@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/cluster/services"
 	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
 
 	ref "github.com/docker/distribution/reference"

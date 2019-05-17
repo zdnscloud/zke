@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/pkg/hosts"
 
 	etcdclient "github.com/coreos/etcd/client"
 	"github.com/sirupsen/logrus"

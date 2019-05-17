@@ -2,14 +2,12 @@ package cluster
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
+	"github.com/zdnscloud/zke/cluster/services"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/util"
-	"github.com/zdnscloud/zke/services"
 	"github.com/zdnscloud/zke/types"
 )
 
@@ -182,11 +180,6 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 		c.PrivateRegistriesMap[pr.URL] = pr
 	}
 
-	err := c.setClusterImageDefaults()
-	if err != nil {
-		return err
-	}
-
 	c.setClusterServicesDefaults()
 	c.setClusterNetworkDefaults()
 	c.setClusterAuthnDefaults()
@@ -242,61 +235,6 @@ func (c *Cluster) setClusterServicesDefaults() {
 			c.Services.Etcd.BackupConfig.Retention = DefaultEtcdBackupConfigRetention
 		}
 	}
-}
-
-func (c *Cluster) setClusterImageDefaults() error {
-	var privRegURL string
-	d := func(image, defaultRegistryURL string) string {
-		if len(defaultRegistryURL) == 0 {
-			return image
-		}
-		return fmt.Sprintf("%s/%s", defaultRegistryURL, image)
-	}
-	// Version Check
-	err := util.ValidateVersion(c.Version)
-	if err != nil {
-		return err
-	}
-
-	imageDefaults := types.AllK8sVersions[c.Version]
-
-	for _, privReg := range c.PrivateRegistries {
-		if privReg.IsDefault {
-			privRegURL = privReg.URL
-			break
-		}
-	}
-	systemImagesDefaultsMap := map[*string]string{
-		&c.SystemImages.Alpine:                    d(imageDefaults.Alpine, privRegURL),
-		&c.SystemImages.NginxProxy:                d(imageDefaults.NginxProxy, privRegURL),
-		&c.SystemImages.CertDownloader:            d(imageDefaults.CertDownloader, privRegURL),
-		&c.SystemImages.CoreDNS:                   d(imageDefaults.CoreDNS, privRegURL),
-		&c.SystemImages.CoreDNSAutoscaler:         d(imageDefaults.CoreDNSAutoscaler, privRegURL),
-		&c.SystemImages.KubernetesServicesSidecar: d(imageDefaults.KubernetesServicesSidecar, privRegURL),
-		&c.SystemImages.Etcd:                      d(imageDefaults.Etcd, privRegURL),
-		&c.SystemImages.Kubernetes:                d(imageDefaults.Kubernetes, privRegURL),
-		&c.SystemImages.PodInfraContainer:         d(imageDefaults.PodInfraContainer, privRegURL),
-		&c.SystemImages.Flannel:                   d(imageDefaults.Flannel, privRegURL),
-		&c.SystemImages.FlannelCNI:                d(imageDefaults.FlannelCNI, privRegURL),
-		&c.SystemImages.CalicoNode:                d(imageDefaults.CalicoNode, privRegURL),
-		&c.SystemImages.CalicoCNI:                 d(imageDefaults.CalicoCNI, privRegURL),
-		&c.SystemImages.CalicoCtl:                 d(imageDefaults.CalicoCtl, privRegURL),
-		&c.SystemImages.Ingress:                   d(imageDefaults.Ingress, privRegURL),
-		&c.SystemImages.IngressBackend:            d(imageDefaults.IngressBackend, privRegURL),
-		&c.SystemImages.MetricsServer:             d(imageDefaults.MetricsServer, privRegURL),
-		&c.SystemImages.StorageCSIAttacher:        d(imageDefaults.StorageCSIAttacher, privRegURL),
-		&c.SystemImages.StorageCSIProvisioner:     d(imageDefaults.StorageCSIProvisioner, privRegURL),
-		&c.SystemImages.StorageDriverRegistrar:    d(imageDefaults.StorageDriverRegistrar, privRegURL),
-		&c.SystemImages.StorageCSILvmplugin:       d(imageDefaults.StorageCSILvmplugin, privRegURL),
-		&c.SystemImages.StorageLvmd:               d(imageDefaults.StorageLvmd, privRegURL),
-		&c.SystemImages.ClusterAgent:              d(imageDefaults.ClusterAgent, privRegURL),
-	}
-
-	for k, v := range systemImagesDefaultsMap {
-		setDefaultIfEmpty(k, v)
-	}
-
-	return nil
 }
 
 func (c *Cluster) setClusterNetworkDefaults() {

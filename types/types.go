@@ -83,7 +83,7 @@ type PrivateRegistry struct {
 	// Password for registry access
 	Password string `yaml:"password" json:"password,omitempty" norman:"type=password"`
 	// Default registry
-	IsDefault bool `yaml:"is_default" json:"isDefault,omitempty"`
+	CAcert string `yaml:"ca_cert" json:"ca_cert",omitempty`
 }
 
 type ZKESystemImages struct {
@@ -145,18 +145,18 @@ type ZKESystemImages struct {
 	StorageNFSProvisioner string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
 	ClusterAgent          string `yaml:"cluster_agent" json:"cluster_agent"`
 	// Harbor Registry images
-	HarborAdminserver     string `yaml:"harbor_adminserver" json:"harbor_adminserver"`
-	HarborChartmuseum     string `yaml:"harbor_chartmuseum" json:"harbor_chartmuseum"`
-	HarborClair           string `yaml:"harbor_clair" json:"harbor_clair"`
-	HarborCore            string `yaml:"harbor_core" json:"harbor_core"`
-	HarborDatabase        string `yaml:"harbor_database" json:"harbor_database"`
-	HarborJobservice      string `yaml:"harbor_jobservice" json:"harbor_jobservice"`
-	HarborNotaryServer    string `yaml:"harbor_notaryserver" json:"harbor_notaryserver"`
-	HarborNotarySigner    string `yaml:"harbor_notarysigner" json:"harbor_notarysigner"`
-	HarborPortal          string `yaml:"harbor_portal" json:"harbor_portal"`
-	HarborRedis           string `yaml:"harbor_redis" json:"harbor_redis"`
-	HarborRegistry        string `yaml:"harbor_registry" json:"harbor_registry"`
-	HarborRegistryctl     string `yaml:"harbor_registryctl" json:"harbor_registryctl"`
+	HarborAdminserver  string `yaml:"harbor_adminserver" json:"harbor_adminserver"`
+	HarborChartmuseum  string `yaml:"harbor_chartmuseum" json:"harbor_chartmuseum"`
+	HarborClair        string `yaml:"harbor_clair" json:"harbor_clair"`
+	HarborCore         string `yaml:"harbor_core" json:"harbor_core"`
+	HarborDatabase     string `yaml:"harbor_database" json:"harbor_database"`
+	HarborJobservice   string `yaml:"harbor_jobservice" json:"harbor_jobservice"`
+	HarborNotaryServer string `yaml:"harbor_notaryserver" json:"harbor_notaryserver"`
+	HarborNotarySigner string `yaml:"harbor_notarysigner" json:"harbor_notarysigner"`
+	HarborPortal       string `yaml:"harbor_portal" json:"harbor_portal"`
+	HarborRedis        string `yaml:"harbor_redis" json:"harbor_redis"`
+	HarborRegistry     string `yaml:"harbor_registry" json:"harbor_registry"`
+	HarborRegistryctl  string `yaml:"harbor_registryctl" json:"harbor_registryctl"`
 }
 
 type ZKEConfigNode struct {
@@ -475,13 +475,12 @@ type BackupConfig struct {
 }
 
 type RegistryConfig struct {
-	Isenabled bool `yaml:"isenabled" json:"isenabled,omitempty"`
-	RegistryIngressURL string `yaml:"registry_ingress_url" json:"registry_ingress_url"`
-	NotaryIngressURL string `yaml:"notary_ingress_url" json:"notary_ingress_url"`
-	RegistryDiskCapacity string `yaml:"registry_disk_capacity" json:"registry_disk_capacity"`
-	DatabaseDiskCapacity string `yaml:"database_disk_capacity" json:"database_disk_capacity"`
-	RedisDiskCapacity string `yaml:"redis_disk_capacity" json:"redis_disk_capacity"`
+	Isenabled               bool   `yaml:"isenabled" json:"isenabled,omitempty"`
+	RegistryIngressURL      string `yaml:"registry_ingress_url" json:"registry_ingress_url"`
+	NotaryIngressURL        string `yaml:"notary_ingress_url" json:"notary_ingress_url"`
+	RegistryDiskCapacity    string `yaml:"registry_disk_capacity" json:"registry_disk_capacity"`
+	DatabaseDiskCapacity    string `yaml:"database_disk_capacity" json:"database_disk_capacity"`
+	RedisDiskCapacity       string `yaml:"redis_disk_capacity" json:"redis_disk_capacity"`
 	ChartmuseumDiskCapacity string `yaml:"Chartmuseum_disk_capacity" json:"Chartmuseum_disk_capacity"`
-	JobserviceDiskCapacity string `yaml:"jobservice_disk_capacity" json:"jobservice_disk_capacity"`
+	JobserviceDiskCapacity  string `yaml:"jobservice_disk_capacity" json:"jobservice_disk_capacity"`
 }
-

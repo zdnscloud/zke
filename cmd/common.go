@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
 
