@@ -6,13 +6,13 @@ import (
 	"strings"
 
 	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/network/calico"
 	"github.com/zdnscloud/zke/network/coredns"
 	"github.com/zdnscloud/zke/network/flannel"
 	"github.com/zdnscloud/zke/network/ingress"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
-	"github.com/zdnscloud/zke/pki"
 )
 
 const (

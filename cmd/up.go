@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/monitoring"
 	"github.com/zdnscloud/zke/network"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/registry"
 	"github.com/zdnscloud/zke/storage"
 	"github.com/zdnscloud/zke/types"

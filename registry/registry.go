@@ -6,9 +6,9 @@ import (
 	"encoding/base64"
 
 	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
-	"github.com/zdnscloud/zke/pki"
 	"github.com/zdnscloud/zke/registry/resources"
 
 	"k8s.io/client-go/util/cert"
