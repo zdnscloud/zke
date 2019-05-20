@@ -32,8 +32,6 @@ const (
 	DefaultClusterDockerSockPath = "/var/run/docker.sock"
 
 	IngressSelectLabel = "node-role.kubernetes.io/edge"
-
-	StorageHostLabel = "zke.zcloud.cn/storageclass"
 )
 
 type clusterCommonCfg struct {
@@ -437,20 +435,6 @@ func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 		if err != nil {
 			return nil, err
 		}
-		/*
-			for _, v := range cfg {
-				for _, n := range nodes {
-					if v.Host == n.HostnameOverride {
-						if len(n.Labels) == 0 {
-							n.Labels = make(map[string]string)
-						}
-						fmt.Println("##############", v.Host)
-						n.Labels[StorageHostLabel] = t
-						fmt.Println(n.Labels)
-						fmt.Println(nodes)
-					}
-				}
-			}*/
 		switch t {
 		case "Lvm":
 			storageCfg.Lvm = cfg
@@ -493,7 +477,6 @@ func allocateStorage(reader *bufio.Reader, storageinfo map[string][]string, t st
 		for _, v := range nums {
 			num, _ := strconv.Atoi(v)
 			_, ok := hostsequence[num]
-			fmt.Println(hostsequence)
 			if ok {
 				validnum = append(validnum, num)
 				flag = true
@@ -514,14 +497,11 @@ func allocateStorage(reader *bufio.Reader, storageinfo map[string][]string, t st
 			continue
 		}
 	}
-	nodelabels := make(map[string]string)
-	nodelabels[StorageHostLabel] = t
 	devicecfgs := make([]types.Deviceconf, 0)
 	for _, h := range hosts {
 		c := types.Deviceconf{
-			NodeSelector: nodelabels,
-			Host:         h,
-			Devs:         storageinfo[h],
+			Host: h,
+			Devs: storageinfo[h],
 		}
 		devicecfgs = append(devicecfgs, c)
 	}

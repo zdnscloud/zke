@@ -116,6 +116,8 @@ spec:
         app: nfs-provisioner
     spec:
       serviceAccount: nfs-provisioner
+      nodeSelector: 
+        {{.LabelKey}}: {{.LabelValue}}
       containers:
         - name: nfs-provisioner
           image: {{.StorageNFSProvisionerImage}}
@@ -151,14 +153,10 @@ spec:
           volumeMounts:
             - name: nfs-data
               mountPath: /export
-  volumeClaimTemplates:
-    - metadata:
-        name: nfs-data
-      spec: 
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: "{{.Size}}Gi"
+      volumes:
+      - name: nfs-data
+        hostPath:
+          path: /nfs-export
 ---
 kind: StorageClass
 apiVersion: storage.k8s.io/v1

@@ -122,15 +122,11 @@ type ZKESystemImages struct {
 	// Metrics Server image
 	MetricsServer string `yaml:"metrics_server" json:"metricsServer,omitempty"`
 	// Storage csi-attacher image
-	StorageCSIAttacher string `yaml:"storage_csi_attacher" json:"storage_csi_attacher,omitempty"`
-	// Storage csi-provisioner image
-	StorageCSIProvisioner string `yaml:"storage_csi_provisioner" json:"storage_csi_provisioner,omitempty"`
-	// Storage driver-registrar image
-	StorageDriverRegistrar string `yaml:"storage_driver_registrar" json:"storage_driver_registrar,omitempty"`
-	// Storage csi-lvmplugin image
-	StorageCSILvmplugin string `yaml:"storage_csi_lvmplugin" json:"storage_csi_lvmplugin,omitempty"`
-	// Storage lvmd image
-	StorageLvmd string `yaml:"storage_lvmd" json:"storage_lvmd,omitempty"`
+	StorageLvmAttacher        string `yaml:"storage_lvm_attacher" json:"storage_lvm_attacher,omitempty"`
+	StorageLvmProvisioner     string `yaml:"storage_lvm_provisioner" json:"storage_lvm_provisioner,omitempty"`
+	StorageLvmDriverRegistrar string `yaml:"storage_lvm_driver_registrar" json:"storage_lvm_driver_registrar,omitempty"`
+	StorageLvmCSI             string `yaml:"storage_lvmcsi" json:"storage_lvmcsi,omitempty"`
+	StorageLvmd               string `yaml:"storage_lvmd" json:"storage_lvmd,omitempty"`
 	// Monitoring images
 	PrometheusAlertManager      string `yaml:"prometheus_alert_manager" json:"prometheus_alert_manager"`
 	PrometheusConfigMapReloader string `yaml:"prometheus_configmap_reloader" json:"prometheus_configmap_reloader"`
@@ -140,8 +136,16 @@ type ZKESystemImages struct {
 	GrafanaWatcher              string `yaml:"grafana_watcher" json:"grafana_watcher"`
 	KubeStateMetrics            string `yaml:"kube_state_metrics" json:"kube_state_metrics"`
 	// Storage nfs image
-	StorageNFSProvisioner string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
-	ClusterAgent          string `yaml:"cluster_agent" json:"cluster_agent"`
+	StorageNFSProvisioner      string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
+	StorageNFSInit             string `yaml:"storage_nfs_init" json:"storage_nfs_init,omitempty"`
+	ClusterAgent               string `yaml:"cluster_agent" json:"cluster_agent"`
+	StorageCephOperator        string `yaml:"storage_ceph_operator" json:"storage_ceph_operator,omitempty"`
+	StorageCephCluster         string `yaml:"storage_ceph_cluster" json:"storage_ceph_cluster,omitempty"`
+	StorageCephTools           string `yaml:"storage_ceph_tools" json:"storage_ceph_tools,omitempty"`
+	StorageCephAttacher        string `yaml:"storage_ceph_attacher" json:"storage_ceph_attacher,omitempty"`
+	StorageCephProvisioner     string `yaml:"storage_ceph_provisioner" json:"storage_ceph_provisioner,omitempty"`
+	StorageCephDriverRegistrar string `yaml:"storage_ceph_driver_registrar" json:"storage_ceph_driver_registrar,omitempty"`
+	StorageCephFsCSI           string `yaml:"storage_ceph_fscsi" json:"storage_ceph_fscsi,omitempty"`
 }
 
 type ZKEConfigNode struct {
@@ -287,9 +291,8 @@ type StorageConfig struct {
 }
 
 type Deviceconf struct {
-	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector,omitempty"`
-	Host         string            `yaml:"host" json:"host,omitempty"`
-	Devs         []string          `yaml:"devs" json:"devs,omitempty"`
+	Host string   `yaml:"host" json:"host,omitempty"`
+	Devs []string `yaml:"devs" json:"devs,omitempty"`
 }
 
 type AuthWebhookConfig struct {

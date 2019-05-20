@@ -1,22 +1,22 @@
-package lvmd
+package nfs
 
-const LVMDTemplate = `
+const NFSInitTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
   name: kube-storage
-{{- if eq .RBACConfig "rbac"}}
 ---
+  {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: storage-agent-lvmd
+  name: storage-agent-nfs-init
   namespace: kube-storage
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: storage-agent-lvmd-runner
+  name: storage-agent-nfs-init-runner
   namespace: kube-storage
 rules:
   - apiGroups: [""]
@@ -26,47 +26,48 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: storage-agent-lvmd-role
+  name: storage-agent-nfs-init-role
   namespace: kube-storage
 subjects:
   - kind: ServiceAccount
-    name: storage-agent-lvmd
+    name: storage-agent-nfs-init
     namespace: kube-storage
 roleRef:
   kind: ClusterRole
-  name: storage-agent-lvmd-runner
+  name: storage-agent-nfs-init-runner
   apiGroup: rbac.authorization.k8s.io
 {{- end}}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: storage-agent-lvmd
+  name: nfs-init
   namespace: kube-storage
   labels:
-    app: storage-agent-lvmd
+    app: nfs-init
 spec:
   selector:
     matchLabels:
-      app: storage-agent-lvmd
+      app: nfs-init
   template:
     metadata:
       labels:
-        app: storage-agent-lvmd
+        app: nfs-init
     spec:
-      serviceAccount: storage-agent-lvmd
-      hostNetwork: true
+      serviceAccount: storage-agent-nfs-init
       nodeSelector: 
         {{.LabelKey}}: {{.LabelValue}}
       containers:
-      - name: storage-agent-lvmd
-        image: {{.StorageLvmdImage}}
-        command: ["/lvmd.sh"]
+      - name: nfs-init
+        image: {{.StorageNFSInitImage}}
+        command: ["/init.sh"]
         env:
           - name: MOUNT_PATH
             value: "/host/dev"
           - name: VG_NAME
-            value: "k8s"
+            value: "nfs"
+          - name: LVM_NAME
+            value: "data"
           - name: NodeName
             valueFrom:
               fieldRef: 

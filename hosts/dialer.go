@@ -58,13 +58,13 @@ func NewDialer(h *Host, kind string) (*dialer, error) {
 		}
 		if bastionDialer.sshKeyString == "" && !bastionDialer.useSSHAgentAuth {
 			var err error
-			bastionDialer.sshKeyString, err = privateKeyPath(h.BastionHost.SSHKeyPath)
+			bastionDialer.sshKeyString, err = PrivateKeyPath(h.BastionHost.SSHKeyPath)
 			if err != nil {
 				return nil, err
 			}
 
 			if bastionDialer.sshCertString == "" && len(h.BastionHost.SSHCertPath) > 0 {
-				bastionDialer.sshCertString, err = certificatePath(h.BastionHost.SSHCertPath)
+				bastionDialer.sshCertString, err = CertificatePath(h.BastionHost.SSHCertPath)
 				if err != nil {
 					return nil, err
 				}
@@ -85,13 +85,13 @@ func NewDialer(h *Host, kind string) (*dialer, error) {
 
 	if dialer.sshKeyString == "" && !dialer.useSSHAgentAuth {
 		var err error
-		dialer.sshKeyString, err = privateKeyPath(h.SSHKeyPath)
+		dialer.sshKeyString, err = PrivateKeyPath(h.SSHKeyPath)
 		if err != nil {
 			return nil, err
 		}
 
 		if dialer.sshCertString == "" && len(h.SSHCertPath) > 0 {
-			dialer.sshCertString, err = certificatePath(h.SSHCertPath)
+			dialer.sshCertString, err = CertificatePath(h.SSHCertPath)
 			if err != nil {
 				return nil, err
 			}
@@ -226,7 +226,7 @@ func BastionHostWrapTransport(bastionHost types.BastionHost) (k8s.WrapTransport,
 
 	if bastionDialer.sshKeyString == "" {
 		var err error
-		bastionDialer.sshKeyString, err = privateKeyPath(bastionHost.SSHKeyPath)
+		bastionDialer.sshKeyString, err = PrivateKeyPath(bastionHost.SSHKeyPath)
 		if err != nil {
 			return nil, err
 		}
@@ -235,7 +235,7 @@ func BastionHostWrapTransport(bastionHost types.BastionHost) (k8s.WrapTransport,
 
 	if bastionDialer.sshCertString == "" && len(bastionHost.SSHCertPath) > 0 {
 		var err error
-		bastionDialer.sshCertString, err = certificatePath(bastionHost.SSHCertPath)
+		bastionDialer.sshCertString, err = CertificatePath(bastionHost.SSHCertPath)
 		if err != nil {
 			return nil, err
 		}

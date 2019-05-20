@@ -1,20 +1,20 @@
-package filesystem
-  
-const filesystemTemplate = `
+package ceph
+
+const FilesystemTemplate = `
 ---
 apiVersion: ceph.rook.io/v1
 kind: CephFilesystem
 metadata:
-  name: myfs
+  name: {{.CephFilesystem}}
   namespace: rook-ceph
 spec:
   metadataPool:
     replicated:
-      size: 3
+      size: {{.Replicas}}
   dataPools:
     - failureDomain: host
       replicated:
-        size: 3
+        size: {{.Replicas}}
   metadataServer:
     activeCount: 1
     activeStandby: true

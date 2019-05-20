@@ -139,27 +139,6 @@ func CertificatePath(sshCertPath string) (string, error) {
 	}
 	return string(buff), nil
 }
-func privateKeyPath(sshKeyPath string) (string, error) {
-	if sshKeyPath[:2] == "~/" {
-		sshKeyPath = filepath.Join(userHome(), sshKeyPath[2:])
-	}
-	buff, err := ioutil.ReadFile(sshKeyPath)
-	if err != nil {
-		return "", fmt.Errorf("Error while reading SSH key file: %v", err)
-	}
-	return string(buff), nil
-}
-
-func certificatePath(sshCertPath string) (string, error) {
-	if sshCertPath[:2] == "~/" {
-		sshCertPath = filepath.Join(userHome(), sshCertPath[2:])
-	}
-	buff, err := ioutil.ReadFile(sshCertPath)
-	if err != nil {
-		return "", fmt.Errorf("Error while reading SSH certificate file: %v", err)
-	}
-	return string(buff), nil
-}
 
 func userHome() string {
 	if home := os.Getenv("HOME"); home != "" {

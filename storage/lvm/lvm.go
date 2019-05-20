@@ -173,12 +173,12 @@ spec:
         app: csi-lvmplugin
     spec:
       nodeSelector: 
-        {{.NodeSelector}}: "true"
+        {{.LabelKey}}: {{.LabelValue}}
       serviceAccount: csi-lvmplugin
       hostNetwork: true
       containers:
         - name: driver-registrar
-          image: {{.StorageDriverRegistrarImage}}
+          image: {{.StorageLvmDriverRegistrarImage}}
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -201,7 +201,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: {{.StorageCSILvmpluginImage}}
+          image: {{.StorageLvmCSIImage}}
           args :
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=$(CSI_ENDPOINT)"
@@ -285,12 +285,12 @@ spec:
         app: csi-attacher
     spec:
       nodeSelector: 
-        {{.NodeSelector}}: "true"
+        {{.LabelKey}}: {{.LabelValue}}
       serviceAccount: csi-attacher
       hostNetwork: true
       containers:
         - name: csi-attacher
-          image: {{.StorageCSIAttacherImage}}
+          image: {{.StorageLvmAttacherImage}}
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -339,12 +339,12 @@ spec:
         app: csi-provisioner
     spec:
       nodeSelector: 
-        {{.NodeSelector}}: "true"
+        {{.LabelKey}}: {{.LabelValue}}
       serviceAccount: csi-provisioner
       hostNetwork: true
       containers:
         - name: csi-provisioner
-          image: {{.StorageCSIProvisionerImage}}
+          image: {{.StorageLvmProvisionerImage}}
           args:
             - "--provisioner=csi-lvmplugin"
             - "--csi-address=$(ADDRESS)"
