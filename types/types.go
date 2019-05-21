@@ -83,7 +83,7 @@ type PrivateRegistry struct {
 	// Password for registry access
 	Password string `yaml:"password" json:"password,omitempty" norman:"type=password"`
 	// Default registry
-	CAcert string `yaml:"ca_cert" json:"ca_cert",omitempty`
+	// CAcert string `yaml:"ca_cert" json:"ca_cert",omitempty`
 }
 
 type ZKESystemImages struct {

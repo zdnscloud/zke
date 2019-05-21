@@ -300,6 +300,10 @@ func (c *Cluster) BuildKubeControllerProcess(prefixPath string) types.Process {
 		"v":                                "2",
 	}
 
+	if len(c.ControlPlaneHosts) < 2 {
+		CommandArgs["leader-elect"] = "false"
+	}
+
 	// check if our version has specific options for this component
 	serviceOptions := c.GetKubernetesServicesOptions()
 	if serviceOptions.KubeController != nil {
@@ -596,6 +600,10 @@ func (c *Cluster) BuildSchedulerProcess(prefixPath string) types.Process {
 		"address":      "127.0.0.1",
 		"profiling":    "false",
 		"kubeconfig":   pki.GetConfigPath(pki.KubeSchedulerCertName),
+	}
+
+	if len(c.ControlPlaneHosts) < 2 {
+		CommandArgs["leader-elect"] = "false"
 	}
 
 	// check if our version has specific options for this component

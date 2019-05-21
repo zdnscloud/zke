@@ -459,7 +459,7 @@ func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConf
 		}
 	}
 	if registryCfg.Isenabled == true {
-		registryDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster registry redis disk capacity"), "50Gi")
+		registryDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster registry disk capacity"), "50Gi")
 		if err != nil {
 			return nil, err
 		}
