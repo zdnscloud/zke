@@ -450,27 +450,27 @@ func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConf
 	if err != nil {
 		return nil, err
 	}
-	if len(c.Storage.Lvm) == 0 {
-		log.Warnf(ctx, "None available lvm storge, will not enable harbor registry!")
+	if isenabled == "n" || isenabled == "N" {
 		registryCfg.Isenabled = false
-	} else {
-		if isenabled == "y" || isenabled == "Y" {
-			registryCfg.Isenabled = true
-		}
+		return &registryCfg, nil
 	}
-	if registryCfg.Isenabled == true {
+	if isenabled == "y" || isenabled == "Y" {
+		if len(c.Storage.Lvm) == 0 {
+			log.Warnf(ctx, "None available lvm storge, will not enable harbor registry!")
+			registryCfg.Isenabled = false
+			return &registryCfg, nil
+		}
+		registryCfg.Isenabled = true
 		registryDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster registry disk capacity"), "50Gi")
 		if err != nil {
 			return nil, err
 		}
 		registryCfg.RegistryDiskCapacity = registryDiskCapacity
-
 		registryIngressURL, err := getConfig(reader, fmt.Sprintf("Cluster registry ingress url"), "registry.kube-registry."+c.Services.Kubelet.ClusterDomain)
 		if err != nil {
 			return nil, err
 		}
 		registryCfg.RegistryIngressURL = registryIngressURL
-
 		registryCfg.NotaryIngressURL = "notary.kube-registry." + c.Services.Kubelet.ClusterDomain
 		registryCfg.RedisDiskCapacity = core.DefaultRegistryRedisDiskCapacity
 		registryCfg.DatabaseDiskCapacity = core.DefaultRegistryDatabaseDiskCapacity
