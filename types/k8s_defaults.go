@@ -76,7 +76,7 @@ var (
 			StorageLvmCSI:               m("zdnscloud/lvmcsi:v0.3"),
 			StorageLvmd:                 m("zdnscloud/lvmd:v0.3"),
 			StorageNFSProvisioner:       m("quay.io/kubernetes_incubator/nfs-provisioner:v2.2.1-k8s1.12"),
-			StorageNFSInit:              m("nfs-init:v7"),
+			StorageNFSInit:              m("zdnscloud/nfs-init:v0.1"),
 			PrometheusAlertManager:      m("zdnscloud/prometheus-alertmanager:v0.14.0"),
 			PrometheusConfigMapReloader: m("zdnscloud/prometheus-configmap-reload:v0.1"),
 			PrometheusNodeExporter:      m("zdnscloud/prometheus-node-exporter:v0.15.2"),
