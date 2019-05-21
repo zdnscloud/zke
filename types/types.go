@@ -139,6 +139,7 @@ type ZKESystemImages struct {
 	StorageNFSProvisioner      string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
 	StorageNFSInit             string `yaml:"storage_nfs_init" json:"storage_nfs_init,omitempty"`
 	ClusterAgent               string `yaml:"cluster_agent" json:"cluster_agent"`
+	NodeAgent                  string `yaml:"node_agent" json:"node_agent"`
 	StorageCephOperator        string `yaml:"storage_ceph_operator" json:"storage_ceph_operator,omitempty"`
 	StorageCephCluster         string `yaml:"storage_ceph_cluster" json:"storage_ceph_cluster,omitempty"`
 	StorageCephTools           string `yaml:"storage_ceph_tools" json:"storage_ceph_tools,omitempty"`

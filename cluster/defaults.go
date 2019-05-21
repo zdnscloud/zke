@@ -268,6 +268,7 @@ func (c *Cluster) setClusterImageDefaults() error {
 		&c.SystemImages.StorageLvmCSI:              d(imageDefaults.StorageLvmCSI, privRegURL),
 		&c.SystemImages.StorageLvmd:                d(imageDefaults.StorageLvmd, privRegURL),
 		&c.SystemImages.ClusterAgent:               d(imageDefaults.ClusterAgent, privRegURL),
+		&c.SystemImages.NodeAgent:                  d(imageDefaults.NodeAgent, privRegURL),
 		&c.SystemImages.StorageCephOperator:        d(imageDefaults.StorageCephOperator, privRegURL),
 		&c.SystemImages.StorageCephCluster:         d(imageDefaults.StorageCephCluster, privRegURL),
 		&c.SystemImages.StorageCephTools:           d(imageDefaults.StorageCephTools, privRegURL),

@@ -178,7 +178,7 @@ func doLVMDeploy(ctx context.Context, c *cluster.Cluster) error {
 		time.Sleep(time.Duration(CheckInterval) * time.Second)
 	}
 	if !ready {
-		return ErrLvmdNotReady
+		return errors.New("some lvmd on node has not ready")
 	}
 	if err := doLVMStorageDeploy(ctx, c); err != nil {
 		return err
@@ -239,7 +239,7 @@ func doCephDeploy(ctx context.Context, c *cluster.Cluster) error {
 		time.Sleep(time.Duration(CheckInterval) * time.Second)
 	}
 	if !ready {
-		return ErrLvmdNotReady
+		return errors.New("ceph cluster has not ready")
 	}
 	if err := doCephFsDeploy(ctx, c); err != nil {
 		return err

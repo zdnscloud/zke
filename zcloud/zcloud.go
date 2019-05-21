@@ -6,6 +6,7 @@ import (
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/templates"
 	clusteragent "github.com/zdnscloud/zke/zcloud/cluster-agent"
+	nodeagent "github.com/zdnscloud/zke/zcloud/node-agent"
 	zcloudsa "github.com/zdnscloud/zke/zcloud/sa"
 )
 
@@ -26,6 +27,9 @@ func DeployZcloudManager(ctx context.Context, c *cluster.Cluster) error {
 		return err
 	}
 	if err := doClusterAgentDeploy(ctx, c); err != nil {
+		return err
+	}
+	if err := doNodeAgentDeploy(ctx, c); err != nil {
 		return err
 	}
 	return nil
@@ -56,6 +60,21 @@ func doClusterAgentDeploy(ctx context.Context, c *cluster.Cluster) error {
 		return err
 	}
 	if err := c.DoAddonDeploy(ctx, clusteragentYaml, ClusterAgentJobName, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func doNodeAgentDeploy(ctx context.Context, c *cluster.Cluster) error {
+	log.Infof(ctx, "[zcloud] Setting up NodeAgent")
+	cfg := map[string]interface{}{
+		"Image": c.SystemImages.NodeAgent,
+	}
+	yaml, err := templates.CompileTemplateFromMap(nodeagent.NodeAgentTemplate, cfg)
+	if err != nil {
+		return err
+	}
+	if err := c.DoAddonDeploy(ctx, yaml, "zcloud-node-agent", true); err != nil {
 		return err
 	}
 	return nil

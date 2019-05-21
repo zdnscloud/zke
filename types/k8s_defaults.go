@@ -85,6 +85,7 @@ var (
 			GrafanaWatcher:              m("zdnscloud/grafana-watcher:v0.0.8"),
 			KubeStateMetrics:            m("zdnscloud/kube-state-metrics:v1.3.1"),
 			ClusterAgent:                m("zdnscloud/cluster-agent:v0.10"),
+			NodeAgent:                   m("zdnscloud/node-agent:v0.12"),
 			StorageCephOperator:         m("rook/ceph:master"),
 			StorageCephCluster:          m("ceph/ceph:v14.2.1-20190430"),
 			StorageCephTools:            m("rook/ceph:master"),
