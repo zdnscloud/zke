@@ -4,15 +4,17 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
-	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/hosts"
-	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/types"
 	"os"
 	"strings"
+
+	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/pki"
+	"github.com/zdnscloud/zke/pkg/hosts"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/types"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 func RemoveCommand() cli.Command {
@@ -41,9 +43,9 @@ func ClusterRemove(
 	ctx context.Context,
 	zkeConfig *types.ZcloudKubernetesEngineConfig,
 	dialersOptions hosts.DialersOptions,
-	flags cluster.ExternalFlags) error {
+	flags core.ExternalFlags) error {
 	log.Infof(ctx, "Tearing down Kubernetes cluster")
-	kubeCluster, err := cluster.InitClusterObject(ctx, zkeConfig, flags)
+	kubeCluster, err := core.InitClusterObject(ctx, zkeConfig, flags)
 	if err != nil {
 		return err
 	}
@@ -81,7 +83,7 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 			return nil
 		}
 	}
-	zkeConfig, err := cluster.ParseConfig(clusterFile)
+	zkeConfig, err := core.ParseConfig(clusterFile)
 	if err != nil {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
 	}
@@ -90,6 +92,6 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 		return err
 	}
 	// setting up the flags
-	flags := cluster.GetExternalFlags(false, "", filePath)
+	flags := core.GetExternalFlags(false, "", filePath)
 	return ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{}, flags)
 }

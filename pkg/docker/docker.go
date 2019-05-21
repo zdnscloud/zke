@@ -13,6 +13,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/types"
+
 	"github.com/coreos/go-semver/semver"
 	ref "github.com/docker/distribution/reference"
 	dockertypes "github.com/docker/docker/api/types"
@@ -20,8 +23,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/sirupsen/logrus"
-	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 

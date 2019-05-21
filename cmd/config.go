@@ -2,21 +2,25 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
-	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/pkg/util"
-	"github.com/zdnscloud/zke/pki"
-	"github.com/zdnscloud/zke/services"
-	"github.com/zdnscloud/zke/types"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/pki"
+	"github.com/zdnscloud/zke/core/services"
+	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/util"
+	"github.com/zdnscloud/zke/types"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -229,6 +233,11 @@ func clusterConfig(ctx *cli.Context) error {
 	cluster.Services = *serviceConfig
 	cluster.Monitoring.GrafanaIngressEndpoint = "grafana.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
 	cluster.Monitoring.PrometheusAlertManagerIngressEndpoint = "alertmanager.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
+	registryConfig, err := getRegistryConfig(reader, &cluster)
+	if err != nil {
+		return err
+	}
+	cluster.Registry = *registryConfig
 	return writeConfig(&cluster, configFile, print)
 }
 
@@ -293,7 +302,7 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 }
 
 func getSystemImagesConfig(reader *bufio.Reader) (*types.ZKESystemImages, error) {
-	imageDefaults := types.K8sVersionToZKESystemImages[cluster.DefaultK8sVersion]
+	imageDefaults := types.K8sVersionToZKESystemImages[core.DefaultK8sVersion]
 	kubeImage, err := getConfig(reader, "Kubernetes Docker image", imageDefaults.Kubernetes)
 	if err != nil {
 		return nil, err
@@ -314,12 +323,12 @@ func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {
 	servicesConfig.Scheduler = types.SchedulerService{}
 	servicesConfig.Kubelet = types.KubeletService{}
 	servicesConfig.Kubeproxy = types.KubeproxyService{}
-	clusterDomain, err := getConfig(reader, "Cluster domain", cluster.DefaultClusterDomain)
+	clusterDomain, err := getConfig(reader, "Cluster domain", core.DefaultClusterDomain)
 	if err != nil {
 		return nil, err
 	}
 	servicesConfig.Kubelet.ClusterDomain = clusterDomain
-	serviceClusterIPRange, err := getConfig(reader, "Service Cluster IP Range", cluster.DefaultServiceClusterIPRange)
+	serviceClusterIPRange, err := getConfig(reader, "Service Cluster IP Range", core.DefaultServiceClusterIPRange)
 	if err != nil {
 		return nil, err
 	}
@@ -334,12 +343,12 @@ func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {
 	} else {
 		servicesConfig.KubeAPI.PodSecurityPolicy = false
 	}
-	clusterNetworkCidr, err := getConfig(reader, "Cluster Network CIDR", cluster.DefaultClusterCIDR)
+	clusterNetworkCidr, err := getConfig(reader, "Cluster Network CIDR", core.DefaultClusterCIDR)
 	if err != nil {
 		return nil, err
 	}
 	servicesConfig.KubeController.ClusterCIDR = clusterNetworkCidr
-	clusterDNSServiceIP, err := getConfig(reader, "Cluster DNS Service IP", cluster.DefaultClusterDNSService)
+	clusterDNSServiceIP, err := getConfig(reader, "Cluster DNS Service IP", core.DefaultClusterDNSService)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +358,7 @@ func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {
 
 func getAuthnConfig(reader *bufio.Reader) (*types.AuthnConfig, error) {
 	authnConfig := types.AuthnConfig{}
-	authnType, err := getConfig(reader, "Authentication Strategy", cluster.DefaultAuthStrategy)
+	authnType, err := getConfig(reader, "Authentication Strategy", core.DefaultAuthStrategy)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +368,7 @@ func getAuthnConfig(reader *bufio.Reader) (*types.AuthnConfig, error) {
 
 func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
 	authzConfig := types.AuthzConfig{}
-	authzMode, err := getConfig(reader, "Authorization Mode (rbac, none)", cluster.DefaultAuthorizationMode)
+	authzMode, err := getConfig(reader, "Authorization Mode (rbac, none)", core.DefaultAuthorizationMode)
 	if err != nil {
 		return nil, err
 	}
@@ -369,24 +378,24 @@ func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
 
 func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 	networkConfig := types.NetworkConfig{}
-	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico)", cluster.DefaultNetworkPlugin)
+	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico)", core.DefaultNetworkPlugin)
 	if err != nil {
 		return nil, err
 	}
 	networkConfig.Plugin = networkPlugin
-	if networkPlugin == cluster.DefaultNetworkPlugin {
+	if networkPlugin == core.DefaultNetworkPlugin {
 		networkFlannelIface, err := getConfig(reader, "Flannel Network Interface", "")
 		if err != nil {
 			return nil, err
 		}
 		networkConfig.Options = make(map[string]string)
 		networkConfig.Options[FlannelIface] = networkFlannelIface
-		networkFlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", cluster.DefaultFlannelBackendType)
+		networkFlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", core.DefaultFlannelBackendType)
 		if err != nil {
 			return nil, err
 		}
 		networkConfig.Options[FlannelBackendType] = networkFlannelBackendType
-		if networkFlannelBackendType == cluster.DefaultFlannelBackendType {
+		if networkFlannelBackendType == core.DefaultFlannelBackendType {
 			networkConfig.Options[FlannelBackendDirectrouting] = "true"
 		} else {
 			networkConfig.Options[FlannelBackendDirectrouting] = "false"
@@ -510,7 +519,7 @@ func allocateStorage(reader *bufio.Reader, storageinfo map[string][]string, t st
 
 func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 	globalDNS := []string{}
-	inputString, err := getConfig(reader, fmt.Sprintf("Cluster global dns,separated by commas"), cluster.DefaultClusterGlobalDns)
+	inputString, err := getConfig(reader, fmt.Sprintf("Cluster global dns,separated by commas"), core.DefaultClusterGlobalDns)
 	if err != nil {
 		return nil, err
 	}
@@ -519,6 +528,43 @@ func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 		globalDNS = append(globalDNS, server)
 	}
 	return globalDNS, nil
+}
+
+func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.RegistryConfig, error) {
+	ctx := context.TODO()
+	registryCfg := types.RegistryConfig{}
+	isenabled, err := getConfig(reader, fmt.Sprintf("Is enabled harbor registry (y/n)?"), "y")
+	if err != nil {
+		return nil, err
+	}
+	if isenabled == "n" || isenabled == "N" {
+		registryCfg.Isenabled = false
+		return &registryCfg, nil
+	}
+	if isenabled == "y" || isenabled == "Y" {
+		if len(c.Storage.Lvm) == 0 {
+			log.Warnf(ctx, "None available lvm storge, will not enable harbor registry!")
+			registryCfg.Isenabled = false
+			return &registryCfg, nil
+		}
+		registryCfg.Isenabled = true
+		registryDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster registry disk capacity"), "50Gi")
+		if err != nil {
+			return nil, err
+		}
+		registryCfg.RegistryDiskCapacity = registryDiskCapacity
+		registryIngressURL, err := getConfig(reader, fmt.Sprintf("Cluster registry ingress url"), "registry.kube-registry."+c.Services.Kubelet.ClusterDomain)
+		if err != nil {
+			return nil, err
+		}
+		registryCfg.RegistryIngressURL = registryIngressURL
+		registryCfg.NotaryIngressURL = "notary.kube-registry." + c.Services.Kubelet.ClusterDomain
+		registryCfg.RedisDiskCapacity = core.DefaultRegistryRedisDiskCapacity
+		registryCfg.DatabaseDiskCapacity = core.DefaultRegistryDatabaseDiskCapacity
+		registryCfg.JobserviceDiskCapacity = core.DefaultRegistryJobserviceDiskCapacity
+		registryCfg.ChartmuseumDiskCapacity = core.DefaultRegistryChartmuseumDiskCapacity
+	}
+	return &registryCfg, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {

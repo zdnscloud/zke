@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
-	"github.com/zdnscloud/zke/cluster"
-	"github.com/zdnscloud/zke/hosts"
+	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/storage/ceph"
 	"github.com/zdnscloud/zke/storage/lvm"
 	"github.com/zdnscloud/zke/storage/lvmd"
 	"github.com/zdnscloud/zke/storage/nfs"
-	"github.com/zdnscloud/zke/templates"
 	"github.com/zdnscloud/zke/types"
 	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
@@ -103,7 +103,7 @@ const (
 	StorageBlocksAnnotations = "storage.zcloud.cn/blocks"
 )
 
-func DeployStoragePlugin(ctx context.Context, c *cluster.Cluster) error {
+func DeployStoragePlugin(ctx context.Context, c *core.Cluster) error {
 	if err := doAddLabelsAndAnnotations(ctx, c); err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func DeployStoragePlugin(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doAddLabelsAndAnnotations(ctx context.Context, c *cluster.Cluster) error {
+func doAddLabelsAndAnnotations(ctx context.Context, c *core.Cluster) error {
 	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
@@ -161,7 +161,7 @@ func doUpdateNode(cli client.Client, name string, t string, devs []string) error
 	return nil
 }
 
-func doLVMDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doLVMDeploy(ctx context.Context, c *core.Cluster) error {
 	if len(c.Storage.Lvm) == 0 {
 		return nil
 	}
@@ -186,7 +186,7 @@ func doLVMDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doLVMDDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doLVMDDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up lvmd")
 	cfg := map[string]interface{}{
 		RBACConfig:       c.Authorization.Mode,
@@ -204,7 +204,7 @@ func doLVMDDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doLVMStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doLVMStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up storageclass lvm")
 	cfg := map[string]interface{}{
 		RBACConfig:                     c.Authorization.Mode,
@@ -225,7 +225,7 @@ func doLVMStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doCephDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doCephDeploy(ctx context.Context, c *core.Cluster) error {
 	if err := doCephClusterDeploy(ctx, c); err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func doCephDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doCephClusterDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doCephClusterDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph cluster")
 	var arr = make([]map[string]interface{}, 0)
 	for _, v := range c.Storage.Ceph {
@@ -284,7 +284,7 @@ func doCephClusterDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doCephFsDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doCephFsDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph filesystem")
 	num := len(c.Storage.Ceph)
 	cfg := map[string]interface{}{
@@ -301,7 +301,7 @@ func doCephFsDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doCephFsStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doCephFsStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up storageclass cephfs")
 	monitors, secret, err := getCephMonCfg(ctx, c)
 	if err != nil {
@@ -329,7 +329,7 @@ func doCephFsStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func getCephMonCfg(ctx context.Context, c *cluster.Cluster) (string, string, error) {
+func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error) {
 	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
@@ -362,7 +362,7 @@ func getCephMonCfg(ctx context.Context, c *cluster.Cluster) (string, string, err
 	return monitors, secret, nil
 }
 
-func doNFSDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doNFSDeploy(ctx context.Context, c *core.Cluster) error {
 	for _, h := range c.Storage.Nfs {
 		name := h.Host
 		err := doNfsInit(ctx, c, name)
@@ -380,7 +380,7 @@ func doNFSDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func doNFSStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
+func doNFSStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up storageclass nfs")
 	cfg := map[string]interface{}{
 		RBACConfig:                 c.Authorization.Mode,
@@ -398,7 +398,7 @@ func doNFSStorageDeploy(ctx context.Context, c *cluster.Cluster) error {
 	return nil
 }
 
-func checkLvmdReady(ctx context.Context, c *cluster.Cluster) bool {
+func checkLvmdReady(ctx context.Context, c *core.Cluster) bool {
 	for _, h := range c.Storage.Lvm {
 		for _, n := range c.Nodes {
 			if h.Host == n.Address || h.Host == n.HostnameOverride {
@@ -413,7 +413,7 @@ func checkLvmdReady(ctx context.Context, c *cluster.Cluster) bool {
 	return true
 }
 
-func checkCephReady(ctx context.Context, c *cluster.Cluster) bool {
+func checkCephReady(ctx context.Context, c *core.Cluster) bool {
 	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
@@ -444,7 +444,7 @@ func checkCephReady(ctx context.Context, c *cluster.Cluster) bool {
 	return true
 }
 
-func doNfsInit(ctx context.Context, c *cluster.Cluster, name string) error {
+func doNfsInit(ctx context.Context, c *core.Cluster, name string) error {
 	cfg := map[string]interface{}{
 		RBACConfig:          c.Authorization.Mode,
 		StorageNFSInitImage: c.SystemImages.StorageNFSInit,
@@ -461,7 +461,7 @@ func doNfsInit(ctx context.Context, c *cluster.Cluster, name string) error {
 	return nil
 
 }
-func doNfsMount(ctx context.Context, c *cluster.Cluster, name string) (bool, error) {
+func doNfsMount(ctx context.Context, c *core.Cluster, name string) (bool, error) {
 	var node types.ZKEConfigNode
 	for _, n := range c.Nodes {
 		if name == n.Address || name == n.HostnameOverride {
