@@ -53,7 +53,8 @@ type ZcloudKubernetesEngineConfig struct {
 	// DNS Config
 	DNS DNSConfig `yaml:"dns" json:"dns,omitempty"`
 	// Harbor Registry Config
-	Registry RegistryConfig `yaml:"registry" json:"registry,omitempty"`
+	Registry      RegistryConfig `yaml:"registry" json:"registry,omitempty"`
+	ConfigVersion string         `yaml:"config_version" json:"config_version"`
 }
 
 type BastionHost struct {

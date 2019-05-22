@@ -5,9 +5,12 @@ import (
 
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/core/pki"
+	"github.com/zdnscloud/zke/types"
 
 	"github.com/urfave/cli"
 )
+
+const defaultConfigVersion = "v1.0.1"
 
 func VersionCommand() cli.Command {
 	versionFlags := []cli.Flag{
@@ -34,5 +37,12 @@ func getClusterVersion(ctx *cli.Context) error {
 		return err
 	}
 	fmt.Printf("Server Version: %s\n", serverVersion)
+	return nil
+}
+
+func validateConfigVersion(zkeConfig *types.ZcloudKubernetesEngineConfig) error {
+	if zkeConfig.ConfigVersion != defaultConfigVersion {
+		return fmt.Errorf("config version not match, please execut config command to generate new config")
+	}
 	return nil
 }

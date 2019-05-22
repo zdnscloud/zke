@@ -138,6 +138,8 @@ func clusterConfig(ctx *cli.Context) error {
 	configFile := ctx.String("name")
 	print := ctx.Bool("print")
 	cluster := types.ZcloudKubernetesEngineConfig{}
+	// set zke config version
+	cluster.ConfigVersion = defaultConfigVersion
 	// Get cluster config from user
 	reader := bufio.NewReader(os.Stdin)
 	// Generate empty configuration file
