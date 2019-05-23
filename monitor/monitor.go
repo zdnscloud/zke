@@ -44,14 +44,14 @@ var DefaultMonitorImage = MonitorImage{
 func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[Monitor] Setting up MonitorPlugin")
 	config := map[string]interface{}{
-		"PrometheusAlertManager":                DefaultMonitorImage.PrometheusAlertManager,
-		"PrometheusConfigMapReloader":           DefaultMonitorImage.PrometheusConfigMapReloader,
-		"PrometheusNodeExporter":                DefaultMonitorImage.PrometheusNodeExporter,
-		"PrometheusServer":                      DefaultMonitorImage.PrometheusServer,
-		"Grafana":                               DefaultMonitorImage.Grafana,
-		"GrafanaWatcher":                        DefaultMonitorImage.GrafanaWatcher,
-		"KubeStateMetrics":                      DefaultMonitorImage.KubeStateMetrics,
-		"MetricsServer":                         DefaultMonitorImage.MetricsServer,
+		"PrometheusAlertManagerImage":           DefaultMonitorImage.PrometheusAlertManager,
+		"PrometheusConfigMapReloaderImage":      DefaultMonitorImage.PrometheusConfigMapReloader,
+		"PrometheusNodeExporterImage":           DefaultMonitorImage.PrometheusNodeExporter,
+		"PrometheusServerImage":                 DefaultMonitorImage.PrometheusServer,
+		"GrafanaImage":                          DefaultMonitorImage.Grafana,
+		"GrafanaWatcherImage":                   DefaultMonitorImage.GrafanaWatcher,
+		"KubeStateMetricsImage":                 DefaultMonitorImage.KubeStateMetrics,
+		"MetricsServerImage":                    DefaultMonitorImage.MetricsServer,
 		"PrometheusAlertManagerIngressEndpoint": c.Monitor.PrometheusAlertManagerIngressEndpoint,
 		"GrafanaIngressEndpoint":                c.Monitor.GrafanaIngressEndpoint,
 		"RBACConfig":                            c.Authorization.Mode,
