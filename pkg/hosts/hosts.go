@@ -21,16 +21,15 @@ import (
 
 const CleanHeritageCMD = `
 	sudo docker rm -f $(docker ps -a -q);
-	sudo umount $(sudo mount | grep '/var/lib/kubelet/pods' | awk '{print $3}');
+	sudo umount -l $(sudo mount | grep '/var/lib/kubelet/pods' | awk '{print $3}');
 	sudo rm -rf /var/lib/{kubelet,rancher} /var/run/flannel/subnet.env /opt/cni/bin/ /etc/cni/net.d/ /var/run/flannel/ /var/lib/rook/;
 	for i in $(ip r |grep -E "10.42."|awk '{print $1}');do sudo ip route del $i;done ;
 	sudo docker volume prune -f;
 	sudo ip link delete flannel.1;
 	sudo ip link delete cni0;
-	sudo umount /nfs-export;
+	sudo umount /var/lib/singlecloud/nfs-export;
 	sudo dmsetup remove nfs-data
-	sudo ls /dev/mapper/ceph-* | xargs -I% -- dmsetup remove %;
-	sudo ls /dev/mapper/nfs-* | xargs -I% -- dmsetup remove %;
+	for i in $(dmsetup ls | grep -E "ceph-|k8s-pvc-|nfs-")do sudo dmsetup remove $i;done ;
 	sudo rm -rf /dev/ceph-* /dev/mapper/ceph-*
 	sudo rm -rf /dev/nfs-*  /dev/mapper/nfs-*
 	sudo rm -fr /dev/k8s    /dev/mapper/k8s-pvc--*

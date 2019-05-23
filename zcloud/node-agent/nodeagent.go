@@ -22,17 +22,27 @@ spec:
         effect: NoSchedule
       - operator: Exists
         effect: NoExecute
-      hostNetwork: true
       containers:
       - name: node-agent
         image: {{.Image}}
-        command: ["/bin/sh", "-c","/node-agent -listen :8899"]
+        command: ["/bin/sh", "-c", "/node-agent -listen $(POD_IP):$(SVC_PORT) -node $(NODE_NAME)"]
+        env:
+          - name: SVC_PORT
+            value: "{{.NodeAgentPort}}"    
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
         securityContext:
           privileged: true
         volumeMounts:
-          - mountPath: /var/lib/kubelet
-            name: kubelet
+          - mountPath: /var/lib
+            name: lib
       volumes:
-        - name: kubelet
+        - name: lib
           hostPath:
-            path: /var/lib/kubelet`
+            path: /var/lib`

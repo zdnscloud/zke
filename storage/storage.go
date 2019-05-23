@@ -19,6 +19,7 @@ import (
 	"github.com/zdnscloud/zke/types"
 	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"net"
 	"strconv"
@@ -104,7 +105,7 @@ const (
 )
 
 func DeployStoragePlugin(ctx context.Context, c *core.Cluster) error {
-	if err := doAddLabelsAndAnnotations(ctx, c); err != nil {
+	if err := doPreparaJob(ctx, c); err != nil {
 		return err
 	}
 	if err := doNFSDeploy(ctx, c); err != nil {
@@ -119,11 +120,18 @@ func DeployStoragePlugin(ctx context.Context, c *core.Cluster) error {
 	return nil
 }
 
-func doAddLabelsAndAnnotations(ctx context.Context, c *core.Cluster) error {
+var storageClassMap = map[string]string{
+	"Lvm":  "lvm",
+	"Nfs":  "nfs",
+	"Ceph": "cephfs",
+}
+
+func doPreparaJob(ctx context.Context, c *core.Cluster) error {
+	log.Infof(ctx, "[storage] Check storage blocks and update nodes Labels and Taints ")
 	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
-		return nil
+		return err
 	}
 	var storageCfgMap = map[string][]types.Deviceconf{
 		"Lvm":  c.Storage.Lvm,
@@ -139,6 +147,11 @@ func doAddLabelsAndAnnotations(ctx context.Context, c *core.Cluster) error {
 		for _, s := range cfg {
 			if err = doUpdateNode(cli, s.Host, t, s.Devs); err != nil {
 				return err
+			}
+			if !checkStorageClassExist(cli, storageClassMap[t]) {
+				if err = doCheckBlocks(ctx, c, s.Host, s.Devs); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -157,6 +170,51 @@ func doUpdateNode(cli client.Client, name string, t string, devs []string) error
 	err = cli.Update(context.TODO(), &node)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func checkStorageClassExist(cli client.Client, name string) bool {
+	var exist bool
+	scs := storagev1.StorageClassList{}
+	err := cli.List(context.TODO(), nil, &scs)
+	if err != nil {
+		return exist
+	}
+	for _, s := range scs.Items {
+		if s.Name == name {
+			exist = true
+			break
+		}
+	}
+	return exist
+}
+
+func doCheckBlocks(ctx context.Context, c *core.Cluster, name string, devs []string) error {
+	var node types.ZKEConfigNode
+	for _, n := range c.Nodes {
+		if name == n.Address || name == n.HostnameOverride {
+			node = n
+		}
+	}
+	client, err := makeSSHClient(node)
+	if err != nil {
+		return err
+	}
+	var errinfo string
+	for _, d := range devs {
+		cmd := "udevadm info --query=property " + d
+		cmdout, cmderr, err := getSSHCmdOut(client, cmd)
+		if err != nil {
+			return err
+		}
+		if cmderr != "" || strings.Contains(cmdout, "ID_PART_TABLE") || strings.Contains(cmdout, "ID_FS_TYPE") {
+			info := name + ":" + d + "."
+			errinfo += info
+		}
+	}
+	if errinfo != "" {
+		return errors.New("some blocks cat not be used!" + errinfo)
 	}
 	return nil
 }
@@ -226,6 +284,9 @@ func doLVMStorageDeploy(ctx context.Context, c *core.Cluster) error {
 }
 
 func doCephDeploy(ctx context.Context, c *core.Cluster) error {
+	if len(c.Storage.Ceph) == 0 {
+		return nil
+	}
 	if err := doCephClusterDeploy(ctx, c); err != nil {
 		return err
 	}
@@ -363,15 +424,28 @@ func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error)
 }
 
 func doNFSDeploy(ctx context.Context, c *core.Cluster) error {
-	for _, h := range c.Storage.Nfs {
-		name := h.Host
-		err := doNfsInit(ctx, c, name)
-		if err != nil {
-			return err
-		}
-		ready, err := doNfsMount(ctx, c, name)
-		if !ready || err != nil {
-			return err
+	if len(c.Storage.Nfs) == 0 {
+		return nil
+	}
+	if len(c.Storage.Nfs) > 1 {
+		return errors.New("nfs only supports ont host!")
+	}
+	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
+	cli, err := client.New(config, client.Options{})
+	if err != nil {
+		return err
+	}
+	if !checkStorageClassExist(cli, storageClassMap["Nfs"]) {
+		for _, h := range c.Storage.Nfs {
+			name := h.Host
+			err := doNfsInit(ctx, c, name)
+			if err != nil {
+				return err
+			}
+			ready, err := doNfsMount(ctx, c, name)
+			if !ready || err != nil {
+				return err
+			}
 		}
 	}
 	if err := doNFSStorageDeploy(ctx, c); err != nil {
@@ -468,59 +542,70 @@ func doNfsMount(ctx context.Context, c *core.Cluster, name string) (bool, error)
 			node = n
 		}
 	}
-	var sshKeyString, sshCertString string
-	if !node.SSHAgentAuth {
-		var err error
-		sshKeyString, err = hosts.PrivateKeyPath(node.SSHKeyPath)
-		if err != nil {
-			return false, err
-		}
-
-		if len(node.SSHCertPath) > 0 {
-			sshCertString, err = hosts.CertificatePath(node.SSHCertPath)
-			if err != nil {
-				return false, err
-			}
-		}
-	}
-
-	cfg, err := hosts.GetSSHConfig(node.User, sshKeyString, sshCertString, node.SSHAgentAuth)
-	if err != nil {
-		return false, err
-	}
-	addr := node.Address + ":22"
-	client, err := ssh.Dial("tcp", addr, cfg)
+	client, err := makeSSHClient(node)
 	if err != nil {
 		return false, err
 	}
 
-	check := `ls /dev/mapper|grep -E nfs-data -q;if [ $? -eq 0 ];then echo true;else echo false;fi`
+	cmd := `ls /dev/mapper|grep -E nfs-data -q;if [ $? -eq 0 ];then echo true;else echo false;fi`
 	var ready bool
 	for i := 0; i < NFSCheckTimes; i++ {
-		session, err := client.NewSession()
+		cmdout, _, err := getSSHCmdOut(client, cmd)
 		if err != nil {
 			return false, err
 		}
-		defer session.Close()
-		var stdOut, stdErr bytes.Buffer
-		session.Stdout = &stdOut
-		session.Stderr = &stdErr
-		session.Run(check)
-		tmp := strings.Replace(stdOut.String(), "\n", "", -1)
-		if tmp == "true" {
+		if cmdout == "true" {
 			ready = true
 			break
 		}
 		time.Sleep(time.Duration(CheckInterval) * time.Second)
 	}
 	if ready {
-		session, err := client.NewSession()
-		if err != nil {
-			return false, err
+		cmd := `sudo mkdir /var/lib/singlecloud/nfs-export -p;sleep 5;sudo mount /dev/mapper/nfs-data /var/lib/singlecloud/nfs-export;`
+		cmdout, cmderr, err := getSSHCmdOut(client, cmd)
+		if err != nil || cmdout != "" || cmderr != "" {
+			return false, errors.New("mount host path for nfs failed!")
 		}
-		defer session.Close()
-		cmd := `sudo mkdir /nfs-export;sleep 1;sudo mount /dev/mapper/nfs-data /nfs-export;`
-		session.Run(cmd)
 	}
 	return ready, nil
+}
+
+func makeSSHClient(node types.ZKEConfigNode) (*ssh.Client, error) {
+	var sshKeyString, sshCertString string
+	if !node.SSHAgentAuth {
+		var err error
+		sshKeyString, err = hosts.PrivateKeyPath(node.SSHKeyPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(node.SSHCertPath) > 0 {
+			sshCertString, err = hosts.CertificatePath(node.SSHCertPath)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	cfg, err := hosts.GetSSHConfig(node.User, sshKeyString, sshCertString, node.SSHAgentAuth)
+	if err != nil {
+		return nil, err
+	}
+	addr := node.Address + ":22"
+	return ssh.Dial("tcp", addr, cfg)
+}
+
+func getSSHCmdOut(client *ssh.Client, cmd string) (string, string, error) {
+	var cmdout, cmderr string
+	session, err := client.NewSession()
+	if err != nil {
+		return cmdout, "error", err
+	}
+	defer session.Close()
+	var stdOut, stdErr bytes.Buffer
+	session.Stdout = &stdOut
+	session.Stderr = &stdErr
+	session.Run(cmd)
+	cmdout = strings.Replace(stdOut.String(), "\n", "", -1)
+	cmderr = strings.Replace(stdErr.String(), "\n", "", -1)
+	return cmdout, cmderr, nil
 }
