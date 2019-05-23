@@ -2,7 +2,6 @@ package zcloud
 
 import (
 	"context"
-	"fmt"
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
@@ -76,7 +75,6 @@ func doNodeAgentDeploy(ctx context.Context, c *core.Cluster) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(yaml)
 	if err := c.DoAddonDeploy(ctx, yaml, "zcloud-node-agent", true); err != nil {
 		return err
 	}
