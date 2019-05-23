@@ -2,6 +2,11 @@ package resources
 
 const GrafanaTemplate = `
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-monitoring
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-grafana

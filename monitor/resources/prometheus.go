@@ -2,6 +2,11 @@ package resources
 
 const PrometheusTemplate = `
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-monitoring
+---
+apiVersion: v1
 items:
 - apiVersion: v1
   kind: ServiceAccount

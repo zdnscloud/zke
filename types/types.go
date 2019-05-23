@@ -47,7 +47,7 @@ type ZcloudKubernetesEngineConfig struct {
 	// Bastion/Jump Host configuration
 	BastionHost BastionHost `yaml:"bastion_host" json:"bastionHost,omitempty"`
 	// Monitoring Config
-	Monitoring MonitoringConfig `yaml:"monitoring" json:"monitoring,omitempty"`
+	Monitor MonitorConfig `yaml:"monitoring" json:"monitoring,omitempty"`
 	// RestoreCluster flag
 	Restore RestoreConfig `yaml:"restore" json:"restore,omitempty"`
 	// DNS Config
@@ -130,14 +130,6 @@ type ZKESystemImages struct {
 	StorageLvmDriverRegistrar string `yaml:"storage_lvm_driver_registrar" json:"storage_lvm_driver_registrar,omitempty"`
 	StorageLvmCSI             string `yaml:"storage_lvmcsi" json:"storage_lvmcsi,omitempty"`
 	StorageLvmd               string `yaml:"storage_lvmd" json:"storage_lvmd,omitempty"`
-	// Monitoring images
-	PrometheusAlertManager      string `yaml:"prometheus_alert_manager" json:"prometheus_alert_manager"`
-	PrometheusConfigMapReloader string `yaml:"prometheus_configmap_reloader" json:"prometheus_configmap_reloader"`
-	PrometheusNodeExporter      string `yaml:"prometheus_nodeexporter" json:"prometheus_nodeexporter"`
-	PrometheusServer            string `yaml:"prometheus_server" json:"prometheus_server"`
-	Grafana                     string `yaml:"grafana" json:"grafana"`
-	GrafanaWatcher              string `yaml:"grafana_watcher" json:"grafana_watcher"`
-	KubeStateMetrics            string `yaml:"kube_state_metrics" json:"kube_state_metrics"`
 	// Storage nfs image
 	StorageNFSProvisioner      string `yaml:"storage_nfs" json:"storage_nfs,omitempty"`
 	StorageNFSInit             string `yaml:"storage_nfs_init" json:"storage_nfs_init,omitempty"`
@@ -440,7 +432,7 @@ type KubernetesServicesOptions struct {
 	Scheduler map[string]string `json:"scheduler"`
 }
 
-type MonitoringConfig struct {
+type MonitorConfig struct {
 	// Monitoring server provider
 	MetricsProvider string `yaml:"metrics_provider" json:"metrics_provider,omitempty" norman:"default=metrics-server"`
 	// Metrics server options

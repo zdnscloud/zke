@@ -233,8 +233,8 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Services = *serviceConfig
-	cluster.Monitoring.GrafanaIngressEndpoint = "grafana.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
-	cluster.Monitoring.PrometheusAlertManagerIngressEndpoint = "alertmanager.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
+	cluster.Monitor.GrafanaIngressEndpoint = "grafana.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
+	cluster.Monitor.PrometheusAlertManagerIngressEndpoint = "alertmanager.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
 	registryConfig, err := getRegistryConfig(reader, &cluster)
 	if err != nil {
 		return err
