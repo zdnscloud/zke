@@ -156,7 +156,7 @@ spec:
       volumes:
       - name: nfs-data
         hostPath:
-          path: /nfs-export
+          path: /var/lib/singlecloud/nfs-export
 ---
 kind: StorageClass
 apiVersion: storage.k8s.io/v1

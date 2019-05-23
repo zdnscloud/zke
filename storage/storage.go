@@ -19,6 +19,7 @@ import (
 	"github.com/zdnscloud/zke/types"
 	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"net"
 	"strconv"
@@ -119,12 +120,18 @@ func DeployStoragePlugin(ctx context.Context, c *core.Cluster) error {
 	return nil
 }
 
+var storageClassMap = map[string]string{
+	"Lvm":  "lvm",
+	"Nfs":  "nfs",
+	"Ceph": "cephfs",
+}
+
 func doPreparaJob(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Check storage blocks and update nodes Labels and Taints ")
 	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
-		return nil
+		return err
 	}
 	var storageCfgMap = map[string][]types.Deviceconf{
 		"Lvm":  c.Storage.Lvm,
@@ -141,8 +148,10 @@ func doPreparaJob(ctx context.Context, c *core.Cluster) error {
 			if err = doUpdateNode(cli, s.Host, t, s.Devs); err != nil {
 				return err
 			}
-			if err = doCheckBlocks(ctx, c, s.Host, s.Devs); err != nil {
-				return err
+			if !checkStorageClassExist(cli, storageClassMap[t]) {
+				if err = doCheckBlocks(ctx, c, s.Host, s.Devs); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -163,6 +172,22 @@ func doUpdateNode(cli client.Client, name string, t string, devs []string) error
 		return err
 	}
 	return nil
+}
+
+func checkStorageClassExist(cli client.Client, name string) bool {
+	var exist bool
+	scs := storagev1.StorageClassList{}
+	err := cli.List(context.TODO(), nil, &scs)
+	if err != nil {
+		return exist
+	}
+	for _, s := range scs.Items {
+		if s.Name == name {
+			exist = true
+			break
+		}
+	}
+	return exist
 }
 
 func doCheckBlocks(ctx context.Context, c *core.Cluster, name string, devs []string) error {
@@ -405,15 +430,22 @@ func doNFSDeploy(ctx context.Context, c *core.Cluster) error {
 	if len(c.Storage.Nfs) > 1 {
 		return errors.New("nfs only supports ont host!")
 	}
-	for _, h := range c.Storage.Nfs {
-		name := h.Host
-		err := doNfsInit(ctx, c, name)
-		if err != nil {
-			return err
-		}
-		ready, err := doNfsMount(ctx, c, name)
-		if !ready || err != nil {
-			return err
+	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
+	cli, err := client.New(config, client.Options{})
+	if err != nil {
+		return err
+	}
+	if !checkStorageClassExist(cli, storageClassMap["Nfs"]) {
+		for _, h := range c.Storage.Nfs {
+			name := h.Host
+			err := doNfsInit(ctx, c, name)
+			if err != nil {
+				return err
+			}
+			ready, err := doNfsMount(ctx, c, name)
+			if !ready || err != nil {
+				return err
+			}
 		}
 	}
 	if err := doNFSStorageDeploy(ctx, c); err != nil {
@@ -529,7 +561,7 @@ func doNfsMount(ctx context.Context, c *core.Cluster, name string) (bool, error)
 		time.Sleep(time.Duration(CheckInterval) * time.Second)
 	}
 	if ready {
-		cmd := `sudo mkdir /nfs-export;sleep 5;sudo mount /dev/mapper/nfs-data /nfs-export;`
+		cmd := `sudo mkdir /var/lib/singlecloud/nfs-export -p;sleep 5;sudo mount /dev/mapper/nfs-data /var/lib/singlecloud/nfs-export;`
 		cmdout, cmderr, err := getSSHCmdOut(client, cmd)
 		if err != nil || cmdout != "" || cmderr != "" {
 			return false, errors.New("mount host path for nfs failed!")
