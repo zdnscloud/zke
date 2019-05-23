@@ -2,7 +2,7 @@ package zcloud
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	RBACConfig = "RBACConfig"
-	Image      = "Image"
-
+	RBACConfig               = "RBACConfig"
+	Image                    = "Image"
+	NodeAgentPort            = "80"
 	ClusterAgentResourceName = "cluster-agent"
 	SAResourceName           = "sa"
 	ClusterAgentJobName      = "zcloud-cluster-agent"
@@ -69,12 +69,14 @@ func doClusterAgentDeploy(ctx context.Context, c *core.Cluster) error {
 func doNodeAgentDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[zcloud] Setting up NodeAgent")
 	cfg := map[string]interface{}{
-		"Image": c.SystemImages.NodeAgent,
+		"Image":         c.SystemImages.NodeAgent,
+		"NodeAgentPort": NodeAgentPort,
 	}
 	yaml, err := templates.CompileTemplateFromMap(nodeagent.NodeAgentTemplate, cfg)
 	if err != nil {
 		return err
 	}
+	fmt.Println(yaml)
 	if err := c.DoAddonDeploy(ctx, yaml, "zcloud-node-agent", true); err != nil {
 		return err
 	}
