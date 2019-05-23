@@ -28,8 +28,8 @@ const CleanHeritageCMD = `
 	sudo ip link delete flannel.1;
 	sudo ip link delete cni0;
 	sudo umount /var/lib/singlecloud/nfs-export;
-	sudo dmsetup remove nfs-data
-	for i in $(dmsetup ls | grep -E "ceph-|k8s-pvc-|nfs-")do sudo dmsetup remove $i;done ;
+	sudo rm -fr /var/lib/singlecloud/nfs-export
+	for i in $(dmsetup ls | grep -E "ceph-|k8s-pvc-|nfs-")do; sudo dmsetup remove $i;done ;
 	sudo rm -rf /dev/ceph-* /dev/mapper/ceph-*
 	sudo rm -rf /dev/nfs-*  /dev/mapper/nfs-*
 	sudo rm -fr /dev/k8s    /dev/mapper/k8s-pvc--*
