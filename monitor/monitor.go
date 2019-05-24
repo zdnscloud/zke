@@ -56,7 +56,7 @@ func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 		"GrafanaIngressEndpoint":                c.Monitor.GrafanaIngressEndpoint,
 		"RBACConfig":                            c.Authorization.Mode,
 		"MetricsServerOptions":                  c.Monitor.MetricsOptions,
-		"MetricsServerVersion":                  "v0.3.1",
+		"MetricsServerMajorVersion":             "v0.3",
 	}
 
 	if err := doOneDeploy(ctx, c, config, resources.MetricsServerTemplate, MetricServerDeployJobName); err != nil {

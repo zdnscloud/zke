@@ -118,7 +118,7 @@ spec:
         imagePullPolicy: Always
         command:
         - /metrics-server
-        {{- if eq .MetricsServerVersion "v0.3" }}
+        {{- if eq .MetricsServerMajorVersion "v0.3" }}
         - --kubelet-insecure-tls
         - --kubelet-preferred-address-types=InternalIP
         - --logtostderr
