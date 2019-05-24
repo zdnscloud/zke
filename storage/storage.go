@@ -49,7 +49,10 @@ func DeployStoragePlugin(ctx context.Context, c *core.Cluster) error {
 
 func doPreparaJob(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Check storage blocks and update nodes Labels and Taints ")
-	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
+	config, err := config.GetConfigFromFile(c.LocalKubeConfigPath)
+	if err != nil {
+		return err
+	}
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
 		return err
