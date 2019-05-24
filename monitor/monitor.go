@@ -58,34 +58,34 @@ func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 		"MetricsServerOptions":                  c.Monitor.MetricsOptions,
 		"MetricsServerMajorVersion":             "v0.3",
 	}
-
+	// deploy metrics server
 	if err := doOneDeploy(ctx, c, config, resources.MetricsServerTemplate, MetricServerDeployJobName); err != nil {
 		if err, ok := err.(*core.AddonError); ok && err.IsCritical {
 			return err
 		}
 		log.Warnf(ctx, "Failed to deploy addon execute job [MetricServer]: %v", err)
 	}
-
+	// deploy prometheus
 	if err := doOneDeploy(ctx, c, config, resources.PrometheusTemplate, PrometheusDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy nodeexporter
 	if err := doOneDeploy(ctx, c, config, resources.NodeExporterTemplate, NodeExporterDeployJobName); err != nil {
 		return err
 	}
-
-	if err := doOneDeploy(ctx, c, config, resources.MetricsServerTemplate, MetricServerDeployJobName); err != nil {
+	// deploy state metrics
+	if err := doOneDeploy(ctx, c, config, resources.StateMetricsTemplate, KubeStateMetricsDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy alertmanager
 	if err := doOneDeploy(ctx, c, config, resources.AlertManagerTemplate, AlertManagerDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy grafana configmap
 	if err := c.DoAddonDeploy(ctx, resources.GrafanaConfigMapYaml, GrafanaConfigmapDeployJobName, true); err != nil {
 		return err
 	}
-
+	// deploy grafana
 	if err := doOneDeploy(ctx, c, config, resources.GrafanaTemplate, GrafanaDeployJobName); err != nil {
 		return err
 	}

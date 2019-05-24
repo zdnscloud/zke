@@ -65,51 +65,51 @@ func DeployRegistry(ctx context.Context, c *core.Cluster) error {
 		"IngresstlsCertBase64":    IngresstlsCertBase64,
 		"IngresstlsKeyBase64":     IngresstlsKeyBase64,
 	}
-
+	// deploy redis
 	if err := doOneDeploy(ctx, c, config, resources.RedisTemplate, RedisDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy database
 	if err := doOneDeploy(ctx, c, config, resources.DatabaseTemplate, DatabaseDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy harbor-core
 	if err := doOneDeploy(ctx, c, config, resources.CoreTemplate, CoreDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy harbor-registry
 	if err := doOneDeploy(ctx, c, config, resources.RegistryTemplate, RegistryDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy notary-server
 	if err := doOneDeploy(ctx, c, config, resources.NotaryServerTemplate, NotaryServerDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy notary-signer
 	if err := doOneDeploy(ctx, c, config, resources.NotarySignerTemplate, NotarySignerDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy chartmuseum
 	if err := doOneDeploy(ctx, c, config, resources.ChartMuseumTemplate, ChartMuseumDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy chair
 	if err := doOneDeploy(ctx, c, config, resources.ClairTemplate, ClairDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy jobservice
 	if err := doOneDeploy(ctx, c, config, resources.JobserviceTemplate, JobserviceDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy portal
 	if err := doOneDeploy(ctx, c, config, resources.PortalTemplate, PortalDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy adminserver
 	if err := doOneDeploy(ctx, c, config, resources.AdminServerTemplate, AdminServerDeployJobName); err != nil {
 		return err
 	}
-
+	// deploy ingress
 	if err := doOneDeploy(ctx, c, config, resources.IngressTemplate, IngressDeployJobName); err != nil {
 		return err
 	}

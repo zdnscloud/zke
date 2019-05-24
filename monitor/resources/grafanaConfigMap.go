@@ -1287,7 +1287,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: kube-monitoring
+  namespace: kube-monitor
 data:
   kubernetes-capacity-planning-dashboard.json: |-
     {
