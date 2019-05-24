@@ -4,7 +4,7 @@ const NotaryServerTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-registry
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
@@ -127,7 +127,7 @@ metadata:
     app: harbor
     component: notary
   name: harbor-notary-server
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -139,7 +139,7 @@ metadata:
     app: harbor
     component: notary-server
   name: harbor-notary-server
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -201,7 +201,7 @@ metadata:
     app: harbor
     component: notary-server
   name: harbor-notary-server
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - port: 4443

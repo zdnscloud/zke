@@ -4,7 +4,7 @@ const RedisTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-registry
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -14,7 +14,7 @@ metadata:
     app: harbor
     component: redis
   name: harbor-redis
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   podManagementPolicy: OrderedReady
   replicas: 1
@@ -87,7 +87,7 @@ metadata:
     app: harbor
     component: redis
   name: harbor-redis
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - port: 6379

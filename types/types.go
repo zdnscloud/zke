@@ -142,19 +142,6 @@ type ZKESystemImages struct {
 	StorageCephProvisioner     string `yaml:"storage_ceph_provisioner" json:"storage_ceph_provisioner,omitempty"`
 	StorageCephDriverRegistrar string `yaml:"storage_ceph_driver_registrar" json:"storage_ceph_driver_registrar,omitempty"`
 	StorageCephFsCSI           string `yaml:"storage_ceph_fscsi" json:"storage_ceph_fscsi,omitempty"`
-	// Harbor Registry images
-	HarborAdminserver  string `yaml:"harbor_adminserver" json:"harbor_adminserver"`
-	HarborChartmuseum  string `yaml:"harbor_chartmuseum" json:"harbor_chartmuseum"`
-	HarborClair        string `yaml:"harbor_clair" json:"harbor_clair"`
-	HarborCore         string `yaml:"harbor_core" json:"harbor_core"`
-	HarborDatabase     string `yaml:"harbor_database" json:"harbor_database"`
-	HarborJobservice   string `yaml:"harbor_jobservice" json:"harbor_jobservice"`
-	HarborNotaryServer string `yaml:"harbor_notaryserver" json:"harbor_notaryserver"`
-	HarborNotarySigner string `yaml:"harbor_notarysigner" json:"harbor_notarysigner"`
-	HarborPortal       string `yaml:"harbor_portal" json:"harbor_portal"`
-	HarborRedis        string `yaml:"harbor_redis" json:"harbor_redis"`
-	HarborRegistry     string `yaml:"harbor_registry" json:"harbor_registry"`
-	HarborRegistryctl  string `yaml:"harbor_registryctl" json:"harbor_registryctl"`
 }
 
 type ZKEConfigNode struct {

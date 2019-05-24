@@ -4,7 +4,7 @@ const CalicoTemplateV112 = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-network
+  name: {{ .DeployNamespace }}
 ---
 {{if eq .RBACConfig "rbac"}}
 ## start rbac here
@@ -96,7 +96,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: calico-node
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 - apiGroup: rbac.authorization.k8s.io
   kind: Group
   name: system:nodes
@@ -108,7 +108,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
  name: calico-config
- namespace: kube-network
+ namespace: {{ .DeployNamespace }}
 data:
  # To enable Typha, set this to "calico-typha" *and* set a non-zero value for Typha replicas
  # below.  We recommend using Typha if you have more than 50 nodes. Above 100 nodes it is
@@ -156,7 +156,7 @@ kind: DaemonSet
 apiVersion: extensions/v1beta1
 metadata:
   name: calico-node
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
   labels:
     k8s-app: calico-node
 spec:
@@ -481,7 +481,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: calico-node
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 
 
 {{if ne .CloudProvider "none"}}
@@ -490,7 +490,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: {{.CloudProvider}}-ippool
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 data:
   {{.CloudProvider}}-ippool: |-
     apiVersion: projectcalico.org/v3
@@ -506,7 +506,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: calicoctl
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 spec:
   hostNetwork: true
   restartPolicy: OnFailure
@@ -535,7 +535,7 @@ const CalicoTemplateV113 = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-network
+  name: {{ .DeployNamespace }}
 ---
 {{if eq .RBACConfig "rbac"}}
 ## start rbac here
@@ -651,7 +651,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: calico-node
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 - apiGroup: rbac.authorization.k8s.io
   kind: Group
   name: system:nodes
@@ -664,7 +664,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: calico-config
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 data:
   # To enable Typha, set this to "calico-typha" *and* set a non-zero value for Typha replicas
   # below.  We recommend using Typha if you have more than 50 nodes. Above 100 nodes it is
@@ -716,7 +716,7 @@ kind: DaemonSet
 apiVersion: extensions/v1beta1
 metadata:
   name: calico-node
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
   labels:
     k8s-app: calico-node
 spec:
@@ -1057,7 +1057,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: calico-node
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 
 
 {{if ne .CloudProvider "none"}}
@@ -1066,7 +1066,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: {{.CloudProvider}}-ippool
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 data:
   {{.CloudProvider}}-ippool: |-
     apiVersion: projectcalico.org/v3
@@ -1082,7 +1082,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: calicoctl
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 spec:
   hostNetwork: true
   restartPolicy: OnFailure

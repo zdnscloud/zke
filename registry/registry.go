@@ -28,7 +28,38 @@ const (
 	RedisDeployJobName        = "zke-registry-redis-deploy-job"
 	RegistryDeployJobName     = "zke-registry-registry-deploy-job"
 	RegistryCertsCN           = "harbor"
+	DeployNamespace           = "zcloud"
 )
+
+type RegistryImage struct {
+	HarborAdminserver  string `yaml:"harbor_adminserver" json:"harbor_adminserver"`
+	HarborChartmuseum  string `yaml:"harbor_chartmuseum" json:"harbor_chartmuseum"`
+	HarborClair        string `yaml:"harbor_clair" json:"harbor_clair"`
+	HarborCore         string `yaml:"harbor_core" json:"harbor_core"`
+	HarborDatabase     string `yaml:"harbor_database" json:"harbor_database"`
+	HarborJobservice   string `yaml:"harbor_jobservice" json:"harbor_jobservice"`
+	HarborNotaryServer string `yaml:"harbor_notaryserver" json:"harbor_notaryserver"`
+	HarborNotarySigner string `yaml:"harbor_notarysigner" json:"harbor_notarysigner"`
+	HarborPortal       string `yaml:"harbor_portal" json:"harbor_portal"`
+	HarborRedis        string `yaml:"harbor_redis" json:"harbor_redis"`
+	HarborRegistry     string `yaml:"harbor_registry" json:"harbor_registry"`
+	HarborRegistryctl  string `yaml:"harbor_registryctl" json:"harbor_registryctl"`
+}
+
+var DefaultImage = RegistryImage{
+	HarborAdminserver:  "goharbor/harbor-adminserver:v1.7.5",
+	HarborChartmuseum:  "goharbor/chartmuseum-photon:v0.8.1-v1.7.5",
+	HarborClair:        "goharbor/clair-photon:v2.0.8-v1.7.5",
+	HarborCore:         "goharbor/harbor-core:v1.7.5",
+	HarborDatabase:     "goharbor/harbor-db:v1.7.5",
+	HarborJobservice:   "goharbor/harbor-jobservice:v1.7.5",
+	HarborNotaryServer: "goharbor/notary-server-photon:v0.6.1-v1.7.5",
+	HarborNotarySigner: "goharbor/notary-signer-photon:v0.6.1-v1.7.5",
+	HarborPortal:       "goharbor/harbor-portal:v1.7.5",
+	HarborRedis:        "goharbor/redis-photon:v1.7.5",
+	HarborRegistry:     "goharbor/registry-photon:v2.6.2-v1.7.5",
+	HarborRegistryctl:  "goharbor/harbor-registryctl:v1.7.5",
+}
 
 func DeployRegistry(ctx context.Context, c *core.Cluster) error {
 	if c.Registry.Isenabled == false {
@@ -42,28 +73,29 @@ func DeployRegistry(ctx context.Context, c *core.Cluster) error {
 		return err
 	}
 	config := map[string]interface{}{
-		"RedisImage":              c.SystemImages.HarborRedis,
+		"RedisImage":              DefaultImage.HarborRedis,
 		"RedisDiskCapacity":       c.Registry.RedisDiskCapacity,
-		"DatabaseImage":           c.SystemImages.HarborDatabase,
+		"DatabaseImage":           DefaultImage.HarborDatabase,
 		"DatabaseDiskCapacity":    c.Registry.DatabaseDiskCapacity,
-		"CoreImage":               c.SystemImages.HarborCore,
-		"RegistryImage":           c.SystemImages.HarborRegistry,
-		"RegistryctlImage":        c.SystemImages.HarborRegistryctl,
+		"CoreImage":               DefaultImage.HarborCore,
+		"RegistryImage":           DefaultImage.HarborRegistry,
+		"RegistryctlImage":        DefaultImage.HarborRegistryctl,
 		"RegistryDiskCapacity":    c.Registry.RegistryDiskCapacity,
-		"NotaryServerImage":       c.SystemImages.HarborNotaryServer,
-		"NotarySignerImage":       c.SystemImages.HarborNotarySigner,
-		"ChartmuseumImage":        c.SystemImages.HarborChartmuseum,
+		"NotaryServerImage":       DefaultImage.HarborNotaryServer,
+		"NotarySignerImage":       DefaultImage.HarborNotarySigner,
+		"ChartmuseumImage":        DefaultImage.HarborChartmuseum,
 		"ChartmuseumDiskCapacity": c.Registry.ChartmuseumDiskCapacity,
-		"ClairImage":              c.SystemImages.HarborClair,
-		"JobserviceImage":         c.SystemImages.HarborJobservice,
+		"ClairImage":              DefaultImage.HarborClair,
+		"JobserviceImage":         DefaultImage.HarborJobservice,
 		"JobserviceDiskCapacity":  c.Registry.JobserviceDiskCapacity,
-		"PortalImage":             c.SystemImages.HarborPortal,
-		"AdminserverImage":        c.SystemImages.HarborAdminserver,
+		"PortalImage":             DefaultImage.HarborPortal,
+		"AdminserverImage":        DefaultImage.HarborAdminserver,
 		"RegistryIngressURL":      c.Registry.RegistryIngressURL,
 		"NotaryIngressURL":        c.Registry.NotaryIngressURL,
 		"IngresscaCertBase64":     IngresscaCertBase64,
 		"IngresstlsCertBase64":    IngresstlsCertBase64,
 		"IngresstlsKeyBase64":     IngresstlsKeyBase64,
+		"DeployNamespace":         DeployNamespace,
 	}
 	// deploy redis
 	if err := doOneDeploy(ctx, c, config, resources.RedisTemplate, RedisDeployJobName); err != nil {

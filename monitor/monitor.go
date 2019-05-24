@@ -17,6 +17,7 @@ const (
 	GrafanaConfigmapDeployJobName = "zke-grafanaconf-deploy-job"
 	GrafanaDeployJobName          = "zke-grafana-deploy-job"
 	MetricServerDeployJobName     = "zke-metricsserver-deploy-job"
+	DeployNamespace               = "zcloud"
 )
 
 type MonitorImage struct {
@@ -57,6 +58,7 @@ func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 		"RBACConfig":                            c.Authorization.Mode,
 		"MetricsServerOptions":                  c.Monitor.MetricsOptions,
 		"MetricsServerMajorVersion":             "v0.3",
+		"DeployNamespace":                       DeployNamespace,
 	}
 	// deploy metrics server
 	if err := doOneDeploy(ctx, c, config, resources.MetricsServerTemplate, MetricServerDeployJobName); err != nil {

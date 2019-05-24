@@ -4,7 +4,7 @@ const IngressTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-registry
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
@@ -17,7 +17,7 @@ metadata:
     app: harbor
     component: ingress
   name: harbor-ingress
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 type: kubernetes.io/tls
 ---
 apiVersion: extensions/v1beta1
@@ -33,7 +33,7 @@ metadata:
     app: harbor
     component: ingress
   name: harbor-ingress
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   rules:
   - host: {{ .RegistryIngressURL}}

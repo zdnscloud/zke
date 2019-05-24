@@ -15,14 +15,14 @@ const CoreDNSTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-network
+  name: kube-system
 ---
 {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: coredns
-  namespace: kube-network
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -57,14 +57,14 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: coredns
-  namespace: kube-network
+  namespace: kube-system
 {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: coredns
-  namespace: kube-network
+  namespace: kube-system
 data:
   Corefile: |
     .:53 {
@@ -95,7 +95,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: coredns
-  namespace: kube-network
+  namespace: kube-system
   labels:
     k8s-app: kube-dns
     kubernetes.io/name: "CoreDNS"
@@ -178,7 +178,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kube-dns
-  namespace: kube-network
+  namespace: kube-system
   annotations:
     prometheus.io/port: "9153"
     prometheus.io/scrape: "true"

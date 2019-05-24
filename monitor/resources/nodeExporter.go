@@ -4,13 +4,13 @@ const NodeExporterTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-monitor
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-node-exporter
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 ---
 apiVersion: apps/v1beta2
 kind: DaemonSet
@@ -20,7 +20,7 @@ metadata:
     component: node-exporter
     release: prometheus
   name: prometheus-node-exporter
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 spec:
   selector:
     matchLabels:
@@ -105,7 +105,7 @@ metadata:
     component: node-exporter
     release: prometheus
   name: prometheus-node-exporter
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - name: metrics

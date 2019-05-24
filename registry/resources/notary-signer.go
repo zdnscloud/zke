@@ -4,7 +4,7 @@ const NotarySignerTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-registry
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -16,7 +16,7 @@ metadata:
     app: harbor
     component: notary-signer
   name: harbor-notary-signer
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -73,7 +73,7 @@ metadata:
     app: harbor
     component: notary-signer
   name: harbor-notary-signer
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - port: 7899

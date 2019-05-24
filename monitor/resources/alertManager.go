@@ -4,13 +4,13 @@ const AlertManagerTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-monitor
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-alertmanager
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -20,7 +20,7 @@ metadata:
     component: alertmanager
     release: prometheus
   name: prometheus-alertmanager
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 data:
   alertmanager.yml: |
     global: null
@@ -36,7 +36,7 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: prometheus-alertmanager
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -120,7 +120,7 @@ metadata:
     component: alertmanager
     release: prometheus
   name: prometheus-alertmanager
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 spec:
   externalTrafficPolicy: Cluster
   ports:
@@ -145,7 +145,7 @@ metadata:
     component: alertmanager
     release: prometheus
   name: prometheus-alertmanager
-  namespace: kube-monitor
+  namespace: {{ .DeployNamespace }}
 spec:
   rules:
   - host: {{ .PrometheusAlertManagerIngressEndpoint }}

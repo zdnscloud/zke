@@ -85,18 +85,6 @@ var (
 			StorageCephProvisioner:     m("quay.io/k8scsi/csi-provisioner:v1.0.1"),
 			StorageCephDriverRegistrar: m("quay.io/k8scsi/csi-node-driver-registrar:v1.0.2"),
 			StorageCephFsCSI:           m("quay.io/cephcsi/cephfsplugin:v1.0.0"),
-			HarborAdminserver:          ("goharbor/harbor-adminserver:v1.7.5"),
-			HarborChartmuseum:          ("goharbor/chartmuseum-photon:v0.8.1-v1.7.5"),
-			HarborClair:                ("goharbor/clair-photon:v2.0.8-v1.7.5"),
-			HarborCore:                 ("goharbor/harbor-core:v1.7.5"),
-			HarborDatabase:             ("goharbor/harbor-db:v1.7.5"),
-			HarborJobservice:           ("goharbor/harbor-jobservice:v1.7.5"),
-			HarborNotaryServer:         ("goharbor/notary-server-photon:v0.6.1-v1.7.5"),
-			HarborNotarySigner:         ("goharbor/notary-signer-photon:v0.6.1-v1.7.5"),
-			HarborPortal:               ("goharbor/harbor-portal:v1.7.5"),
-			HarborRedis:                ("goharbor/redis-photon:v1.7.5"),
-			HarborRegistry:             ("goharbor/registry-photon:v2.6.2-v1.7.5"),
-			HarborRegistryctl:          ("goharbor/harbor-registryctl:v1.7.5"),
 		},
 	}
 )

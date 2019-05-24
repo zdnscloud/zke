@@ -44,6 +44,8 @@ const (
 	CNIImage         = "CNIImage"
 	NodeImage        = "NodeImage"
 	ControllersImage = "ControllersImage"
+
+	DeployNamespace = "kube-system"
 )
 
 func DeployNetwork(ctx context.Context, c *core.Cluster) error {
@@ -86,8 +88,9 @@ func doFlannelDeploy(ctx context.Context, c *core.Cluster) error {
 			"Type":          c.Network.Options[FlannelBackendType],
 			"Directrouting": c.Network.Options[FlannelBackendDirectrouting],
 		},
-		RBACConfig:     c.Authorization.Mode,
-		ClusterVersion: core.GetTagMajorVersion(c.Version),
+		RBACConfig:        c.Authorization.Mode,
+		ClusterVersion:    core.GetTagMajorVersion(c.Version),
+		"DeployNamespace": DeployNamespace,
 	}
 	//pluginYaml, err := templates.GetManifest(flannelConfig, FlannelNetworkPlugin)
 	pluginYaml, err := templates.CompileTemplateFromMap(flannel.FlannelTemplate, flannelConfig)
@@ -100,13 +103,14 @@ func doFlannelDeploy(ctx context.Context, c *core.Cluster) error {
 func doCalicoDeploy(ctx context.Context, c *core.Cluster) error {
 	clientConfig := pki.GetConfigPath(pki.KubeNodeCertName)
 	calicoConfig := map[string]interface{}{
-		KubeCfg:       clientConfig,
-		ClusterCIDR:   c.ClusterCIDR,
-		CNIImage:      c.SystemImages.CalicoCNI,
-		NodeImage:     c.SystemImages.CalicoNode,
-		Calicoctl:     c.SystemImages.CalicoCtl,
-		CloudProvider: c.Network.Options[CalicoCloudProvider],
-		RBACConfig:    c.Authorization.Mode,
+		KubeCfg:           clientConfig,
+		ClusterCIDR:       c.ClusterCIDR,
+		CNIImage:          c.SystemImages.CalicoCNI,
+		NodeImage:         c.SystemImages.CalicoNode,
+		Calicoctl:         c.SystemImages.CalicoCtl,
+		CloudProvider:     c.Network.Options[CalicoCloudProvider],
+		RBACConfig:        c.Authorization.Mode,
+		"DeployNamespace": DeployNamespace,
 	}
 
 	var CalicoTemplate string

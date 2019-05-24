@@ -4,7 +4,7 @@ const RegistryTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-registry
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
@@ -28,7 +28,7 @@ metadata:
     app: harbor
     component: registry
   name: harbor-registry
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
@@ -39,7 +39,7 @@ metadata:
     app: harbor
     component: registry
   name: harbor-registry
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 type: Opaque
 ---
 apiVersion: v1
@@ -53,7 +53,7 @@ metadata:
     app: harbor
     component: registry
   name: harbor-registry
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   accessModes:
   - ReadWriteOnce
@@ -74,7 +74,7 @@ metadata:
     app: harbor
     component: registry
   name: harbor-registry
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -224,7 +224,7 @@ metadata:
     app: harbor
     component: registry
   name: harbor-registry
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - name: registry

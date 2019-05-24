@@ -4,7 +4,7 @@ const DatabaseTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-registry
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
@@ -15,7 +15,7 @@ metadata:
     app: harbor
     component: database
   name: harbor-database
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 type: Opaque
 ---
 apiVersion: apps/v1
@@ -26,7 +26,7 @@ metadata:
     app: harbor
     component: database
   name: harbor-database
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   podManagementPolicy: OrderedReady
   replicas: 1
@@ -120,7 +120,7 @@ metadata:
     app: harbor
     component: database
   name: harbor-database
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - port: 5432

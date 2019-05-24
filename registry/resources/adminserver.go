@@ -4,7 +4,7 @@ const AdminServerTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-registry
+  name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
@@ -53,7 +53,7 @@ metadata:
     app: harbor
     component: adminserver
   name: harbor-adminserver
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
@@ -67,7 +67,7 @@ metadata:
     app: harbor
     component: adminserver
   name: harbor-adminserver
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 type: Opaque
 ---
 apiVersion: extensions/v1beta1
@@ -80,7 +80,7 @@ metadata:
     app: harbor
     component: adminserver
   name: harbor-adminserver
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -180,7 +180,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: harbor-adminserver
-  namespace: kube-registry
+  namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - port: 80

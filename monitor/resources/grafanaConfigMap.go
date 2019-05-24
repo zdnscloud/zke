@@ -4,7 +4,7 @@ const GrafanaConfigMapYaml = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-monitor
+  name: zcloud
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -13,7 +13,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana-resources
-  namespace: kube-monitor
+  namespace: zcloud
 data:
   nodes-dashboard.json: |-
     {
@@ -1287,7 +1287,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: kube-monitor
+  namespace: zcloud
 data:
   kubernetes-capacity-planning-dashboard.json: |-
     {

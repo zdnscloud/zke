@@ -4,7 +4,7 @@ const FlannelTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-network
+  name: {{ .DeployNamespace }}
 {{- if eq .RBACConfig "rbac"}}
 ---
 kind: ClusterRoleBinding
@@ -18,7 +18,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: flannel
-  namespace: kube-network
+  namespace: {{ .DeployNamespace }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -50,7 +50,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: kube-flannel-cfg
-  namespace: "kube-network"
+  namespace: "{{ .DeployNamespace }}"
   labels:
     tier: node
     app: flannel
@@ -92,7 +92,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: kube-flannel
-  namespace: "kube-network"
+  namespace: "{{ .DeployNamespace }}"
   labels:
     tier: node
     k8s-app: flannel
@@ -192,4 +192,4 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: flannel
-  namespace: kube-network`
+  namespace: {{ .DeployNamespace }}`
