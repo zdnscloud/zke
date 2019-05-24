@@ -4,7 +4,7 @@ const GrafanaConfigMapYaml = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-monitoring
+  name: kube-monitor
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -13,7 +13,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana-resources
-  namespace: kube-monitoring
+  namespace: kube-monitor
 data:
   nodes-dashboard.json: |-
     {

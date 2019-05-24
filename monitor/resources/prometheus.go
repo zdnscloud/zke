@@ -4,7 +4,7 @@ const PrometheusTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-monitoring
+  name: kube-monitor
 ---
 apiVersion: v1
 items:
@@ -12,12 +12,12 @@ items:
   kind: ServiceAccount
   metadata:
     name: prometheus-pushgateway
-    namespace: kube-monitoring
+    namespace: kube-monitor
 - apiVersion: v1
   kind: ServiceAccount
   metadata:
     name: prometheus-server
-    namespace: kube-monitoring
+    namespace: kube-monitor
 kind: List
 metadata:
   resourceVersion: ""
@@ -83,7 +83,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-server
-  namespace: kube-monitoring
+  namespace: kube-monitor
 {{- end}}
 ---
 apiVersion: v1
@@ -94,7 +94,7 @@ metadata:
     component: server
     release: prometheus
   name: prometheus-server
-  namespace: kube-monitoring
+  namespace: kube-monitor
 data:
   alerts: |
     {}
@@ -270,7 +270,7 @@ data:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         relabel_configs:
         - source_labels: [__meta_kubernetes_namespace]
-          regex: kube-monitoring
+          regex: kube-monitor
           action: keep
         - source_labels: [__meta_kubernetes_pod_label_app]
           regex: prometheus
@@ -318,7 +318,7 @@ metadata:
     component: server
     release: prometheus
   name: prometheus-server
-  namespace: kube-monitoring
+  namespace: kube-monitor
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -360,7 +360,7 @@ spec:
         - --web.console.libraries=/etc/prometheus/console_libraries
         - --web.console.templates=/etc/prometheus/consoles
         - --web.enable-lifecycle
-        image: {{ .PermetheusServerImage }}
+        image: {{ .PrometheusServerImage }}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -433,7 +433,7 @@ metadata:
     component: server
     release: prometheus
   name: prometheus-server
-  namespace: kube-monitoring
+  namespace: kube-monitor
 spec:
   externalTrafficPolicy: Cluster
   ports:

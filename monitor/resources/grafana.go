@@ -4,13 +4,13 @@ const GrafanaTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-monitoring
+  name: kube-monitor
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-grafana
-  namespace: kube-monitoring
+  namespace: kube-monitor
 ---
 {{- if eq .RBACConfig "rbac"}}
 ---
@@ -46,7 +46,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-grafana
-  namespace: kube-monitoring
+  namespace: kube-monitor
 {{- end}}
 ---
 apiVersion: v1
@@ -59,14 +59,14 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: kube-monitoring
+  namespace: kube-monitor
 type: Opaque
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: prometheus-grafana
-  namespace: kube-monitoring
+  namespace: kube-monitor
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -192,7 +192,7 @@ metadata:
     app: prometheus-grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: kube-monitoring
+  namespace: kube-monitor
 spec:
   externalTrafficPolicy: Cluster
   ports:
@@ -214,7 +214,7 @@ metadata:
     app: grafana
     release: prometheus
   name: prometheus-grafana
-  namespace: kube-monitoring
+  namespace: kube-monitor
 spec:
   rules:
   - host: {{ .GrafanaIngressEndpoint }}

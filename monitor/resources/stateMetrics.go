@@ -4,13 +4,13 @@ const StateMetricsTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-monitoring
+  name: kube-monitor
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus-kube-state-metrics
-  namespace: kube-monitoring
+  namespace: kube-monitor
 ---
 {{- if eq .RBACConfig "rbac"}}
 ---
@@ -90,7 +90,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus-kube-state-metrics
-  namespace: kube-monitoring
+  namespace: kube-monitor
 {{- end}}
 ---
 apiVersion: apps/v1beta2
@@ -101,7 +101,7 @@ metadata:
     component: kube-state-metrics
     release: prometheus
   name: prometheus-kube-state-metrics
-  namespace: kube-monitoring
+  namespace: kube-monitor
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -153,7 +153,7 @@ metadata:
     component: kube-state-metrics
     release: prometheus
   name: prometheus-kube-state-metrics
-  namespace: kube-monitoring
+  namespace: kube-monitor
 spec:
   ports:
   - name: http
