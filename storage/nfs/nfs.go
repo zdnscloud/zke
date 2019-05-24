@@ -79,7 +79,7 @@ func doPartition(ctx context.Context, c *core.Cluster, name string) error {
 }
 
 func doNFSInit(ctx context.Context, c *core.Cluster) error {
-	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
+	config, err := config.GetConfigFromFile(c.LocalKubeConfigPath)
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
 		return err

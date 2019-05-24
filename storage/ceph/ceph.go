@@ -174,7 +174,7 @@ func doWaitReady(ctx context.Context, c *core.Cluster) error {
 }
 
 func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error) {
-	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
+	config, err := config.GetConfigFromFile(c.LocalKubeConfigPath)
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
 		return "", "", err
@@ -207,7 +207,7 @@ func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error)
 }
 
 func checkCephReady(ctx context.Context, c *core.Cluster) bool {
-	config, err := config.GetConfigFromFile("kube_config_cluster.yml")
+	config, err := config.GetConfigFromFile(c.LocalKubeConfigPath)
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
 		return false
