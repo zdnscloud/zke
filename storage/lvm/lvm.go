@@ -101,8 +101,10 @@ func checkLvmdReady(ctx context.Context, c *core.Cluster) bool {
 			if h.Host == n.Address || h.Host == n.HostnameOverride {
 				addr := n.Address + ":" + LVMDPort
 				if _, err := net.Dial(LVMDProtocol, addr); err != nil {
+					log.Infof(ctx, "[storage] lvmd on %s not ready! Please check", n.Address)
 					return false
 				}
+				log.Infof(ctx, "[storage] lvmd on %s has ready", n.Address)
 			}
 		}
 	}

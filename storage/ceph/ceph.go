@@ -158,10 +158,14 @@ func doCephFsStorageDeploy(ctx context.Context, c *core.Cluster) error {
 }
 
 func doWaitReady(ctx context.Context, c *core.Cluster) error {
-	log.Infof(ctx, "[storage] Waiting for ceph cluster ready")
 	var ready bool
+	var num int
+	for _, v := range c.Storage.Ceph {
+		num += len(v.Devs)
+	}
+	log.Infof(ctx, "[storage] Waiting for ceph cluster ready, it need %d osd proc to runing.", num)
 	for i := 0; i < CephCheckTimes; i++ {
-		if checkCephReady(ctx, c) {
+		if checkCephReady(ctx, c, num) {
 			ready = true
 			break
 		}
@@ -206,7 +210,7 @@ func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error)
 	return monitors, secret, nil
 }
 
-func checkCephReady(ctx context.Context, c *core.Cluster) bool {
+func checkCephReady(ctx context.Context, c *core.Cluster, num int) bool {
 	config, err := config.GetConfigFromFile(c.LocalKubeConfigPath)
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
@@ -216,10 +220,6 @@ func checkCephReady(ctx context.Context, c *core.Cluster) bool {
 	err = cli.List(context.TODO(), &client.ListOptions{Namespace: StorageNamespace}, &pods)
 	if err != nil {
 		return false
-	}
-	var num int
-	for _, v := range c.Storage.Ceph {
-		num += len(v.Devs)
 	}
 	for i := 0; i < num; i++ {
 		name := CephOsdPodName + strconv.Itoa(i)
@@ -233,6 +233,7 @@ func checkCephReady(ctx context.Context, c *core.Cluster) bool {
 		if pod.Status.Phase != "Running" {
 			return false
 		}
+		log.Infof(ctx, "[storage] %d osd proc has runing.", i+1)
 	}
 	return true
 }
