@@ -75,7 +75,7 @@ var (
 			StorageLvmCSI:              m("zdnscloud/lvmcsi:v0.4"),
 			StorageLvmd:                m("zdnscloud/lvmd:v0.3"),
 			StorageNFSProvisioner:      m("quay.io/kubernetes_incubator/nfs-provisioner:v2.2.1-k8s1.12"),
-			StorageNFSInit:             m("zdnscloud/nfs-init:v0.1"),
+			StorageNFSInit:             m("zdnscloud/nfs-init:v0.3"),
 			ClusterAgent:               m("zdnscloud/cluster-agent:v1.0"),
 			NodeAgent:                  m("zdnscloud/node-agent:v1.0"),
 			StorageCephOperator:        m("rook/ceph:master"),

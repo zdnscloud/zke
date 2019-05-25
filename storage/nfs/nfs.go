@@ -9,8 +9,6 @@ import (
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/storage/common"
-	"github.com/zdnscloud/zke/types"
-	"time"
 )
 
 const (
@@ -19,6 +17,7 @@ const (
 	StorageClassName  = "nfs"
 	StorageHostLabels = "storage.zcloud.cn/storagetype"
 	CheckInterval     = 6
+	NFS_DIR           = "/var/lib/singlecloud/nfs-export"
 	NFSCheckTimes     = 10
 )
 
@@ -47,6 +46,7 @@ func doNFSStorageDeploy(ctx context.Context, c *core.Cluster) error {
 		"LabelValue":                 StorageType,
 		"StorageClassName":           StorageClassName,
 		"StorageNamespace":           StorageNamespace,
+		"NFS_DIR":                    NFS_DIR,
 	}
 	yaml, err := templates.CompileTemplateFromMap(NFSStorageTemplate, cfg)
 	if err != nil {
@@ -66,6 +66,7 @@ func doPartition(ctx context.Context, c *core.Cluster, name string) error {
 		"LabelKey":            StorageHostLabels,
 		"LabelValue":          StorageType,
 		"StorageNamespace":    StorageNamespace,
+		"NFS_DIR":             NFS_DIR,
 	}
 	yaml, err := templates.CompileTemplateFromMap(NFSInitTemplate, cfg)
 	if err != nil {
@@ -90,45 +91,6 @@ func doNFSInit(ctx context.Context, c *core.Cluster) error {
 			if err != nil {
 				return err
 			}
-			err = doNfsMount(ctx, c, h.Host)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func doNfsMount(ctx context.Context, c *core.Cluster, name string) error {
-	var node types.ZKEConfigNode
-	for _, n := range c.Nodes {
-		if name == n.Address || name == n.HostnameOverride {
-			node = n
-		}
-	}
-	client, err := common.MakeSSHClient(node)
-	if err != nil {
-		return err
-	}
-
-	cmd := `ls /dev/mapper|grep -E nfs-data -q;if [ $? -eq 0 ];then echo true;else echo false;fi`
-	var ready bool
-	for i := 0; i < NFSCheckTimes; i++ {
-		cmdout, _, err := common.GetSSHCmdOut(client, cmd)
-		if err != nil {
-			return err
-		}
-		if cmdout == "true" {
-			ready = true
-			break
-		}
-		time.Sleep(time.Duration(CheckInterval) * time.Second)
-	}
-	if ready {
-		cmd := `sudo mkdir /var/lib/singlecloud/nfs-export -p;sleep 5;sudo mount /dev/mapper/nfs-data /var/lib/singlecloud/nfs-export;`
-		cmdout, cmderr, err := common.GetSSHCmdOut(client, cmd)
-		if err != nil || cmdout != "" || cmderr != "" {
-			return errors.New("mount host path for nfs failed!")
 		}
 	}
 	return nil

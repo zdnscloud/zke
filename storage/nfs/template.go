@@ -68,6 +68,8 @@ spec:
             value: "nfs"
           - name: LVM_NAME
             value: "data"
+          - name: NFS_DIR
+            value: {{.NFS_DIR}}
           - name: NodeName
             valueFrom:
               fieldRef: 
@@ -80,10 +82,16 @@ spec:
         volumeMounts:
           - mountPath: /host/dev
             name: host-dev
+          - mountPath: /var/lib/singlecloud
+            name: nfs-dir
+            mountPropagation: Bidirectional
       volumes:
         - name: host-dev
           hostPath:
-            path: /dev`
+            path: /dev
+        - name: nfs-dir
+          hostPath:
+            path: /var/lib/singlecloud`
 
 const NFSStorageTemplate = `
 apiVersion: v1
@@ -241,7 +249,7 @@ spec:
       volumes:
       - name: nfs-data
         hostPath:
-          path: /var/lib/singlecloud/nfs-export
+          path: {{.NFS_DIR}}
 ---
 kind: StorageClass
 apiVersion: storage.k8s.io/v1

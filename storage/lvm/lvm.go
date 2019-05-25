@@ -16,7 +16,7 @@ const (
 	StorageClassName  = "lvm"
 	StorageHostLabels = "storage.zcloud.cn/storagetype"
 	CheckInterval     = 6
-	LVMDCheckTimes    = 10
+	LVMDCheckTimes    = 50
 	LVMDPort          = "1736"
 	LVMDProtocol      = "tcp"
 )
