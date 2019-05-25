@@ -233,8 +233,8 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Services = *serviceConfig
-	cluster.Monitor.GrafanaIngressEndpoint = "grafana.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
-	cluster.Monitor.PrometheusAlertManagerIngressEndpoint = "alertmanager.kube-monitoring." + cluster.Services.Kubelet.ClusterDomain
+	cluster.Monitor.GrafanaIngressEndpoint = "grafana.zcloud." + cluster.Services.Kubelet.ClusterDomain
+	cluster.Monitor.PrometheusAlertManagerIngressEndpoint = "alertmanager.zcloud." + cluster.Services.Kubelet.ClusterDomain
 	registryConfig, err := getRegistryConfig(reader, &cluster)
 	if err != nil {
 		return err
@@ -555,12 +555,12 @@ func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConf
 			return nil, err
 		}
 		registryCfg.RegistryDiskCapacity = registryDiskCapacity
-		registryIngressURL, err := getConfig(reader, fmt.Sprintf("Cluster registry ingress url"), "registry.kube-registry."+c.Services.Kubelet.ClusterDomain)
+		registryIngressURL, err := getConfig(reader, fmt.Sprintf("Cluster registry ingress url"), "registry.zcloud."+c.Services.Kubelet.ClusterDomain)
 		if err != nil {
 			return nil, err
 		}
 		registryCfg.RegistryIngressURL = registryIngressURL
-		registryCfg.NotaryIngressURL = "notary.kube-registry." + c.Services.Kubelet.ClusterDomain
+		registryCfg.NotaryIngressURL = "notary.zcloud." + c.Services.Kubelet.ClusterDomain
 		registryCfg.RedisDiskCapacity = core.DefaultRegistryRedisDiskCapacity
 		registryCfg.DatabaseDiskCapacity = core.DefaultRegistryDatabaseDiskCapacity
 		registryCfg.JobserviceDiskCapacity = core.DefaultRegistryJobserviceDiskCapacity
