@@ -142,6 +142,7 @@ type ZKESystemImages struct {
 	StorageCephProvisioner     string `yaml:"storage_ceph_provisioner" json:"storage_ceph_provisioner,omitempty"`
 	StorageCephDriverRegistrar string `yaml:"storage_ceph_driver_registrar" json:"storage_ceph_driver_registrar,omitempty"`
 	StorageCephFsCSI           string `yaml:"storage_ceph_fscsi" json:"storage_ceph_fscsi,omitempty"`
+	ZKERemover                 string `yaml:"zke_remover" json:zke_remover`
 }
 
 type ZKEConfigNode struct {

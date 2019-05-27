@@ -85,6 +85,7 @@ var (
 			StorageCephProvisioner:     m("quay.io/k8scsi/csi-provisioner:v1.0.1"),
 			StorageCephDriverRegistrar: m("quay.io/k8scsi/csi-node-driver-registrar:v1.0.2"),
 			StorageCephFsCSI:           m("quay.io/cephcsi/cephfsplugin:v1.0.0"),
+			ZKERemover:                 m("zdnscloud/zke-remove:v0.9"),
 		},
 	}
 )

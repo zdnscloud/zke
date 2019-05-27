@@ -56,8 +56,6 @@ const (
 	CleanerContainerName    = "kube-cleaner"
 	LogCleanerContainerName = "zke-log-cleaner"
 	ZKELogsPath             = "/var/lib/zdnscloud/zke/log"
-
-	RemoveImage = "zdnscloud/zke-remove:v0.9"
 )
 
 func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool, storageMap map[string][]string) error {
@@ -150,7 +148,7 @@ func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage 
 	if err := CleanHeritageContainers(ctx, h); err != nil {
 		return err
 	}
-	if err := CleanHeritageStorge(ctx, h, RemoveImage, storageMap, prsMap); err != nil {
+	if err := CleanHeritageStorge(ctx, h, types.AllK8sVersions["v1.13.1"].ZKERemover, storageMap, prsMap); err != nil {
 		return err
 	}
 
