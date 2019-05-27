@@ -22,7 +22,7 @@ func (c *Cluster) ClusterRemove(ctx context.Context) error {
 	return nil
 }
 
-func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
+func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool, storageMap map[string][]string) error {
 
 	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts)
 
@@ -33,7 +33,7 @@ func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageH
 			var errList []error
 			for host := range hostsQueue {
 				runHost := host.(*hosts.Host)
-				if err := runHost.CleanUpAll(ctx, cleanerImage, prsMap, externalEtcd); err != nil {
+				if err := runHost.CleanUpAll(ctx, cleanerImage, prsMap, externalEtcd, storageMap); err != nil {
 					errList = append(errList, err)
 				}
 			}
@@ -65,8 +65,10 @@ func (c *Cluster) CleanupNodes(ctx context.Context) error {
 		}
 	}
 
+	storageMap := c.getStorageConfigMap()
+
 	// Clean up all hosts
-	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap, externalEtcd)
+	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap, externalEtcd, storageMap)
 }
 
 func (c *Cluster) CleanupFiles(ctx context.Context) error {
@@ -98,4 +100,18 @@ func (c *Cluster) RemoveOldNodes(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (c *Cluster) getStorageConfigMap() map[string][]string {
+	storageConfigMap := map[string][]string{}
+	for _, i := range c.Storage.Lvm {
+		storageConfigMap[i.Host] = i.Devs
+	}
+	for _, i := range c.Storage.Nfs {
+		storageConfigMap[i.Host] = i.Devs
+	}
+	for _, i := range c.Storage.Ceph {
+		storageConfigMap[i.Host] = i.Devs
+	}
+	return storageConfigMap
 }
