@@ -14,26 +14,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 )
-
-const CleanHeritageCMD = `
-	sudo docker rm -f $(docker ps -a -q);
-	sudo umount -l $(sudo mount | grep '/var/lib/kubelet/pods' | awk '{print $3}');
-	for i in $(ip r |grep -E "10.42."|awk '{print $1}');do sudo ip route del $i;done ;
-	sudo docker volume prune -f;
-	sudo ip link delete flannel.1;
-	sudo ip link delete cni0;
-	sudo umount /var/lib/singlecloud/nfs-export;
-	sudo rm -fr /var/lib/singlecloud/nfs-export;
-	for i in $(sudo dmsetup ls | grep -E "ceph-|k8s-pvc-|nfs-");do sudo dmsetup remove $i;done ;
-	sudo rm -rf /dev/ceph-* /dev/mapper/ceph-*
-	sudo rm -rf /dev/nfs-*  /dev/mapper/nfs-*
-	sudo rm -fr /dev/k8s    /dev/mapper/k8s-pvc--*
-	sudo rm -rf /var/lib/{kubelet,rancher} /var/run/flannel/subnet.env /opt/cni/bin/ /etc/cni/net.d/ /var/run/flannel/ /var/lib/rook/;
-	`
 
 type Host struct {
 	types.ZKEConfigNode
@@ -60,6 +43,10 @@ type Host struct {
 
 const (
 	ToCleanEtcdDir          = "/var/lib/etcd/"
+	ToCleanKubeletDir       = "/var/lib/kubelet"
+	ToCleanRookDir          = "/var/lib/rook"
+	ToCleanZkeDir           = "/var/lib/zdnscloud"
+	ToCleanFlannelDir       = "/var/run/flannel/"
 	ToCleanSSLDir           = "/etc/kubernetes/"
 	ToCleanCNIConf          = "/etc/cni/"
 	ToCleanCNIBin           = "/opt/cni/"
@@ -69,15 +56,21 @@ const (
 	CleanerContainerName    = "kube-cleaner"
 	LogCleanerContainerName = "zke-log-cleaner"
 	ZKELogsPath             = "/var/lib/zdnscloud/zke/log"
+
+	RemoveImage = "zdnscloud/zke-remove:v0.9"
 )
 
-func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
+func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool, storageMap map[string][]string) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
 	toCleanPaths := []string{
 		path.Join(h.PrefixPath, ToCleanSSLDir),
 		ToCleanCNIConf,
 		ToCleanCNIBin,
 		ToCleanCalicoRun,
+		ToCleanKubeletDir,
+		ToCleanRookDir,
+		ToCleanZkeDir,
+		ToCleanFlannelDir,
 		path.Join(h.PrefixPath, ToCleanTempCertPath),
 		path.Join(h.PrefixPath, ToCleanCNILib),
 	}
@@ -85,7 +78,7 @@ func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[s
 	if !externalEtcd {
 		toCleanPaths = append(toCleanPaths, path.Join(h.PrefixPath, ToCleanEtcdDir))
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, storageMap)
 }
 
 func (h *Host) CleanUpWorkerHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
@@ -100,7 +93,7 @@ func (h *Host) CleanUpWorkerHost(ctx context.Context, cleanerImage string, prsMa
 		ToCleanCalicoRun,
 		path.Join(h.PrefixPath, ToCleanCNILib),
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, map[string][]string{})
 }
 
 func (h *Host) CleanUpControlHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
@@ -115,7 +108,7 @@ func (h *Host) CleanUpControlHost(ctx context.Context, cleanerImage string, prsM
 		ToCleanCalicoRun,
 		path.Join(h.PrefixPath, ToCleanCNILib),
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, map[string][]string{})
 }
 
 func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
@@ -129,10 +122,10 @@ func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap 
 			path.Join(h.PrefixPath, ToCleanEtcdDir),
 		}
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, map[string][]string{})
 }
 
-func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
+func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]types.PrivateRegistry, storageMap map[string][]string) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
 	imageCfg, hostCfg := buildCleanerConfig(h, toCleanPaths, cleanerImage)
 	log.Infof(ctx, "[hosts] Running cleaner container on host [%s]", h.Address)
@@ -153,9 +146,14 @@ func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage 
 		return err
 	}
 	log.Infof(ctx, "[hosts] Removing cluster container and generated files on host [%s]", h.Address)
-	if err := DoCleanHeritage(ctx, h); err != nil {
+
+	if err := CleanHeritageContainers(ctx, h); err != nil {
 		return err
 	}
+	if err := CleanHeritageStorge(ctx, h, RemoveImage, storageMap, prsMap); err != nil {
+		return err
+	}
+
 	log.Infof(ctx, "[hosts] Successfully cleaned up host [%s]", h.Address)
 	return nil
 }
@@ -343,31 +341,6 @@ func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap
 		return err
 	}
 	logrus.Debugf("[cleanup] Successfully cleaned up log links on host [%s]", host.Address)
-	return nil
-}
-
-func DoCleanHeritage(ctx context.Context, host *Host) error {
-	d, err := NewDialer(host, "docker")
-	if err != nil {
-		return err
-	}
-	cfg, err := GetSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
-	if err != nil {
-		return err
-	}
-	addr := host.Address + ":22"
-	client, err := ssh.Dial("tcp", addr, cfg)
-	if err != nil {
-		return err
-	}
-	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-	// session.Stdout = os.Stdout
-	// session.Stderr = os.Stderr
-	session.Run(CleanHeritageCMD)
 	return nil
 }
 
