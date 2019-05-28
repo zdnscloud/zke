@@ -38,11 +38,7 @@ func Prepara(ctx context.Context, c *core.Cluster, cfg []types.Deviceconf, stora
 		if err = updateNode(cli, h.Host, storagetype, h.Devs); err != nil {
 			return err
 		}
-		exist, err := checkStorageClassExist(cli, classname)
-		if err != nil {
-			return err
-		}
-		if exist {
+		if err = checkStorageClassExist(cli, classname); err == nil {
 			continue
 		}
 		if err = checkBlocks(ctx, c, h.Host, h.Devs); err != nil {
@@ -58,24 +54,14 @@ func updateNode(cli client.Client, hostname string, storagetype string, devs []s
 	if err != nil {
 		return err
 	}
-	annotations := strings.Replace(strings.Trim(fmt.Sprint(devs), "[]"), " ", ",", -1)
 	node.Labels[StorageHostLabels] = storagetype
-	node.Annotations[StorageBlocksAnnotations] = annotations
+	node.Annotations[StorageBlocksAnnotations] = strings.Replace(strings.Trim(fmt.Sprint(devs), "[]"), " ", ",", -1)
 	return cli.Update(context.TODO(), &node)
 }
 
-func checkStorageClassExist(cli client.Client, classname string) (bool, error) {
-	scs := storagev1.StorageClassList{}
-	err := cli.List(context.TODO(), nil, &scs)
-	if err != nil {
-		return false, err
-	}
-	for _, s := range scs.Items {
-		if s.Name == classname {
-			return true, nil
-		}
-	}
-	return false, nil
+func checkStorageClassExist(cli client.Client, classname string) error {
+	sc := storagev1.StorageClass{}
+	return cli.Get(context.TODO(), k8stypes.NamespacedName{"", classname}, &sc)
 }
 
 func checkBlocks(ctx context.Context, c *core.Cluster, name string, devs []string) error {

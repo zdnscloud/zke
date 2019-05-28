@@ -55,7 +55,7 @@ func doWaitReady(ctx context.Context, c *core.Cluster) error {
 		}
 		time.Sleep(time.Duration(CheckInterval) * time.Second)
 	}
-	return errors.New("some lvmd on node has not ready")
+	return errors.New("Timeout. Some lvmd on node has not ready")
 }
 
 func checkLvmdReady(ctx context.Context, c *core.Cluster) bool {
@@ -64,7 +64,7 @@ func checkLvmdReady(ctx context.Context, c *core.Cluster) bool {
 			if h.Host == n.Address || h.Host == n.HostnameOverride {
 				addr := n.Address + ":" + LVMDPort
 				if _, err := net.Dial(LVMDProtocol, addr); err != nil {
-					log.Infof(ctx, "[storage] lvmd on %s not ready! Please check", n.Address)
+					log.Infof(ctx, "[storage] lvmd on %s not ready, waiting...", n.Address)
 					return false
 				}
 				log.Infof(ctx, "[storage] lvmd on %s has ready", n.Address)

@@ -12,6 +12,7 @@ import (
 	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/storage/common"
 	corev1 "k8s.io/api/core/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"strconv"
 	"strings"
 	"time"
@@ -27,10 +28,7 @@ func doCephCommonDeploy(ctx context.Context, c *core.Cluster) error {
 	if err != nil {
 		return err
 	}
-	if err := c.DoAddonDeploy(ctx, yaml, "zke-storage-ceph-common", true); err != nil {
-		return err
-	}
-	return nil
+	return c.DoAddonDeploy(ctx, yaml, "zke-storage-ceph-common", true)
 }
 
 func doCephClusterDeploy(ctx context.Context, c *core.Cluster) error {
@@ -62,10 +60,7 @@ func doCephClusterDeploy(ctx context.Context, c *core.Cluster) error {
 	if err != nil {
 		return err
 	}
-	if err := c.DoAddonDeploy(ctx, yaml, "zke-storage-ceph-cluster", true); err != nil {
-		return err
-	}
-	return nil
+	return c.DoAddonDeploy(ctx, yaml, "zke-storage-ceph-cluster", true)
 }
 
 func doCephFsDeploy(ctx context.Context, c *core.Cluster) error {
@@ -82,10 +77,7 @@ func doCephFsDeploy(ctx context.Context, c *core.Cluster) error {
 	if err != nil {
 		return err
 	}
-	if err := c.DoAddonDeploy(ctx, yaml, "zke-storage-cephfs", true); err != nil {
-		return err
-	}
-	return nil
+	return c.DoAddonDeploy(ctx, yaml, "zke-storage-cephfs", true)
 }
 
 func doCephFsStorageDeploy(ctx context.Context, c *core.Cluster) error {
@@ -114,30 +106,26 @@ func doCephFsStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	if err != nil {
 		return err
 	}
-	if err := c.DoAddonDeploy(ctx, yaml, "zke-storage-cephfs-csi", true); err != nil {
-		return err
-	}
-	return nil
+	return c.DoAddonDeploy(ctx, yaml, "zke-storage-cephfs-csi", true)
 }
 
 func doWaitReady(ctx context.Context, c *core.Cluster) error {
-	var ready bool
 	var num int
 	for _, v := range c.Storage.Ceph {
 		num += len(v.Devs)
 	}
 	log.Infof(ctx, "[storage] Waiting for ceph cluster ready, it need %d osd proc to runing.", num)
 	for i := 0; i < CephCheckTimes; i++ {
-		if checkCephReady(ctx, c, num) {
-			ready = true
-			break
+		ready, err := checkCephReady(ctx, c, num)
+		if err != nil {
+			return err
+		}
+		if ready {
+			return nil
 		}
 		time.Sleep(time.Duration(CheckInterval) * time.Second)
 	}
-	if !ready {
-		return errors.New("ceph cluster has not ready")
-	}
-	return nil
+	return errors.New("Timeout. Ceph cluster has not ready")
 }
 
 func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error) {
@@ -146,13 +134,15 @@ func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error)
 	if err != nil {
 		return "", "", err
 	}
-	services := corev1.ServiceList{}
-	err = cli.List(context.TODO(), &client.ListOptions{Namespace: common.StorageNamespace}, &services)
+	sec := corev1.Secret{}
+	err = cli.Get(context.TODO(), k8stypes.NamespacedName{common.StorageNamespace, CephSecretName}, &sec)
 	if err != nil {
 		return "", "", err
 	}
-	secrets := corev1.SecretList{}
-	err = cli.List(context.TODO(), &client.ListOptions{Namespace: common.StorageNamespace}, &secrets)
+	secret := base64.StdEncoding.EncodeToString(sec.Data[CephSecretDataName])
+
+	services := corev1.ServiceList{}
+	err = cli.List(context.TODO(), &client.ListOptions{Namespace: common.StorageNamespace}, &services)
 	if err != nil {
 		return "", "", err
 	}
@@ -163,26 +153,20 @@ func getCephMonCfg(ctx context.Context, c *core.Cluster) (string, string, error)
 			addrs = append(addrs, addr)
 		}
 	}
-	var monitors, secret string
-	for _, sc := range secrets.Items {
-		if sc.Name == CephSecretName {
-			secret = base64.StdEncoding.EncodeToString(sc.Data[CephSecretDataName])
-		}
-	}
-	monitors = strings.Replace(strings.Trim(fmt.Sprint(addrs), "[]"), " ", ",", -1)
+	monitors := strings.Replace(strings.Trim(fmt.Sprint(addrs), "[]"), " ", ",", -1)
 	return monitors, secret, nil
 }
 
-func checkCephReady(ctx context.Context, c *core.Cluster, num int) bool {
+func checkCephReady(ctx context.Context, c *core.Cluster, num int) (bool, error) {
 	config, err := config.GetConfigFromFile(c.LocalKubeConfigPath)
 	cli, err := client.New(config, client.Options{})
 	if err != nil {
-		return false
+		return false, err
 	}
 	pods := corev1.PodList{}
 	err = cli.List(context.TODO(), &client.ListOptions{Namespace: common.StorageNamespace}, &pods)
 	if err != nil {
-		return false
+		return false, err
 	}
 	for i := 0; i < num; i++ {
 		name := CephOsdPodName + strconv.Itoa(i)
@@ -194,9 +178,9 @@ func checkCephReady(ctx context.Context, c *core.Cluster, num int) bool {
 			}
 		}
 		if pod.Status.Phase != "Running" {
-			return false
+			return false, nil
 		}
 		log.Infof(ctx, "[storage] %d osd proc has runing.", i+1)
 	}
-	return true
+	return true, nil
 }
