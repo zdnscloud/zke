@@ -2,13 +2,10 @@ package lvm
 
 import (
 	"context"
-	"errors"
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/storage/common"
-	"net"
-	"time"
 )
 
 func doLVMDDeploy(ctx context.Context, c *core.Cluster) error {
@@ -45,32 +42,4 @@ func doLVMStorageDeploy(ctx context.Context, c *core.Cluster) error {
 		return err
 	}
 	return c.DoAddonDeploy(ctx, yaml, "zke-storage-lvm", true)
-}
-
-func doWaitReady(ctx context.Context, c *core.Cluster) error {
-	log.Infof(ctx, "[storage] Waiting for lvmd ready")
-	for i := 0; i < LVMDCheckTimes; i++ {
-		if checkLvmdReady(ctx, c) {
-			return nil
-		}
-		time.Sleep(time.Duration(CheckInterval) * time.Second)
-	}
-	return errors.New("Timeout. Some lvmd on node has not ready")
-}
-
-func checkLvmdReady(ctx context.Context, c *core.Cluster) bool {
-	for _, h := range c.Storage.Lvm {
-		for _, n := range c.Nodes {
-			if h.Host == n.Address || h.Host == n.HostnameOverride {
-				addr := n.Address + ":" + LVMDPort
-				if _, err := net.Dial(LVMDProtocol, addr); err != nil {
-					log.Infof(ctx, "[storage] lvmd on %s not ready, waiting...", n.Address)
-					return false
-				}
-				log.Infof(ctx, "[storage] lvmd on %s has ready", n.Address)
-				break
-			}
-		}
-	}
-	return true
 }

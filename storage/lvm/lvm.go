@@ -27,9 +27,6 @@ func (s *Lvm) Up(ctx context.Context, c *core.Cluster) error {
 	if err := doLVMDDeploy(ctx, c); err != nil {
 		return err
 	}
-	if err := doWaitReady(ctx, c); err != nil {
-		return err
-	}
 	if err := doLVMStorageDeploy(ctx, c); err != nil {
 		return err
 	}

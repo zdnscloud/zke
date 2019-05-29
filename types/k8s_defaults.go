@@ -72,11 +72,11 @@ var (
 			StorageLvmAttacher:         m("quay.io/k8scsi/csi-attacher:v1.0.0"),
 			StorageLvmProvisioner:      m("quay.io/k8scsi/csi-provisioner:v1.0.0"),
 			StorageLvmDriverRegistrar:  m("quay.io/k8scsi/csi-node-driver-registrar:v1.0.2"),
-			StorageLvmCSI:              m("zdnscloud/lvmcsi:v0.4"),
+			StorageLvmCSI:              m("zdnscloud/lvmcsi:v0.5"),
 			StorageLvmd:                m("zdnscloud/lvmd:v0.3"),
 			StorageNFSProvisioner:      m("quay.io/kubernetes_incubator/nfs-provisioner:v2.2.1-k8s1.12"),
 			StorageNFSInit:             m("zdnscloud/nfs-init:v0.5"),
-			ClusterAgent:               m("zdnscloud/cluster-agent:v1.0"),
+			ClusterAgent:               m("zdnscloud/cluster-agent:v1.2"),
 			NodeAgent:                  m("zdnscloud/node-agent:v1.0"),
 			StorageCephOperator:        m("rook/ceph:master"),
 			StorageCephCluster:         m("ceph/ceph:v14.2.1-20190430"),
@@ -85,7 +85,7 @@ var (
 			StorageCephProvisioner:     m("quay.io/k8scsi/csi-provisioner:v1.0.1"),
 			StorageCephDriverRegistrar: m("quay.io/k8scsi/csi-node-driver-registrar:v1.0.2"),
 			StorageCephFsCSI:           m("quay.io/cephcsi/cephfsplugin:v1.0.0"),
-			ZKERemover:                 m("zdnscloud/zke-remove:v0.2"),
+			ZKERemover:                 m("zdnscloud/zke-remove:v0.3"),
 		},
 	}
 )
