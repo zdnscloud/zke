@@ -107,8 +107,8 @@ func (c *Cluster) CheckClusterPorts(ctx context.Context, currentCluster *Cluster
 	if err := c.runServicePortChecks(ctx); err != nil {
 		return err
 	}
-	// Skip kubeapi check if we are using custom k8s dialer or bastion/jump host
-	if c.K8sWrapTransport == nil && len(c.BastionHost.Address) == 0 {
+	// Skip kubeapi check if we are using custom k8s dialer
+	if c.K8sWrapTransport == nil {
 		if err := c.checkKubeAPIPort(ctx); err != nil {
 			return err
 		}

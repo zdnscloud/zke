@@ -44,8 +44,6 @@ type ZcloudKubernetesEngineConfig struct {
 	PrefixPath string `yaml:"prefix_path" json:"prefixPath,omitempty"`
 	// Timeout in seconds for status check on addon deployment jobs
 	AddonJobTimeout int `yaml:"addon_job_timeout" json:"addonJobTimeout,omitempty" norman:"default=30"`
-	// Bastion/Jump Host configuration
-	BastionHost BastionHost `yaml:"bastion_host" json:"bastionHost,omitempty"`
 	// Monitoring Config
 	Monitor MonitorConfig `yaml:"monitoring" json:"monitoring,omitempty"`
 	// RestoreCluster flag
@@ -55,25 +53,6 @@ type ZcloudKubernetesEngineConfig struct {
 	// Harbor Registry Config
 	Registry      RegistryConfig `yaml:"registry" json:"registry,omitempty"`
 	ConfigVersion string         `yaml:"config_version" json:"config_version"`
-}
-
-type BastionHost struct {
-	// Address of Bastion Host
-	Address string `yaml:"address" json:"address,omitempty"`
-	// SSH Port of Bastion Host
-	Port string `yaml:"port" json:"port,omitempty"`
-	// ssh User to Bastion Host
-	User string `yaml:"user" json:"user,omitempty"`
-	// SSH Agent Auth enable
-	SSHAgentAuth bool `yaml:"ssh_agent_auth,omitempty" json:"sshAgentAuth,omitempty"`
-	// SSH Private Key
-	SSHKey string `yaml:"ssh_key" json:"sshKey,omitempty" norman:"type=password"`
-	// SSH Private Key Path
-	SSHKeyPath string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
-	// SSH Certificate
-	SSHCert string `yaml:"ssh_cert" json:"sshCert,omitempty"`
-	// SSH Certificate Path
-	SSHCertPath string `yaml:"ssh_cert_path" json:"sshCertPath,omitempty"`
 }
 
 type PrivateRegistry struct {

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/zdnscloud/zke/pkg/k8s"
-	"github.com/zdnscloud/zke/types"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -28,7 +27,6 @@ type dialer struct {
 	netConn         string
 	dockerSocket    string
 	useSSHAgentAuth bool
-	bastionDialer   *dialer
 }
 
 type DialersOptions struct {
@@ -46,33 +44,6 @@ func GetDialerOptions(d, l DialerFactory, w k8s.WrapTransport) DialersOptions {
 }
 
 func NewDialer(h *Host, kind string) (*dialer, error) {
-	// Check for Bastion host connection
-	var bastionDialer *dialer
-	if len(h.BastionHost.Address) > 0 {
-		bastionDialer = &dialer{
-			sshAddress:      fmt.Sprintf("%s:%s", h.BastionHost.Address, h.BastionHost.Port),
-			username:        h.BastionHost.User,
-			sshKeyString:    h.BastionHost.SSHKey,
-			sshCertString:   h.BastionHost.SSHCert,
-			netConn:         "tcp",
-			useSSHAgentAuth: h.SSHAgentAuth,
-		}
-		if bastionDialer.sshKeyString == "" && !bastionDialer.useSSHAgentAuth {
-			var err error
-			bastionDialer.sshKeyString, err = PrivateKeyPath(h.BastionHost.SSHKeyPath)
-			if err != nil {
-				return nil, err
-			}
-
-			if bastionDialer.sshCertString == "" && len(h.BastionHost.SSHCertPath) > 0 {
-				bastionDialer.sshCertString, err = CertificatePath(h.BastionHost.SSHCertPath)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
-
 	dialer := &dialer{
 		sshAddress:      fmt.Sprintf("%s:%s", h.Address, h.Port),
 		username:        h.User,
@@ -81,7 +52,6 @@ func NewDialer(h *Host, kind string) (*dialer, error) {
 		sshCertString:   h.SSHCert,
 		netConn:         "unix",
 		useSSHAgentAuth: h.SSHAgentAuth,
-		bastionDialer:   bastionDialer,
 	}
 
 	if dialer.sshKeyString == "" && !dialer.useSSHAgentAuth {
@@ -124,11 +94,7 @@ func LocalConnFactory(h *Host) (func(network, address string) (net.Conn, error),
 func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 	var conn *ssh.Client
 	var err error
-	if d.bastionDialer != nil {
-		conn, err = d.getBastionHostTunnelConn()
-	} else {
-		conn, err = d.getSSHTunnelConnection()
-	}
+	conn, err = d.getSSHTunnelConnection()
 	if err != nil {
 		if strings.Contains(err.Error(), "no key found") {
 			return nil, fmt.Errorf("Unable to access node with address [%s] using SSH. Please check if the configured key or specified key file is a valid SSH Private Key. Error: %v", d.sshAddress, err)
@@ -187,67 +153,5 @@ func (h *Host) newHTTPClient(dialerFactory DialerFactory) (*http.Client, error) 
 			IdleConnTimeout:       dockerDialerTimeout,
 			ResponseHeaderTimeout: dockerDialerTimeout,
 		},
-	}, nil
-}
-
-func (d *dialer) getBastionHostTunnelConn() (*ssh.Client, error) {
-	bastionCfg, err := GetSSHConfig(d.bastionDialer.username, d.bastionDialer.sshKeyString, d.bastionDialer.sshCertString, d.bastionDialer.useSSHAgentAuth)
-	if err != nil {
-		return nil, fmt.Errorf("Error configuring SSH for bastion host [%s]: %v", d.bastionDialer.sshAddress, err)
-	}
-	bastionClient, err := ssh.Dial("tcp", d.bastionDialer.sshAddress, bastionCfg)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to connect to the bastion host [%s]: %v", d.bastionDialer.sshAddress, err)
-	}
-	conn, err := bastionClient.Dial(d.bastionDialer.netConn, d.sshAddress)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to connect to the host [%s]: %v", d.sshAddress, err)
-	}
-	cfg, err := GetSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
-	if err != nil {
-		return nil, fmt.Errorf("Error configuring SSH for host [%s]: %v", d.sshAddress, err)
-	}
-	newClientConn, channels, sshRequest, err := ssh.NewClientConn(conn, d.sshAddress, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to establish new ssh client conn [%s]: %v", d.sshAddress, err)
-	}
-	return ssh.NewClient(newClientConn, channels, sshRequest), nil
-}
-
-func BastionHostWrapTransport(bastionHost types.BastionHost) (k8s.WrapTransport, error) {
-
-	bastionDialer := &dialer{
-		sshAddress:      fmt.Sprintf("%s:%s", bastionHost.Address, bastionHost.Port),
-		username:        bastionHost.User,
-		sshKeyString:    bastionHost.SSHKey,
-		sshCertString:   bastionHost.SSHCert,
-		netConn:         "tcp",
-		useSSHAgentAuth: bastionHost.SSHAgentAuth,
-	}
-
-	if bastionDialer.sshKeyString == "" {
-		var err error
-		bastionDialer.sshKeyString, err = PrivateKeyPath(bastionHost.SSHKeyPath)
-		if err != nil {
-			return nil, err
-		}
-
-	}
-
-	if bastionDialer.sshCertString == "" && len(bastionHost.SSHCertPath) > 0 {
-		var err error
-		bastionDialer.sshCertString, err = CertificatePath(bastionHost.SSHCertPath)
-		if err != nil {
-			return nil, err
-		}
-
-	}
-	return func(rt http.RoundTripper) http.RoundTripper {
-		if ht, ok := rt.(*http.Transport); ok {
-			ht.DialContext = nil
-			ht.DialTLS = nil
-			ht.Dial = bastionDialer.Dial
-		}
-		return rt
 	}, nil
 }
