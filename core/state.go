@@ -57,7 +57,7 @@ func (c *Cluster) GetClusterState(ctx context.Context, fullState *FullState) (*C
 	currentCluster.Certificates = fullState.CurrentState.CertificatesBundle
 
 	// resetup dialers
-	dialerOptions := hosts.GetDialerOptions(c.DockerDialerFactory, c.LocalConnDialerFactory, c.K8sWrapTransport)
+	dialerOptions := hosts.GetDialerOptions(c.DockerDialerFactory, c.K8sWrapTransport)
 	if err := currentCluster.SetupDialers(ctx, dialerOptions); err != nil {
 		return nil, err
 	}

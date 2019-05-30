@@ -8,12 +8,12 @@ import (
 	"github.com/zdnscloud/zke/types"
 )
 
-func runScheduler(ctx context.Context, host *hosts.Host, df hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, schedulerProcess types.Process, alpineImage string) error {
+func runScheduler(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, schedulerProcess types.Process, alpineImage string) error {
 	imageCfg, hostCfg, healthCheckURL := GetProcessConfig(schedulerProcess)
 	if err := docker.DoRunContainer(ctx, host.DClient, imageCfg, hostCfg, SchedulerContainerName, host.Address, ControlRole, prsMap); err != nil {
 		return err
 	}
-	if err := runHealthcheck(ctx, host, SchedulerContainerName, df, healthCheckURL, nil); err != nil {
+	if err := runHealthcheck(ctx, host, SchedulerContainerName, healthCheckURL, nil); err != nil {
 		return err
 	}
 	return createLogLink(ctx, host, SchedulerContainerName, ControlRole, alpineImage, prsMap)

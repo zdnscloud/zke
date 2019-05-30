@@ -34,7 +34,6 @@ func RunEtcdPlane(
 	ctx context.Context,
 	etcdHosts []*hosts.Host,
 	etcdNodePlanMap map[string]types.ZKEConfigNodePlan,
-	localConnDialerFactory hosts.DialerFactory,
 	prsMap map[string]types.PrivateRegistry,
 	updateWorkersOnly bool,
 	alpineImage string,
@@ -72,7 +71,7 @@ func RunEtcdPlane(
 	var healthy bool
 	for _, host := range etcdHosts {
 		_, _, healthCheckURL := GetProcessConfig(etcdNodePlanMap[host.Address].Processes[EtcdContainerName])
-		if healthy = isEtcdHealthy(ctx, localConnDialerFactory, host, clientCert, clientkey, healthCheckURL); healthy {
+		if healthy = isEtcdHealthy(ctx, host, clientCert, clientkey, healthCheckURL); healthy {
 			break
 		}
 	}
@@ -145,7 +144,7 @@ func RemoveEtcdPlane(ctx context.Context, etcdHosts []*hosts.Host, force bool) e
 	return nil
 }
 
-func AddEtcdMember(ctx context.Context, toAddEtcdHost *hosts.Host, etcdHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte) error {
+func AddEtcdMember(ctx context.Context, toAddEtcdHost *hosts.Host, etcdHosts []*hosts.Host, cert, key []byte) error {
 	log.Infof(ctx, "[add/%s] Adding member [etcd-%s] to etcd cluster", ETCDRole, toAddEtcdHost.HostnameOverride)
 	peerURL := fmt.Sprintf("https://%s:2380", toAddEtcdHost.InternalAddress)
 	added := false
@@ -153,7 +152,7 @@ func AddEtcdMember(ctx context.Context, toAddEtcdHost *hosts.Host, etcdHosts []*
 		if host.Address == toAddEtcdHost.Address {
 			continue
 		}
-		etcdClient, err := getEtcdClient(ctx, host, localConnDialerFactory, cert, key)
+		etcdClient, err := getEtcdClient(ctx, host, cert, key)
 		if err != nil {
 			logrus.Debugf("Failed to create etcd client for host [%s]: %v", host.Address, err)
 			continue
@@ -173,12 +172,12 @@ func AddEtcdMember(ctx context.Context, toAddEtcdHost *hosts.Host, etcdHosts []*
 	return nil
 }
 
-func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte) error {
+func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*hosts.Host, cert, key []byte) error {
 	log.Infof(ctx, "[remove/%s] Removing member [etcd-%s] from etcd cluster", ETCDRole, etcdHost.HostnameOverride)
 	var mID string
 	removed := false
 	for _, host := range etcdHosts {
-		etcdClient, err := getEtcdClient(ctx, host, localConnDialerFactory, cert, key)
+		etcdClient, err := getEtcdClient(ctx, host, cert, key)
 		if err != nil {
 			logrus.Debugf("Failed to create etcd client for host [%s]: %v", host.Address, err)
 			continue
@@ -209,7 +208,7 @@ func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*ho
 	return nil
 }
 
-func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHost *hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte, prsMap map[string]types.PrivateRegistry, etcdNodePlanMap map[string]types.ZKEConfigNodePlan, alpineImage string) error {
+func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHost *hosts.Host, cert, key []byte, prsMap map[string]types.PrivateRegistry, etcdNodePlanMap map[string]types.ZKEConfigNodePlan, alpineImage string) error {
 	imageCfg, hostCfg, _ := GetProcessConfig(etcdNodePlanMap[newHost.Address].Processes[EtcdContainerName])
 	if err := docker.DoRunContainer(ctx, newHost.DClient, imageCfg, hostCfg, EtcdContainerName, newHost.Address, ETCDRole, prsMap); err != nil {
 		return err
@@ -221,7 +220,7 @@ func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHos
 	var healthy bool
 	for _, host := range readyEtcdHosts {
 		_, _, healthCheckURL := GetProcessConfig(etcdNodePlanMap[host.Address].Processes[EtcdContainerName])
-		if healthy = isEtcdHealthy(ctx, localConnDialerFactory, host, cert, key, healthCheckURL); healthy {
+		if healthy = isEtcdHealthy(ctx, host, cert, key, healthCheckURL); healthy {
 			break
 		}
 	}
@@ -231,14 +230,14 @@ func ReloadEtcdCluster(ctx context.Context, readyEtcdHosts []*hosts.Host, newHos
 	return nil
 }
 
-func IsEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte) (bool, error) {
+func IsEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*hosts.Host, cert, key []byte) (bool, error) {
 	var listErr error
 	peerURL := fmt.Sprintf("https://%s:2380", etcdHost.InternalAddress)
 	for _, host := range etcdHosts {
 		if host.Address == etcdHost.Address {
 			continue
 		}
-		etcdClient, err := getEtcdClient(ctx, host, localConnDialerFactory, cert, key)
+		etcdClient, err := getEtcdClient(ctx, host, cert, key)
 		if err != nil {
 			listErr = errors.Wrapf(err, "Failed to create etcd client for host [%s]", host.Address)
 			logrus.Debugf("Failed to create etcd client for host [%s]: %v", host.Address, err)

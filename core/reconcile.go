@@ -159,7 +159,7 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 
 	etcdToDelete := hosts.GetToDeleteHosts(currentCluster.EtcdHosts, kubeCluster.EtcdHosts, kubeCluster.InactiveHosts)
 	for _, etcdHost := range etcdToDelete {
-		if err := services.RemoveEtcdMember(ctx, etcdHost, kubeCluster.EtcdHosts, currentCluster.LocalConnDialerFactory, clientCert, clientkey); err != nil {
+		if err := services.RemoveEtcdMember(ctx, etcdHost, kubeCluster.EtcdHosts, clientCert, clientkey); err != nil {
 			log.Warnf(ctx, "[reconcile] %v", err)
 			continue
 		}
@@ -181,12 +181,12 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 	}
 	for _, etcdHost := range etcdToAdd {
 		// Check if the host already part of the cluster -- this will cover cluster with lost quorum
-		isEtcdMember, err := services.IsEtcdMember(ctx, etcdHost, kubeCluster.EtcdHosts, currentCluster.LocalConnDialerFactory, clientCert, clientkey)
+		isEtcdMember, err := services.IsEtcdMember(ctx, etcdHost, kubeCluster.EtcdHosts, clientCert, clientkey)
 		if err != nil {
 			return err
 		}
 		if !isEtcdMember {
-			if err := services.AddEtcdMember(ctx, etcdHost, kubeCluster.EtcdHosts, currentCluster.LocalConnDialerFactory, clientCert, clientkey); err != nil {
+			if err := services.AddEtcdMember(ctx, etcdHost, kubeCluster.EtcdHosts, clientCert, clientkey); err != nil {
 				return err
 			}
 		}
@@ -199,7 +199,7 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 		}
 		// this will start the newly added etcd node and make sure it started correctly before restarting other node
 		// https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/runtime-configuration.md#add-a-new-member
-		if err := services.ReloadEtcdCluster(ctx, kubeCluster.EtcdReadyHosts, etcdHost, currentCluster.LocalConnDialerFactory, clientCert, clientkey, currentCluster.PrivateRegistriesMap, etcdNodePlanMap, kubeCluster.SystemImages.Alpine); err != nil {
+		if err := services.ReloadEtcdCluster(ctx, kubeCluster.EtcdReadyHosts, etcdHost, clientCert, clientkey, currentCluster.PrivateRegistriesMap, etcdNodePlanMap, kubeCluster.SystemImages.Alpine); err != nil {
 			return err
 		}
 	}

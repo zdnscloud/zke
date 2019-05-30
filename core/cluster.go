@@ -47,7 +47,6 @@ type Cluster struct {
 	KubeClient                         *kubernetes.Clientset
 	KubernetesServiceIP                net.IP
 	LocalKubeConfigPath                string
-	LocalConnDialerFactory             hosts.DialerFactory
 	PrivateRegistriesMap               map[string]types.PrivateRegistry
 	StateFilePath                      string
 	UpdateWorkersOnly                  bool
@@ -93,7 +92,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	if len(c.Services.Etcd.ExternalURLs) > 0 {
 		log.Infof(ctx, "[etcd] External etcd connection string has been specified, skipping etcd plane")
 	} else {
-		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.LocalConnDialerFactory, c.PrivateRegistriesMap, c.UpdateWorkersOnly, c.SystemImages.Alpine, c.Services.Etcd, c.Certificates); err != nil {
+		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.PrivateRegistriesMap, c.UpdateWorkersOnly, c.SystemImages.Alpine, c.Services.Etcd, c.Certificates); err != nil {
 			return fmt.Errorf("[etcd] Failed to bring up Etcd Plane: %v", err)
 		}
 	}
@@ -104,7 +103,6 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 		cpNodePlanMap[cpHost.Address] = BuildZKEConfigNodePlan(ctx, c, cpHost, cpHost.DockerInfo)
 	}
 	if err := services.RunControlPlane(ctx, c.ControlPlaneHosts,
-		c.LocalConnDialerFactory,
 		c.PrivateRegistriesMap,
 		cpNodePlanMap,
 		c.UpdateWorkersOnly,
@@ -124,7 +122,6 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 		workerNodePlanMap[workerHost.Address] = BuildZKEConfigNodePlan(ctx, c, workerHost, workerHost.DockerInfo)
 	}
 	if err := services.RunWorkerPlane(ctx, allHosts,
-		c.LocalConnDialerFactory,
 		c.PrivateRegistriesMap,
 		workerNodePlanMap,
 		c.Certificates,
@@ -198,7 +195,6 @@ func (c *Cluster) setNetworkOptions() error {
 
 func (c *Cluster) SetupDialers(ctx context.Context, dailersOptions hosts.DialersOptions) error {
 	c.DockerDialerFactory = dailersOptions.DockerDialerFactory
-	c.LocalConnDialerFactory = dailersOptions.LocalConnDialerFactory
 	c.K8sWrapTransport = dailersOptions.K8sWrapTransport
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.ZKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
+func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.ZKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
 	if updateWorkersOnly {
 		return nil
 	}
@@ -25,7 +25,7 @@ func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, localConnD
 			var errList []error
 			for host := range hostsQueue {
 				runHost := host.(*hosts.Host)
-				err := doDeployControlHost(ctx, runHost, localConnDialerFactory, prsMap, cpNodePlanMap[runHost.Address].Processes, alpineImage, certMap)
+				err := doDeployControlHost(ctx, runHost, prsMap, cpNodePlanMap[runHost.Address].Processes, alpineImage, certMap)
 				if err != nil {
 					errList = append(errList, err)
 				}
@@ -119,7 +119,7 @@ func RestartControlPlane(ctx context.Context, controlHosts []*hosts.Host) error 
 	return nil
 }
 
-func doDeployControlHost(ctx context.Context, host *hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, alpineImage string, certMap map[string]pki.CertificatePKI) error {
+func doDeployControlHost(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, alpineImage string, certMap map[string]pki.CertificatePKI) error {
 	if host.IsWorker {
 		if err := removeNginxProxy(ctx, host); err != nil {
 			return err
@@ -130,13 +130,13 @@ func doDeployControlHost(ctx context.Context, host *hosts.Host, localConnDialerF
 		return err
 	}
 	// run kubeapi
-	if err := runKubeAPI(ctx, host, localConnDialerFactory, prsMap, processMap[KubeAPIContainerName], alpineImage, certMap); err != nil {
+	if err := runKubeAPI(ctx, host, prsMap, processMap[KubeAPIContainerName], alpineImage, certMap); err != nil {
 		return err
 	}
 	// run kubecontroller
-	if err := runKubeController(ctx, host, localConnDialerFactory, prsMap, processMap[KubeControllerContainerName], alpineImage); err != nil {
+	if err := runKubeController(ctx, host, prsMap, processMap[KubeControllerContainerName], alpineImage); err != nil {
 		return err
 	}
 	// run scheduler
-	return runScheduler(ctx, host, localConnDialerFactory, prsMap, processMap[SchedulerContainerName], alpineImage)
+	return runScheduler(ctx, host, prsMap, processMap[SchedulerContainerName], alpineImage)
 }

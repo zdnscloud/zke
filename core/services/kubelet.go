@@ -9,12 +9,12 @@ import (
 	"github.com/zdnscloud/zke/types"
 )
 
-func runKubelet(ctx context.Context, host *hosts.Host, df hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, kubeletProcess types.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
+func runKubelet(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, kubeletProcess types.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
 	imageCfg, hostCfg, healthCheckURL := GetProcessConfig(kubeletProcess)
 	if err := docker.DoRunContainer(ctx, host.DClient, imageCfg, hostCfg, KubeletContainerName, host.Address, WorkerRole, prsMap); err != nil {
 		return err
 	}
-	if err := runHealthcheck(ctx, host, KubeletContainerName, df, healthCheckURL, certMap); err != nil {
+	if err := runHealthcheck(ctx, host, KubeletContainerName, healthCheckURL, certMap); err != nil {
 		return err
 	}
 	return createLogLink(ctx, host, KubeletContainerName, WorkerRole, alpineImage, prsMap)

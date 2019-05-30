@@ -30,16 +30,14 @@ type dialer struct {
 }
 
 type DialersOptions struct {
-	DockerDialerFactory    DialerFactory
-	LocalConnDialerFactory DialerFactory
-	K8sWrapTransport       k8s.WrapTransport
+	DockerDialerFactory DialerFactory
+	K8sWrapTransport    k8s.WrapTransport
 }
 
-func GetDialerOptions(d, l DialerFactory, w k8s.WrapTransport) DialersOptions {
+func GetDialerOptions(d DialerFactory, w k8s.WrapTransport) DialersOptions {
 	return DialersOptions{
-		DockerDialerFactory:    d,
-		LocalConnDialerFactory: l,
-		K8sWrapTransport:       w,
+		DockerDialerFactory: d,
+		K8sWrapTransport:    w,
 	}
 }
 

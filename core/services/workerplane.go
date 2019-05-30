@@ -17,7 +17,7 @@ const (
 	unschedulableControlTaint = "node-role.kubernetes.io/controlplane=true:NoSchedule"
 )
 
-func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.ZKEConfigNodePlan, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
+func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.ZKEConfigNodePlan, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
 	log.Infof(ctx, "[%s] Building up Worker Plane..", WorkerRole)
 	var errgrp errgroup.Group
 
@@ -27,7 +27,7 @@ func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, localConnDialer
 			var errList []error
 			for host := range hostsQueue {
 				runHost := host.(*hosts.Host)
-				err := doDeployWorkerPlaneHost(ctx, runHost, localConnDialerFactory, prsMap, workerNodePlanMap[runHost.Address].Processes, certMap, updateWorkersOnly, alpineImage)
+				err := doDeployWorkerPlaneHost(ctx, runHost, prsMap, workerNodePlanMap[runHost.Address].Processes, certMap, updateWorkersOnly, alpineImage)
 				if err != nil {
 					errList = append(errList, err)
 				}
@@ -43,7 +43,7 @@ func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, localConnDialer
 	return nil
 }
 
-func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, localConnDialerFactory hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
+func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
 	if updateWorkersOnly {
 		if !host.UpdateWorker {
 			return nil
@@ -59,7 +59,7 @@ func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, localConnDia
 			host.ToAddTaints = append(host.ToAddTaints, unschedulableControlTaint)
 		}
 	}
-	return doDeployWorkerPlane(ctx, host, localConnDialerFactory, prsMap, processMap, certMap, alpineImage)
+	return doDeployWorkerPlane(ctx, host, prsMap, processMap, certMap, alpineImage)
 }
 
 func RemoveWorkerPlane(ctx context.Context, workerHosts []*hosts.Host, force bool) error {
@@ -132,7 +132,6 @@ func RestartWorkerPlane(ctx context.Context, workerHosts []*hosts.Host) error {
 }
 
 func doDeployWorkerPlane(ctx context.Context, host *hosts.Host,
-	localConnDialerFactory hosts.DialerFactory,
 	prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
 	// run nginx proxy
 	if !host.IsControl {
@@ -145,10 +144,10 @@ func doDeployWorkerPlane(ctx context.Context, host *hosts.Host,
 		return err
 	}
 	// run kubelet
-	if err := runKubelet(ctx, host, localConnDialerFactory, prsMap, processMap[KubeletContainerName], certMap, alpineImage); err != nil {
+	if err := runKubelet(ctx, host, prsMap, processMap[KubeletContainerName], certMap, alpineImage); err != nil {
 		return err
 	}
-	return runKubeproxy(ctx, host, localConnDialerFactory, prsMap, processMap[KubeproxyContainerName], alpineImage)
+	return runKubeproxy(ctx, host, prsMap, processMap[KubeproxyContainerName], alpineImage)
 }
 
 func copyProcessMap(m map[string]types.Process) map[string]types.Process {

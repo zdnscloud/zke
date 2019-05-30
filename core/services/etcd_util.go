@@ -16,8 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func getEtcdClient(ctx context.Context, etcdHost *hosts.Host, localConnDialerFactory hosts.DialerFactory, cert, key []byte) (etcdclient.Client, error) {
-	dialer, err := getEtcdDialer(localConnDialerFactory, etcdHost)
+func getEtcdClient(ctx context.Context, etcdHost *hosts.Host, cert, key []byte) (etcdclient.Client, error) {
+	dialer, err := getEtcdDialer(etcdHost)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create a dialer for host [%s]: %v", etcdHost.Address, err)
 	}
@@ -40,10 +40,10 @@ func getEtcdClient(ctx context.Context, etcdHost *hosts.Host, localConnDialerFac
 	return etcdclient.New(cfg)
 }
 
-func isEtcdHealthy(ctx context.Context, localConnDialerFactory hosts.DialerFactory, host *hosts.Host, cert, key []byte, url string) bool {
+func isEtcdHealthy(ctx context.Context, host *hosts.Host, cert, key []byte, url string) bool {
 	logrus.Debugf("[etcd] Check etcd cluster health")
 	for i := 0; i < 3; i++ {
-		dialer, err := getEtcdDialer(localConnDialerFactory, host)
+		dialer, err := getEtcdDialer(host)
 		if err != nil {
 			return false
 		}
@@ -102,14 +102,10 @@ func GetEtcdInitialCluster(hosts []*hosts.Host) string {
 	return initialCluster
 }
 
-func getEtcdDialer(localConnDialerFactory hosts.DialerFactory, etcdHost *hosts.Host) (func(network, address string) (net.Conn, error), error) {
+func getEtcdDialer(etcdHost *hosts.Host) (func(network, address string) (net.Conn, error), error) {
 	etcdHost.LocalConnPort = 2379
 	var etcdFactory hosts.DialerFactory
-	if localConnDialerFactory == nil {
-		etcdFactory = hosts.LocalConnFactory
-	} else {
-		etcdFactory = localConnDialerFactory
-	}
+	etcdFactory = hosts.LocalConnFactory
 	return etcdFactory(etcdHost)
 }
 

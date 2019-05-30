@@ -8,12 +8,12 @@ import (
 	"github.com/zdnscloud/zke/types"
 )
 
-func runKubeController(ctx context.Context, host *hosts.Host, df hosts.DialerFactory, prsMap map[string]types.PrivateRegistry, controllerProcess types.Process, alpineImage string) error {
+func runKubeController(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, controllerProcess types.Process, alpineImage string) error {
 	imageCfg, hostCfg, healthCheckURL := GetProcessConfig(controllerProcess)
 	if err := docker.DoRunContainer(ctx, host.DClient, imageCfg, hostCfg, KubeControllerContainerName, host.Address, ControlRole, prsMap); err != nil {
 		return err
 	}
-	if err := runHealthcheck(ctx, host, KubeControllerContainerName, df, healthCheckURL, nil); err != nil {
+	if err := runHealthcheck(ctx, host, KubeControllerContainerName, healthCheckURL, nil); err != nil {
 		return err
 	}
 	return createLogLink(ctx, host, KubeControllerContainerName, ControlRole, alpineImage, prsMap)

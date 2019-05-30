@@ -26,7 +26,7 @@ const (
 	HTTPSProtoPrefix = "https://"
 )
 
-func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, localConnDialerFactory hosts.DialerFactory, url string, certMap map[string]pki.CertificatePKI) error {
+func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, url string, certMap map[string]pki.CertificatePKI) error {
 	log.Infof(ctx, "[healthcheck] Start Healthcheck on service [%s] on host [%s]", serviceName, host.Address)
 	var x509Pair tls.Certificate
 
@@ -50,7 +50,7 @@ func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, l
 			return err
 		}
 	}
-	client, err := getHealthCheckHTTPClient(host, port, localConnDialerFactory, &x509Pair)
+	client, err := getHealthCheckHTTPClient(host, port, &x509Pair)
 	if err != nil {
 		return fmt.Errorf("Failed to initiate new HTTP client for service [%s] for host [%s]: %v", serviceName, host.Address, err)
 	}
@@ -72,14 +72,10 @@ func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, l
 	return fmt.Errorf("Failed to verify healthcheck: %v, log: %v", err, containerLog)
 }
 
-func getHealthCheckHTTPClient(host *hosts.Host, port int, localConnDialerFactory hosts.DialerFactory, x509KeyPair *tls.Certificate) (*http.Client, error) {
+func getHealthCheckHTTPClient(host *hosts.Host, port int, x509KeyPair *tls.Certificate) (*http.Client, error) {
 	host.LocalConnPort = port
 	var factory hosts.DialerFactory
-	if localConnDialerFactory == nil {
-		factory = hosts.LocalConnFactory
-	} else {
-		factory = localConnDialerFactory
-	}
+	factory = hosts.LocalConnFactory
 	dialer, err := factory(host)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create a dialer for host [%s]: %v", host.Address, err)
