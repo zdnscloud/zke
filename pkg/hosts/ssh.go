@@ -2,6 +2,8 @@ package hosts
 
 import (
 	"bytes"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/pkg/sftp"
@@ -38,4 +40,29 @@ func (h *Host) GetSftpClient(cli *ssh.Client) (*sftp.Client, error) {
 		return nil, err
 	}
 	return sc, nil
+}
+
+func (h *Host) TransFile(cli *sftp.Client, srcFilePath string, dstPath string) error {
+	srcFile, err := os.Open(srcFilePath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	var dstFileName = path.Base(srcFilePath)
+	dstFile, err := cli.Create(path.Join(dstPath, dstFileName))
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	buf := make([]byte, 1024)
+	for {
+		n, _ := srcFile.Read(buf)
+		if n == 0 {
+			break
+		}
+		dstFile.Write(buf)
+	}
+	return nil
 }

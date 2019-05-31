@@ -56,14 +56,10 @@ type ZcloudKubernetesEngineConfig struct {
 }
 
 type PrivateRegistry struct {
-	// URL for the registry
-	URL string `yaml:"url" json:"url,omitempty"`
-	// User name for registry acces
-	User string `yaml:"user" json:"user,omitempty"`
-	// Password for registry access
-	Password string `yaml:"password" json:"password,omitempty" norman:"type=password"`
-	// Default registry
-	// CAcert string `yaml:"ca_cert" json:"ca_cert",omitempty`
+	URL        string `yaml:"url" json:"url,omitempty"`
+	User       string `yaml:"user" json:"user,omitempty"`
+	Password   string `yaml:"password" json:"password,omitempty" norman:"type=password"`
+	CAcertPath string `yaml:"ca_cert_path" json:"ca_cert_path,omitempty"`
 }
 
 type ZKESystemImages struct {
