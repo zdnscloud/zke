@@ -4,17 +4,19 @@ import (
 	"context"
 	"crypto/rsa"
 	"encoding/base64"
-	"fmt"
-	"time"
 
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/core/pki"
+	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/registry/resources"
+	"github.com/zdnscloud/zke/types"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -72,7 +74,7 @@ func DeployRegistry(ctx context.Context, c *core.Cluster) error {
 	}
 	log.Infof(ctx, "[Registry] Setting up Registry Plugin")
 
-	IngresscaCertBase64, IngresstlsCertBase64, IngresstlsKeyBase64, err := generateIngressCertsBase64(c, RegistryCertsCN)
+	IngresscaCert, IngresstlsCert, IngresstlsKey, err := generateRegistryCerts(c, RegistryCertsCN)
 	if err != nil {
 		return err
 	}
@@ -96,9 +98,9 @@ func DeployRegistry(ctx context.Context, c *core.Cluster) error {
 		"AdminserverImage":        DefaultImage.HarborAdminserver,
 		"RegistryIngressURL":      c.Registry.RegistryIngressURL,
 		"NotaryIngressURL":        c.Registry.NotaryIngressURL,
-		"IngresscaCertBase64":     IngresscaCertBase64,
-		"IngresstlsCertBase64":    IngresstlsCertBase64,
-		"IngresstlsKeyBase64":     IngresstlsKeyBase64,
+		"IngresscaCertBase64":     getB64Cert(IngresscaCert),
+		"IngresstlsCertBase64":    getB64Cert(IngresstlsCert),
+		"IngresstlsKeyBase64":     getB64Cert(IngresstlsKey),
 		"DeployNamespace":         DeployNamespace,
 	}
 	// deploy redis
@@ -149,8 +151,10 @@ func DeployRegistry(ctx context.Context, c *core.Cluster) error {
 	if err := doOneDeploy(ctx, c, config, resources.IngressTemplate, IngressDeployJobName); err != nil {
 		return err
 	}
+	if err := deployRegistryCert(ctx, c, IngresscaCert); err != nil {
+		return err
+	}
 	return nil
-
 }
 
 func doOneDeploy(ctx context.Context, c *core.Cluster, config map[string]interface{}, resourcesTemplate string, deployJobName string) error {
@@ -165,7 +169,7 @@ func doOneDeploy(ctx context.Context, c *core.Cluster, config map[string]interfa
 	return nil
 }
 
-func generateIngressCertsBase64(c *core.Cluster, commonName string) (string, string, string, error) {
+func generateRegistryCerts(c *core.Cluster, commonName string) (string, string, string, error) {
 	caCert, caKey, err := pki.GenerateCACertAndKey(commonName, nil)
 	if err != nil {
 		return "", "", "", err
@@ -183,44 +187,99 @@ func generateIngressCertsBase64(c *core.Cluster, commonName string) (string, str
 		return "", "", "", err
 	}
 	tls := pki.ToCertObject("", "", "", tlsCert, tlsKey, nil)
-
-	caCertPEMBase64 := base64.StdEncoding.EncodeToString([]byte(ca.CertificatePEM))
-	tlsCertPEMBase64 := base64.StdEncoding.EncodeToString([]byte(tls.CertificatePEM))
-	tlsKeyPEMBase64 := base64.StdEncoding.EncodeToString([]byte(tls.KeyPEM))
-	return caCertPEMBase64, tlsCertPEMBase64, tlsKeyPEMBase64, nil
+	return ca.CertificatePEM, tls.CertificatePEM, tls.KeyPEM, nil
 }
 
-func connect(user, password, host string, port int) (*sftp.Client, error) {
-	var (
-		auth         []ssh.AuthMethod
-		addr         string
-		clientConfig *ssh.ClientConfig
-		sshClient    *ssh.Client
-		sftpClient   *sftp.Client
-		err          error
-	)
-	// get auth method
-	auth = make([]ssh.AuthMethod, 0)
-	auth = append(auth, ssh.Password(password))
+func getB64Cert(cert string) string {
+	return base64.StdEncoding.EncodeToString([]byte(cert))
+}
 
-	clientConfig = &ssh.ClientConfig{
-		User:            user,
-		Auth:            auth,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         30 * time.Second,
+func deployRegistryCert(ctx context.Context, c *core.Cluster, registryCACert string) error {
+	err := c.TunnelHosts(ctx, core.ExternalFlags{})
+	if err != nil {
+		return nil
+	}
+	hosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+	for _, h := range hosts {
+		certTmpBasePath := "/home/" + h.User + "/certs.d/"
+		certTmpPath := certTmpBasePath + c.Registry.RegistryIngressURL
+		sshClient, err := h.GetSSHClient()
+		if err != nil {
+			return err
+		}
+		sftpClient, err := h.GetSftpClient(sshClient)
+		if err != nil {
+			return err
+		}
+		err = transCertUseSftp(sftpClient, registryCACert, certTmpPath)
+		if err != nil {
+			return err
+		}
+		err = moveCerts(ctx, h, certTmpBasePath, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+		if err != nil {
+			return err
+		}
+		err = sftpClient.RemoveDirectory(certTmpBasePath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func transCertUseSftp(cli *sftp.Client, fileContent string, dstPath string) error {
+	if err := cli.MkdirAll(dstPath); err != nil {
+		return err
+	}
+	dstFile, err := cli.Create(dstPath + "/ca.crt")
+	defer dstFile.Close()
+	if err != nil {
+		return err
+	}
+	if _, err := dstFile.Write([]byte(fileContent)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func moveCerts(ctx context.Context, h *hosts.Host, tmpPath string, deployImage string, prsMap map[string]types.PrivateRegistry) error {
+	imageCfg := &container.Config{
+		Image: deployImage,
+		Tty:   true,
+		Cmd: []string{
+			"mv",
+			"/certs.d",
+			"/etc/docker/",
+		},
 	}
 
-	// connet to ssh
-	addr = fmt.Sprintf("%s:%d", host, port)
-
-	if sshClient, err = ssh.Dial("tcp", addr, clientConfig); err != nil {
-		return nil, err
+	hostcfgMounts := []mount.Mount{
+		{
+			Type:        "bind",
+			Source:      "/etc/docker",
+			Target:      "/etc/docker",
+			BindOptions: &mount.BindOptions{Propagation: "rshared"},
+		},
+		{
+			Type:        "bind",
+			Source:      tmpPath,
+			Target:      "/certs.d",
+			BindOptions: &mount.BindOptions{Propagation: "rshared"},
+		},
+	}
+	hostCfg := &container.HostConfig{
+		Mounts:     hostcfgMounts,
+		Privileged: true,
 	}
 
-	// create sftp client
-	if sftpClient, err = sftp.NewClient(sshClient); err != nil {
-		return nil, err
+	if err := docker.DoRunContainer(ctx, h.DClient, imageCfg, hostCfg, "harbor-certs-deployer", h.Address, "cleanup", prsMap); err != nil {
+		return err
 	}
-
-	return sftpClient, nil
+	if _, err := docker.WaitForContainer(ctx, h.DClient, h.Address, "harbor-certs-deployer"); err != nil {
+		return err
+	}
+	if err := docker.DoRemoveContainer(ctx, h.DClient, "harbor-certs-deployer", h.Address); err != nil {
+		return err
+	}
+	return nil
 }

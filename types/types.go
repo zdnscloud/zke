@@ -261,9 +261,9 @@ type NetworkConfig struct {
 }
 
 type StorageConfig struct {
-	Lvm  []Deviceconf `yaml:"lvm" json:lvm,omitempty`
-	Nfs  []Deviceconf `yaml:"nfs" json:nfs,omitempty`
-	Ceph []Deviceconf `yaml:"ceph" json:ceph,omitempty`
+	Lvm  []Deviceconf `yaml:"lvm" json:"lvm,omitempty"`
+	Nfs  []Deviceconf `yaml:"nfs" json:"nfs,omitempty"`
+	Ceph []Deviceconf `yaml:"ceph" json:"ceph,omitempty"`
 }
 
 type Deviceconf struct {
