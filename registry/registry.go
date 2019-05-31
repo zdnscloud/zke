@@ -17,6 +17,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/pkg/sftp"
+	"github.com/zdnscloud/gok8s/helper"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -283,3 +284,5 @@ func moveCerts(ctx context.Context, h *hosts.Host, tmpPath string, deployImage s
 	}
 	return nil
 }
+
+var sss string = helper.YamlDelimiter
