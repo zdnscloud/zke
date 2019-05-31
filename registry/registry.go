@@ -17,6 +17,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/pkg/sftp"
+	"github.com/zdnscloud/gok8s/client"
+	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/gok8s/helper"
 	"k8s.io/client-go/util/cert"
 )
@@ -285,4 +287,15 @@ func moveCerts(ctx context.Context, h *hosts.Host, tmpPath string, deployImage s
 	return nil
 }
 
-var sss string = helper.YamlDelimiter
+func doOneDeployFromYaml(yaml string) error {
+	cfg, err := config.GetConfigFromFile("./kube_config_cluster.yml")
+	if err != nil {
+		return err
+	}
+	cli, err := client.New(cfg, client.Options{})
+	if err != nil {
+		return err
+	}
+	err = helper.CreateResourceFromYaml(cli, yaml)
+	return err
+}
