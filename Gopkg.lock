@@ -183,7 +183,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/zdnscloud/gok8s"
-  packages = ["client","client/apiutil","client/config","util"]
+  packages = ["client","client/apiutil","client/config","helper","util"]
   revision = "3459fbac1c12556485bb5a75aa6f9dc9cfaa1d5a"
 
 [[projects]]
@@ -285,6 +285,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bcc01e59f83079abd3757f666ddfdb5851f50f447a0eb4dcd36fb0cd4e78ddaf"
+  inputs-digest = "6e7bc56b279fa9c24f0dcfba0f3029e714258f284553ed81c82f451bb853aa79"
   solver-name = "gps-cdcl"
   solver-version = 1
