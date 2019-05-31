@@ -105,14 +105,14 @@
 [[projects]]
   name = "github.com/mattn/go-colorable"
   packages = ["."]
-  revision = "3a70a971f94a22f2fa562ffcc7a0eb45f5daf045"
-  version = "v0.1.1"
+  revision = "8029fb3788e5a4a9c00e415f586a6d033f5d38b3"
+  version = "v0.1.2"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
   packages = ["."]
-  revision = "c2a7a6ca930a4cd0bc33a3f298eb71960732a3a7"
-  version = "v0.0.7"
+  revision = "1311e847b0cb909da63b5fecfb5370aa66236465"
+  version = "v0.0.8"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
@@ -165,8 +165,8 @@
 [[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "8bdbc7bcc01dcbb8ec23dc8a28e332258d25251f"
-  version = "v1.4.1"
+  revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
+  version = "v1.4.2"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -184,25 +184,25 @@
   branch = "master"
   name = "github.com/zdnscloud/gok8s"
   packages = ["client","client/apiutil","client/config","helper","util"]
-  revision = "3459fbac1c12556485bb5a75aa6f9dc9cfaa1d5a"
+  revision = "7ba6306b8d6a34b911e4ebbe2b9adb0a35341f54"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["curve25519","ed25519","ed25519/internal/edwards25519","internal/chacha20","internal/subtle","poly1305","ssh","ssh/agent","ssh/terminal"]
-  revision = "22d7a77e9e5f409e934ed268692e56707cd169e5"
+  revision = "20be4c3c3ed52bfccdb2d59a412ee1a936d175a7"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","http/httpguts","http2","http2/hpack","idna","internal/socks","proxy"]
-  revision = "3ec19112720433827bbce8be9342797f5a6aaaf9"
+  revision = "f3200d17e092c607f615320ecaad13d87ad9a2b3"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","internal"]
-  revision = "9f3314589c9a9136388751d9adae6b0ed400978a"
+  revision = "aaccbc9213b0974828f81aaac109d194880e3014"
 
 [[projects]]
   branch = "master"
@@ -214,7 +214,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["cpu","unix","windows"]
-  revision = "3a4b5fb9f71f5874b2374ae059bc0e0bcb52e145"
+  revision = "46560c3f3c0a091352115a3d825af45663b983d8"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -267,8 +267,8 @@
 [[projects]]
   name = "k8s.io/klog"
   packages = ["."]
-  revision = "e531227889390a39d9533dde61f590fe9f4b0035"
-  version = "v0.3.0"
+  revision = "78315d914a8af2453db4864e69230b647b1ff711"
+  version = "v0.3.2"
 
 [[projects]]
   branch = "release-1.13"
