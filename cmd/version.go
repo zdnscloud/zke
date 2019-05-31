@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-const defaultConfigVersion = "v1.0.4"
+const defaultConfigVersion = "v1.0.5"
 
 func VersionCommand() cli.Command {
 	versionFlags := []cli.Flag{
