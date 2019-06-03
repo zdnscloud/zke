@@ -18,7 +18,6 @@ data:
     \ endpoints:\n    - name: harbor\n      disabled: false\n      url: http://harbor-core/service/notifications\n
     \     timeout: 3000ms\n      threshold: 5\n      backoff: 1s\n"
   ctl-config.yml: |
-    ---
     protocol: "http"
     port: 8080
     log_level: debug

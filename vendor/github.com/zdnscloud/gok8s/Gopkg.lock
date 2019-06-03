@@ -184,9 +184,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:74809edd40c334cec2cbce107638ace10ebdf3285ece18ccebb7fa49beee899e"
+  digest = "1:705095794b3c33ee93905578d6612a4382a931e59d1c260dbd132943fcaaf42b"
   name = "github.com/zdnscloud/cement"
-  packages = ["unittest"]
+  packages = [
+    "log",
+    "log/log4go",
+    "unittest",
+  ]
   pruneopts = "UT"
   revision = "3e9edaca4e5a437983a7968f818829084d30a77a"
 
@@ -494,6 +498,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:f3d213b470f0b4c924df1d91fb97c0d3b0015eedb71ca16d1e78174a14f239b5"
+  name = "k8s.io/kube-aggregator"
+  packages = [
+    "pkg/apis/apiregistration",
+    "pkg/apis/apiregistration/v1beta1",
+  ]
+  pruneopts = "UT"
+  revision = "949db0d7bb893c026364988dd3717a57aa0c4e3d"
+
+[[projects]]
+  branch = "master"
   digest = "1:20ca56a1299fe3787b1cf86c3a0388fbc11d08604783b32a258eca7a947a7fdb"
   name = "k8s.io/kube-openapi"
   packages = ["pkg/util/proto"]
@@ -515,6 +530,14 @@
   ]
   pruneopts = "UT"
   revision = "09a0c108b123c8ae95078fe810905bd670d0da85"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8b5d43a2ffe1c0df5e9d7f635227f179341964dd7d0b72fc12f857186a47c224"
+  name = "k8s.io/utils"
+  packages = ["pointer"]
+  pruneopts = "UT"
+  revision = "6999998975a717e7f5fc2a7476497044cb111854"
 
 [[projects]]
   digest = "1:9070222ca967d09b3966552a161dd4420d62315964bf5e1efd8cc4c7c30ebca8"
@@ -540,6 +563,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/zdnscloud/cement/log",
     "github.com/zdnscloud/cement/unittest",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
@@ -569,6 +593,7 @@
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/tools/remotecommand",
     "k8s.io/client-go/util/workqueue",
+    "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1",
     "k8s.io/metrics/pkg/apis/metrics",
     "k8s.io/metrics/pkg/apis/metrics/v1beta1",
     "k8s.io/metrics/pkg/client/clientset/versioned",

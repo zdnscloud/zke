@@ -184,7 +184,7 @@
   branch = "master"
   name = "github.com/zdnscloud/gok8s"
   packages = ["client","client/apiutil","client/config","helper","util"]
-  revision = "7ba6306b8d6a34b911e4ebbe2b9adb0a35341f54"
+  revision = "495b4dda484ad4d0430a9a3e7391039c58870a1e"
 
 [[projects]]
   branch = "master"
@@ -214,7 +214,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["cpu","unix","windows"]
-  revision = "46560c3f3c0a091352115a3d825af45663b983d8"
+  revision = "4c4f7f33c9ed00de01c4c741d2177abfcfe19307"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -271,10 +271,22 @@
   version = "v0.3.2"
 
 [[projects]]
+  branch = "master"
+  name = "k8s.io/kube-aggregator"
+  packages = ["pkg/apis/apiregistration","pkg/apis/apiregistration/v1beta1"]
+  revision = "b998c87818f673b58e26800667dadc3d2e2f49c7"
+
+[[projects]]
   branch = "release-1.13"
   name = "k8s.io/metrics"
   packages = ["pkg/apis/metrics","pkg/apis/metrics/v1alpha1","pkg/apis/metrics/v1beta1","pkg/client/clientset/versioned","pkg/client/clientset/versioned/scheme","pkg/client/clientset/versioned/typed/metrics/v1alpha1","pkg/client/clientset/versioned/typed/metrics/v1beta1"]
   revision = "486c9ba21ea924d069175e771671f026eda5a34c"
+
+[[projects]]
+  branch = "master"
+  name = "k8s.io/utils"
+  packages = ["pointer"]
+  revision = "6999998975a717e7f5fc2a7476497044cb111854"
 
 [[projects]]
   name = "sigs.k8s.io/yaml"

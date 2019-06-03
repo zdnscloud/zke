@@ -2,11 +2,16 @@ package monitor
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/monitor/resources"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
+
+	"github.com/zdnscloud/gok8s/client"
+	"github.com/zdnscloud/gok8s/client/config"
+	"github.com/zdnscloud/gok8s/helper"
 )
 
 const (
@@ -100,8 +105,25 @@ func doOneDeploy(ctx context.Context, c *core.Cluster, config map[string]interfa
 		return err
 	}
 
-	if err := c.DoAddonDeploy(ctx, configYaml, deployJobName, true); err != nil {
+	// if err := c.DoAddonDeploy(ctx, configYaml, deployJobName, true); err != nil {
+	// return err
+	// }
+	err = doOneDeployFromYaml(configYaml)
+	return err
+}
+
+func doOneDeployFromYaml(yaml string) error {
+	cfg, err := config.GetConfigFromFile("./kube_config_cluster.yml")
+	if err != nil {
 		return err
 	}
-	return nil
+	cli, err := client.New(cfg, client.Options{})
+	if err != nil {
+		return err
+	}
+	err = helper.CreateResourceFromYaml(cli, yaml)
+	if err != nil {
+		fmt.Println(yaml)
+	}
+	return err
 }

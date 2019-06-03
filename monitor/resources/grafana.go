@@ -13,7 +13,6 @@ metadata:
   namespace: {{ .DeployNamespace }}
 ---
 {{- if eq .RBACConfig "rbac"}}
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

@@ -166,10 +166,10 @@ func doOneDeploy(ctx context.Context, c *core.Cluster, config map[string]interfa
 		return err
 	}
 
-	if err := c.DoAddonDeploy(ctx, configYaml, deployJobName, true); err != nil {
-		return err
-	}
-	return nil
+	// if err := c.DoAddonDeploy(ctx, configYaml, deployJobName, true); err != nil {
+	err = doOneDeployFromYaml(configYaml)
+	return err
+
 }
 
 func generateRegistryCerts(c *core.Cluster, commonName string) (string, string, string, error) {

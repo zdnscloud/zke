@@ -154,6 +154,4 @@ spec:
       - backend:
           serviceName: prometheus-alertmanager
           servicePort: 80
-status:
-  loadBalancer: {}
 `

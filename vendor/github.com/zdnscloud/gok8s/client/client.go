@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	apiregistrationv1beta1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1"
 	metricsapi "k8s.io/metrics/pkg/apis/metrics"
 	metricsV1beta1api "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
@@ -44,6 +45,7 @@ func New(config *rest.Config, options Options) (Client, error) {
 
 	// Init a scheme if none provided
 	if options.Scheme == nil {
+		apiregistrationv1beta1.AddToScheme(scheme.Scheme)
 		options.Scheme = scheme.Scheme
 	}
 

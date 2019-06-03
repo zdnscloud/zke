@@ -89,11 +89,6 @@ spec:
         name: sys
   updateStrategy:
     type: OnDelete
-status:
-  currentNumberScheduled: 0
-  desiredNumberScheduled: 0
-  numberMisscheduled: 0
-  numberReady: 0
 ---
 apiVersion: v1
 kind: Service
@@ -118,6 +113,4 @@ spec:
     release: prometheus
   sessionAffinity: None
   type: ClusterIP
-status:
-  loadBalancer: {}
 `

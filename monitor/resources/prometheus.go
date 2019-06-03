@@ -7,24 +7,18 @@ metadata:
   name: {{ .DeployNamespace }}
 ---
 apiVersion: v1
-items:
-- apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: prometheus-pushgateway
-    namespace: {{ .DeployNamespace }}
-- apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: prometheus-server
-    namespace: {{ .DeployNamespace }}
-kind: List
+kind: ServiceAccount
 metadata:
-  resourceVersion: ""
-  selfLink: ""
+  name: prometheus-pushgateway
+  namespace: {{ .DeployNamespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-server
+  namespace: {{ .DeployNamespace }}
 ---
 {{- if eq .RBACConfig "rbac"}}
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -423,7 +417,6 @@ spec:
         name: config-volume
       - emptyDir: {}
         name: storage-volume
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -447,6 +440,4 @@ spec:
     release: prometheus
   sessionAffinity: None
   type: NodePort
-status:
-  loadBalancer: {}
   `
