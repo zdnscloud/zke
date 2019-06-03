@@ -36,7 +36,7 @@ spec:
       labels:
         app: cluster-agent
     spec:
-      serviceAccount: zcloud-cluster-readonly
+      serviceAccount: zcloud-cluster-admin
       containers:
       - name: cluster-agent
         image: {{.Image}}
