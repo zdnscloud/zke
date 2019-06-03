@@ -1,4 +1,4 @@
-package resources
+package components
 
 const NotarySignerTemplate = `
 apiVersion: v1

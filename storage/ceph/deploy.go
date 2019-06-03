@@ -8,8 +8,8 @@ import (
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/templates"
 	"github.com/zdnscloud/zke/storage/common"
 	corev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
@@ -20,19 +20,23 @@ import (
 
 func doCephCommonDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph common")
+	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	if err != nil {
+		return err
+	}
 	cfg := map[string]interface{}{
 		"RBACConfig":       c.Authorization.Mode,
 		"StorageNamespace": common.StorageNamespace,
 	}
-	yaml, err := templates.CompileTemplateFromMap(commonTemplate, cfg)
-	if err != nil {
-		return err
-	}
-	return c.DoAddonDeploy(ctx, yaml, "zke-storage-ceph-common", true)
+	return k8s.DoDeployFromTemplate(cli, commonTemplate, cfg)
 }
 
 func doCephClusterDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph cluster")
+	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	if err != nil {
+		return err
+	}
 	var arr = make([]map[string]interface{}, 0)
 	for _, v := range c.Storage.Ceph {
 		m := make(map[string]interface{})
@@ -56,15 +60,15 @@ func doCephClusterDeploy(ctx context.Context, c *core.Cluster) error {
 		"LabelValue":               StorageType,
 		"StorageNamespace":         common.StorageNamespace,
 	}
-	yaml, err := templates.CompileTemplateFromMap(clusterTemplate, cfg)
-	if err != nil {
-		return err
-	}
-	return c.DoAddonDeploy(ctx, yaml, "zke-storage-ceph-cluster", true)
+	return k8s.DoDeployFromTemplate(cli, clusterTemplate, cfg)
 }
 
 func doCephFsDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph filesystem")
+	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	if err != nil {
+		return err
+	}
 	num := len(c.Storage.Ceph)
 	cfg := map[string]interface{}{
 		"CephFilesystem":   CephFilesystemName,
@@ -73,15 +77,15 @@ func doCephFsDeploy(ctx context.Context, c *core.Cluster) error {
 		"LabelKey":         common.StorageHostLabels,
 		"LabelValue":       StorageType,
 	}
-	yaml, err := templates.CompileTemplateFromMap(filesystemTemplate, cfg)
-	if err != nil {
-		return err
-	}
-	return c.DoAddonDeploy(ctx, yaml, "zke-storage-cephfs", true)
+	return k8s.DoDeployFromTemplate(cli, filesystemTemplate, cfg)
 }
 
 func doCephFsStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up storageclass cephfs")
+	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	if err != nil {
+		return err
+	}
 	monitors, secret, err := getCephMonCfg(ctx, c)
 	if err != nil {
 		return err
@@ -102,11 +106,7 @@ func doCephFsStorageDeploy(ctx context.Context, c *core.Cluster) error {
 		"LabelKey":                        common.StorageHostLabels,
 		"LabelValue":                      StorageType,
 	}
-	yaml, err := templates.CompileTemplateFromMap(fscsiTemplate, cfg)
-	if err != nil {
-		return err
-	}
-	return c.DoAddonDeploy(ctx, yaml, "zke-storage-cephfs-csi", true)
+	return k8s.DoDeployFromTemplate(cli, fscsiTemplate, cfg)
 }
 
 func doWaitReady(ctx context.Context, c *core.Cluster) error {

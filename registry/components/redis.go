@@ -1,4 +1,4 @@
-package resources
+package components
 
 const RedisTemplate = `
 apiVersion: v1

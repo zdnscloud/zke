@@ -1,4 +1,4 @@
-package resources
+package components
 
 const PortalTemplate = `
 apiVersion: v1

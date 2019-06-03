@@ -1,6 +1,6 @@
-package resources
+package components
 
-const ChartMuseumTemplate = `
+const JobserviceTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -8,47 +8,46 @@ metadata:
 ---
 apiVersion: v1
 data:
-  ALLOW_OVERWRITE: "true"
-  AUTH_ANONYMOUS_GET: "false"
-  BASIC_AUTH_USER: chart_controller
-  CACHE: redis
-  CACHE_REDIS_ADDR: harbor-redis:6379
-  CACHE_REDIS_DB: "3"
-  CHART_POST_FORM_FIELD_NAME: chart
-  CHART_URL: ""
-  CONTEXT_PATH: ""
-  DEBUG: "true"
-  DEPTH: "1"
-  DISABLE_API: "false"
-  DISABLE_METRICS: "false"
-  DISABLE_STATEFILES: "false"
-  INDEX_LIMIT: "0"
-  LOG_JSON: "true"
-  MAX_STORAGE_OBJECTS: "0"
-  MAX_UPLOAD_SIZE: "20971520"
-  PORT: "9999"
-  PROV_POST_FORM_FIELD_NAME: prov
-  STORAGE: local
-  STORAGE_LOCAL_ROOTDIR: /chart_storage
-  TLS_CERT: ""
-  TLS_KEY: ""
+  config.yml: |
+    protocol: "http"
+    port: 8080
+    worker_pool:
+      workers: 10
+      backend: "redis"
+      redis_pool:
+        redis_url: "harbor-redis:6379/1"
+        namespace: "harbor_job_service_namespace"
+    job_loggers:
+      - name: "FILE"
+        level: DEBUG
+        settings: # Customized settings of logger
+          base_dir: "/var/log/jobs"
+        sweeper:
+          duration: 14 #days
+          settings: # Customized settings of sweeper
+            work_dir: "/var/log/jobs"
+    #Loggers for the job service
+    loggers:
+      - name: "STD_OUTPUT"
+        level: DEBUG
+    admin_server: "http://harbor-adminserver"
 kind: ConfigMap
 metadata:
   labels:
     app: harbor
-    component: chartmuseum
-  name: harbor-chartmuseum
+    component: jobservice
+  name: harbor-jobservice
   namespace: {{ .DeployNamespace }}
 ---
 apiVersion: v1
 data:
-  CACHE_REDIS_PASSWORD: ""
+  secret: TlFieVNXdDlWb0pzdFVjdQ==
 kind: Secret
 metadata:
   labels:
     app: harbor
-    component: clartmuseum
-  name: harbor-chartmuseum
+    component: jobservice
+  name: harbor-jobservice
   namespace: {{ .DeployNamespace }}
 type: Opaque
 ---
@@ -61,8 +60,8 @@ metadata:
   - kubernetes.io/pvc-protection
   labels:
     app: harbor
-    component: chartmuseum
-  name: harbor-chartmuseum
+    component: jobservice
+  name: harbor-jobservice
   namespace: {{ .DeployNamespace }}
 spec:
   accessModes:
@@ -70,7 +69,7 @@ spec:
   dataSource: null
   resources:
     requests:
-      storage: {{ .ChartmuseumDiskCapacity}}
+      storage: {{ .JobserviceDiskCapacity}}
   storageClassName: lvm
   volumeMode: Filesystem
 ---
@@ -82,8 +81,8 @@ metadata:
   generation: 1
   labels:
     app: harbor
-    component: chartmuseum
-  name: harbor-chartmuseum
+    component: jobservice
+  name: harbor-jobservice
   namespace: {{ .DeployNamespace }}
 spec:
   progressDeadlineSeconds: 600
@@ -92,7 +91,7 @@ spec:
   selector:
     matchLabels:
       app: harbor
-      component: chartmuseum
+      component: jobservice
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -101,48 +100,54 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configmap: 750928f282f9bef8056e91bfc8e42b3a687396aeadf193032a219632dadad001
-        checksum/secret: 4e65b2fa8b4ab04c4627cf1b1132453622716fd8e5bcb808adc8a2eadaabfd1a
+        checksum/configmap: 65a06469e8f69f18602f9d9083d4706b2e9c84b0ee71cec263f6068be30ae03d
+        checksum/secret: a5b5f87462f05fd9b75a7c285e7e80b99f6a2fcdfcc96d23b17d883dad74dd6a
       creationTimestamp: null
       labels:
         app: harbor
-        component: chartmuseum
+        component: jobservice
     spec:
       containers:
       - env:
-        - name: BASIC_AUTH_PASS
+        - name: CORE_SECRET
           valueFrom:
             secretKeyRef:
               key: secret
               name: harbor-core
-        envFrom:
-        - configMapRef:
-            name: harbor-chartmuseum
-        - secretRef:
-            name: harbor-chartmuseum
-        image: {{ .ChartmuseumImage}}
+        - name: JOBSERVICE_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: secret
+              name: harbor-jobservice
+        - name: ADMINSERVER_URL
+          value: http://harbor-adminserver
+        - name: REGISTRY_CONTROLLER_URL
+          value: http://harbor-registry:8080
+        - name: LOG_LEVEL
+          value: debug
+        image: {{ .JobserviceImage}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
           httpGet:
-            path: /health
-            port: 9999
+            path: /api/v1/stats
+            port: 8080
             scheme: HTTP
-          initialDelaySeconds: 1
+          initialDelaySeconds: 20
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 1
-        name: chartmuseum
+        name: jobservice
         ports:
-        - containerPort: 9999
+        - containerPort: 8080
           protocol: TCP
         readinessProbe:
           failureThreshold: 3
           httpGet:
-            path: /health
-            port: 9999
+            path: /api/v1/stats
+            port: 8080
             scheme: HTTP
-          initialDelaySeconds: 1
+          initialDelaySeconds: 20
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 1
@@ -150,34 +155,41 @@ spec:
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
-        - mountPath: /chart_storage
-          name: chartmuseum-data
+        - mountPath: /etc/jobservice/config.yml
+          name: jobservice-config
+          subPath: config.yml
+        - mountPath: /var/log/jobs
+          name: job-logs
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
       volumes:
-      - name: chartmuseum-data
+      - configMap:
+          defaultMode: 420
+          name: harbor-jobservice
+        name: jobservice-config
+      - name: job-logs
         persistentVolumeClaim:
-          claimName: harbor-chartmuseum
+          claimName: harbor-jobservice
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: harbor
-    component: chartmuseum
-  name: harbor-chartmuseum
+    component: jobservice
+  name: harbor-jobservice
   namespace: {{ .DeployNamespace }}
 spec:
   ports:
   - port: 80
     protocol: TCP
-    targetPort: 9999
+    targetPort: 8080
   selector:
     app: harbor
-    component: chartmuseum
+    component: jobservice
   sessionAffinity: None
   type: ClusterIP
 `

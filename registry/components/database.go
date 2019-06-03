@@ -1,4 +1,4 @@
-package resources
+package components
 
 const DatabaseTemplate = `
 apiVersion: v1

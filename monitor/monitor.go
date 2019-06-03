@@ -2,28 +2,16 @@ package monitor
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/zdnscloud/zke/core"
-	"github.com/zdnscloud/zke/monitor/resources"
+	"github.com/zdnscloud/zke/monitor/components"
+	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/templates"
 
 	"github.com/zdnscloud/gok8s/client"
-	"github.com/zdnscloud/gok8s/client/config"
-	"github.com/zdnscloud/gok8s/helper"
 )
 
-const (
-	PrometheusDeployJobName       = "zke-prometheus-deploy-job"
-	NodeExporterDeployJobName     = "zke-nodeexporter-deploy-job"
-	KubeStateMetricsDeployJobName = "zke-kubestatemetrics-deploy-job"
-	AlertManagerDeployJobName     = "zke-alertmanager-deploy-job"
-	GrafanaConfigmapDeployJobName = "zke-grafanaconf-deploy-job"
-	GrafanaDeployJobName          = "zke-grafana-deploy-job"
-	MetricServerDeployJobName     = "zke-metricsserver-deploy-job"
-	DeployNamespace               = "zcloud"
-)
+const DeployNamespace = "zcloud"
 
 type MonitorImage struct {
 	PrometheusAlertManager      string `yaml:"prometheus_alert_manager" json:"prometheus_alert_manager"`
@@ -47,9 +35,39 @@ var DefaultMonitorImage = MonitorImage{
 	MetricsServer:               "zdnscloud/metrics-server-amd64:v0.3.1",
 }
 
+var componentsTemplates = map[string]string{
+	"metrics-server": components.MetricsServerTemplate,
+	"prometheus":     components.PrometheusTemplate,
+	"node-exporter":  components.NodeExporterTemplate,
+	"state-metrics":  components.StateMetricsTemplate,
+	"alert-manager":  components.AlertManagerTemplate,
+	"grafana":        components.GrafanaTemplate,
+}
+
 func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
-	log.Infof(ctx, "[Monitor] Setting up MonitorPlugin")
-	config := map[string]interface{}{
+	log.Infof(ctx, "[Monitor] Setting up Monitor Plugin")
+	templateConfig, k8sClient, err := prepare(c)
+	if err != nil {
+		return err
+	}
+	err = k8s.DoDeployFromYaml(k8sClient, components.GrafanaConfigMapYaml)
+	if err != nil {
+		return err
+	}
+	for component, template := range componentsTemplates {
+		err := k8s.DoDeployFromTemplate(k8sClient, template, templateConfig)
+		if err != nil {
+			log.Infof(ctx, "[Monitor] component %s deploy failed", component)
+			return err
+		}
+	}
+
+	log.Infof(ctx, "[Monitor] Successfully deployed Monitor Plugin")
+	return nil
+}
+
+func prepare(c *core.Cluster) (map[string]interface{}, client.Client, error) {
+	templateConfig := map[string]interface{}{
 		"PrometheusAlertManagerImage":           DefaultMonitorImage.PrometheusAlertManager,
 		"PrometheusConfigMapReloaderImage":      DefaultMonitorImage.PrometheusConfigMapReloader,
 		"PrometheusNodeExporterImage":           DefaultMonitorImage.PrometheusNodeExporter,
@@ -65,65 +83,6 @@ func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 		"MetricsServerMajorVersion":             "v0.3",
 		"DeployNamespace":                       DeployNamespace,
 	}
-	// deploy metrics server
-	if err := doOneDeploy(ctx, c, config, resources.MetricsServerTemplate, MetricServerDeployJobName); err != nil {
-		if err, ok := err.(*core.AddonError); ok && err.IsCritical {
-			return err
-		}
-		log.Warnf(ctx, "Failed to deploy addon execute job [MetricServer]: %v", err)
-	}
-	// deploy prometheus
-	if err := doOneDeploy(ctx, c, config, resources.PrometheusTemplate, PrometheusDeployJobName); err != nil {
-		return err
-	}
-	// deploy nodeexporter
-	if err := doOneDeploy(ctx, c, config, resources.NodeExporterTemplate, NodeExporterDeployJobName); err != nil {
-		return err
-	}
-	// deploy state metrics
-	if err := doOneDeploy(ctx, c, config, resources.StateMetricsTemplate, KubeStateMetricsDeployJobName); err != nil {
-		return err
-	}
-	// deploy alertmanager
-	if err := doOneDeploy(ctx, c, config, resources.AlertManagerTemplate, AlertManagerDeployJobName); err != nil {
-		return err
-	}
-	// deploy grafana configmap
-	if err := c.DoAddonDeploy(ctx, resources.GrafanaConfigMapYaml, GrafanaConfigmapDeployJobName, true); err != nil {
-		return err
-	}
-	// deploy grafana
-	if err := doOneDeploy(ctx, c, config, resources.GrafanaTemplate, GrafanaDeployJobName); err != nil {
-		return err
-	}
-	return nil
-}
-
-func doOneDeploy(ctx context.Context, c *core.Cluster, config map[string]interface{}, resourcesTemplate string, deployJobName string) error {
-	configYaml, err := templates.CompileTemplateFromMap(resourcesTemplate, config)
-	if err != nil {
-		return err
-	}
-
-	// if err := c.DoAddonDeploy(ctx, configYaml, deployJobName, true); err != nil {
-	// return err
-	// }
-	err = doOneDeployFromYaml(configYaml)
-	return err
-}
-
-func doOneDeployFromYaml(yaml string) error {
-	cfg, err := config.GetConfigFromFile("./kube_config_cluster.yml")
-	if err != nil {
-		return err
-	}
-	cli, err := client.New(cfg, client.Options{})
-	if err != nil {
-		return err
-	}
-	err = helper.CreateResourceFromYaml(cli, yaml)
-	if err != nil {
-		fmt.Println(yaml)
-	}
-	return err
+	k8sClient, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	return templateConfig, k8sClient, err
 }

@@ -1,4 +1,4 @@
-package resources
+package components
 
 const GrafanaTemplate = `
 apiVersion: v1

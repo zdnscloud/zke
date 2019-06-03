@@ -51,6 +51,7 @@ const (
 	ToCleanCNIBin           = "/opt/cni/"
 	ToCleanCNILib           = "/var/lib/cni/"
 	ToCleanCalicoRun        = "/var/run/calico/"
+	ToCleanDockerCerts      = "/etc/docker/certs.d"
 	ToCleanTempCertPath     = "/etc/kubernetes/.tmp/"
 	CleanerContainerName    = "kube-cleaner"
 	LogCleanerContainerName = "zke-log-cleaner"
@@ -68,6 +69,7 @@ func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[s
 		ToCleanRookDir,
 		ToCleanZkeDir,
 		ToCleanFlannelDir,
+		ToCleanDockerCerts,
 		path.Join(h.PrefixPath, ToCleanTempCertPath),
 		path.Join(h.PrefixPath, ToCleanCNILib),
 	}

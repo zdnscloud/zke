@@ -11,8 +11,10 @@ import (
 	"github.com/zdnscloud/zke/network/coredns"
 	"github.com/zdnscloud/zke/network/flannel"
 	"github.com/zdnscloud/zke/network/ingress"
+	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/templates"
+
+	"github.com/zdnscloud/gok8s/client"
 )
 
 const (
@@ -49,36 +51,40 @@ const (
 )
 
 func DeployNetwork(ctx context.Context, c *core.Cluster) error {
-	if err := DeployNetworkPlugin(ctx, c); err != nil {
+	k8sClient, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	if err != nil {
+		return err
+	}
+	if err := deployNetworkPlugin(ctx, c, k8sClient); err != nil {
 		return err
 	}
 
-	if err := deployDNSPlugin(ctx, c); err != nil {
+	if err := doDNSDeploy(ctx, c, k8sClient); err != nil {
 		return err
 	}
 
-	if err := deployIngressPlugin(ctx, c); err != nil {
+	if err := doIngressDeploy(ctx, c, k8sClient); err != nil {
 		return err
 	}
 	return nil
 }
 
-func DeployNetworkPlugin(ctx context.Context, c *core.Cluster) error {
+func deployNetworkPlugin(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[network] Setting up network plugin: %s", c.Network.Plugin)
 	switch c.Network.Plugin {
 	case FlannelNetworkPlugin:
-		return doFlannelDeploy(ctx, c)
+		return doFlannelDeploy(ctx, c, cli)
 	case CalicoNetworkPlugin:
-		return doCalicoDeploy(ctx, c)
+		return doCalicoDeploy(ctx, c, cli)
 	case NoNetworkPlugin:
-		log.Infof(ctx, "[network] Not deploying a cluster network, expecting custom CNI")
+		log.Infof(ctx, "[Network] Not deploying a cluster network, expecting custom CNI")
 		return nil
 	default:
-		return fmt.Errorf("[network] Unsupported network plugin: %s", c.Network.Plugin)
+		return fmt.Errorf("[Network] Unsupported network plugin: %s", c.Network.Plugin)
 	}
 }
 
-func doFlannelDeploy(ctx context.Context, c *core.Cluster) error {
+func doFlannelDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	flannelConfig := map[string]interface{}{
 		ClusterCIDR:      c.ClusterCIDR,
 		Image:            c.SystemImages.Flannel,
@@ -92,15 +98,14 @@ func doFlannelDeploy(ctx context.Context, c *core.Cluster) error {
 		ClusterVersion:    core.GetTagMajorVersion(c.Version),
 		"DeployNamespace": DeployNamespace,
 	}
-	//pluginYaml, err := templates.GetManifest(flannelConfig, FlannelNetworkPlugin)
-	pluginYaml, err := templates.CompileTemplateFromMap(flannel.FlannelTemplate, flannelConfig)
-	if err != nil {
+	if err := k8s.DoDeployFromTemplate(cli, flannel.FlannelTemplate, flannelConfig); err != nil {
 		return err
 	}
-	return c.DoAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
+	log.Infof(ctx, "[Network] network plugin flannel deployed successfully")
+	return nil
 }
 
-func doCalicoDeploy(ctx context.Context, c *core.Cluster) error {
+func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	clientConfig := pki.GetConfigPath(pki.KubeNodeCertName)
 	calicoConfig := map[string]interface{}{
 		KubeCfg:           clientConfig,
@@ -120,26 +125,15 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster) error {
 	case "default":
 		CalicoTemplate = calico.CalicoTemplateV112
 	}
-	//pluginYaml, err := templates.GetManifest(calicoConfig, CalicoNetworkPlugin, c.Version)
-	pluginYaml, err := templates.CompileTemplateFromMap(CalicoTemplate, calicoConfig)
-	if err != nil {
+	if err := k8s.DoDeployFromTemplate(cli, CalicoTemplate, calicoConfig); err != nil {
 		return err
 	}
-	return c.DoAddonDeploy(ctx, pluginYaml, NetworkPluginResourceName, true)
-}
-
-func deployDNSPlugin(ctx context.Context, c *core.Cluster) error {
-	if err := doCoreDNSDeploy(ctx, c); err != nil {
-		if err, ok := err.(*core.AddonError); ok && err.IsCritical {
-			return err
-		}
-		log.Warnf(ctx, "Failed to deploy DNS addon execute job for provider coredns: %v", err)
-	}
+	log.Infof(ctx, "[Network] network plugin calico deployed successfully")
 	return nil
 }
 
-func doCoreDNSDeploy(ctx context.Context, c *core.Cluster) error {
-	log.Infof(ctx, "[DNS] Setting up DNS provider %s", c.DNS.Provider)
+func doDNSDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
+	log.Infof(ctx, "[DNS] Setting up DNS plugin %s", c.DNS.Provider)
 	CoreDNSConfig := coredns.CoreDNSOptions{
 		CoreDNSImage:           c.SystemImages.CoreDNS,
 		CoreDNSAutoScalerImage: c.SystemImages.CoreDNSAutoscaler,
@@ -149,29 +143,15 @@ func doCoreDNSDeploy(ctx context.Context, c *core.Cluster) error {
 		UpstreamNameservers:    c.DNS.UpstreamNameservers,
 		ReverseCIDRs:           c.DNS.ReverseCIDRs,
 	}
-	coreDNSYaml, err := templates.CompileTemplateFromMap(coredns.CoreDNSTemplate, CoreDNSConfig)
-	if err != nil {
+	if err := k8s.DoDeployFromTemplate(cli, coredns.CoreDNSTemplate, CoreDNSConfig); err != nil {
 		return err
 	}
-	if err := c.DoAddonDeploy(ctx, coreDNSYaml, CoreDNSResourceName, false); err != nil {
-		return err
-	}
-	log.Infof(ctx, "[DNS] DNS provider coredns deployed successfully")
+	log.Infof(ctx, "[Network] DNS plugin coredns deployed successfully")
 	return nil
 }
 
-func deployIngressPlugin(ctx context.Context, c *core.Cluster) error {
-	if err := doIngressDeploy(ctx, c); err != nil {
-		if err, ok := err.(*core.AddonError); ok && err.IsCritical {
-			return err
-		}
-		log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", IngressResourceName, err)
-	}
-	return nil
-}
-
-func doIngressDeploy(ctx context.Context, c *core.Cluster) error {
-	log.Infof(ctx, "[ingress] Setting up %s ingress controller", c.Ingress.Provider)
+func doIngressDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
+	log.Infof(ctx, "[Network] Setting up %s ingress controller", c.Ingress.Provider)
 	ingressConfig := ingress.IngressOptions{
 		RBACConfig:     c.Authorization.Mode,
 		Options:        c.Ingress.Options,
@@ -180,8 +160,6 @@ func doIngressDeploy(ctx context.Context, c *core.Cluster) error {
 		IngressImage:   c.SystemImages.Ingress,
 		IngressBackend: c.SystemImages.IngressBackend,
 	}
-	// since nginx ingress controller 0.16.0, it can be run as non-root and doesn't require privileged anymore.
-	// So we can use securityContext instead of setting privileges via initContainer.
 	ingressSplits := strings.SplitN(c.SystemImages.Ingress, ":", 2)
 	if len(ingressSplits) == 2 {
 		version := strings.Split(ingressSplits[1], "-")[0]
@@ -189,14 +167,9 @@ func doIngressDeploy(ctx context.Context, c *core.Cluster) error {
 			ingressConfig.AlpineImage = c.SystemImages.Alpine
 		}
 	}
-	// Currently only deploying nginx ingress controller
-	ingressYaml, err := templates.CompileTemplateFromMap(ingress.NginxIngressTemplate, ingressConfig)
-	if err != nil {
+	if err := k8s.DoDeployFromTemplate(cli, ingress.NginxIngressTemplate, ingressConfig); err != nil {
 		return err
 	}
-	if err := c.DoAddonDeploy(ctx, ingressYaml, IngressResourceName, false); err != nil {
-		return err
-	}
-	log.Infof(ctx, "[ingress] ingress controller %s deployed successfully", c.Ingress.Provider)
+	log.Infof(ctx, "[Network] ingress controller %s deployed successfully", c.Ingress.Provider)
 	return nil
 }

@@ -1,4 +1,4 @@
-package resources
+package components
 
 const PrometheusTemplate = `
 apiVersion: v1

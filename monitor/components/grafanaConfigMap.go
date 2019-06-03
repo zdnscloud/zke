@@ -1,4 +1,4 @@
-package resources
+package components
 
 const GrafanaConfigMapYaml = `
 apiVersion: v1

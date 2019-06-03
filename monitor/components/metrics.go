@@ -1,4 +1,4 @@
-package resources
+package components
 
 const MetricsServerTemplate = `
 apiVersion: v1
