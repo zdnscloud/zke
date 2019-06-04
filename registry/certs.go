@@ -49,7 +49,7 @@ func deployRegistryCert(ctx context.Context, c *core.Cluster, registryCACert str
 	}
 	hosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	for _, h := range hosts {
-		certTmpBasePath := "/home/" + h.User + "/certs.d/"
+		certTmpBasePath := "/home/" + h.User + "/docker-certs-tmp/"
 		certTmpPath := certTmpBasePath + c.Registry.RegistryIngressURL
 		sshClient, err := h.GetSSHClient()
 		if err != nil {
@@ -95,9 +95,7 @@ func moveCerts(ctx context.Context, h *hosts.Host, tmpPath string, deployImage s
 		Image: deployImage,
 		Tty:   true,
 		Cmd: []string{
-			"mv",
-			"/certs.d",
-			"/etc/docker/",
+			"registry-cert",
 		},
 	}
 
@@ -111,7 +109,7 @@ func moveCerts(ctx context.Context, h *hosts.Host, tmpPath string, deployImage s
 		{
 			Type:        "bind",
 			Source:      tmpPath,
-			Target:      "/certs.d",
+			Target:      "/docker-certs-tmp",
 			BindOptions: &mount.BindOptions{Propagation: "rshared"},
 		},
 	}
