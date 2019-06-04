@@ -76,7 +76,7 @@ func RunEtcdPlane(
 		}
 	}
 	if !healthy {
-		return fmt.Errorf("[etcd] Etcd Cluster is not healthy")
+		return fmt.Errorf("[etcd] Etcd Cluster is not healthy,the cert and key that use to connect etcd is: >>>>%s<<<<\n,>>>>%s<<<<", string(clientCert), string(clientkey))
 	}
 	return nil
 }
