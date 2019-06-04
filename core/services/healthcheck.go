@@ -54,8 +54,11 @@ func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, u
 	if err != nil {
 		return fmt.Errorf("Failed to initiate new HTTP client for service [%s] for host [%s]: %v", serviceName, host.Address, err)
 	}
-	for retries := 0; retries < 10; retries++ {
+	var checkTimes = 0
+	for {
 		if err = getHealthz(client, serviceName, host.Address, url); err != nil {
+			checkTimes = checkTimes + 1
+			log.Warnf(ctx, "[healthcheck] service [%s] on host [%s] is not healthy,has checked [%s] times", serviceName, host.Address, strconv.Itoa(checkTimes))
 			logrus.Debugf("[healthcheck] %v", err)
 			time.Sleep(5 * time.Second)
 			continue

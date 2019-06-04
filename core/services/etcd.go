@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -69,14 +70,20 @@ func RunEtcdPlane(
 	clientCert := cert.EncodeCertPEM(certMap[pki.KubeNodeCertName].Certificate)
 	clientkey := cert.EncodePrivateKeyPEM(certMap[pki.KubeNodeCertName].Key)
 	var healthy bool
-	for _, host := range etcdHosts {
-		_, _, healthCheckURL := GetProcessConfig(etcdNodePlanMap[host.Address].Processes[EtcdContainerName])
-		if healthy = isEtcdHealthy(ctx, host, clientCert, clientkey, healthCheckURL); healthy {
+	var checkTimes = 0
+	for {
+		for _, host := range etcdHosts {
+			_, _, healthCheckURL := GetProcessConfig(etcdNodePlanMap[host.Address].Processes[EtcdContainerName])
+			if healthy = isEtcdHealthy(ctx, host, clientCert, clientkey, healthCheckURL); healthy {
+				break
+			}
+		}
+		if !healthy {
+			checkTimes = checkTimes + 1
+			log.Warnf(ctx, "[Etcd] Etcd Cluster is not healthy, has checked [%s] times!", strconv.Itoa(checkTimes))
+		} else {
 			break
 		}
-	}
-	if !healthy {
-		return fmt.Errorf("[etcd] Etcd Cluster is not healthy,the cert and key that use to connect etcd is: >>>>%s<<<<\n,>>>>%s<<<<", string(clientCert), string(clientkey))
 	}
 	return nil
 }
