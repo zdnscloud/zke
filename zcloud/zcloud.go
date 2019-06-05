@@ -25,7 +25,7 @@ const (
 )
 
 func DeployZcloudManager(ctx context.Context, c *core.Cluster) error {
-	k8sClient, err := k8s.GetK8sClientFromConfig("kube_config_cluster.yml")
+	k8sClient, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	if err != nil {
 		return err
 	}

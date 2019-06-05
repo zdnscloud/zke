@@ -1,8 +1,6 @@
 package k8s
 
 import (
-	"fmt"
-
 	"github.com/zdnscloud/zke/pkg/templates"
 
 	"github.com/zdnscloud/gok8s/client"
@@ -15,12 +13,7 @@ func DoDeployFromTemplate(cli client.Client, template string, templateConfig int
 	if err != nil {
 		return err
 	}
-	err = DoDeployFromYaml(cli, yaml)
-	if err != nil {
-		fmt.Println("===========\n", yaml, "\n=========\n")
-	}
-	return err
-
+	return DoDeployFromYaml(cli, yaml)
 }
 
 func DoDeployFromYaml(cli client.Client, yaml string) error {

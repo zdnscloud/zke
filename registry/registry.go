@@ -119,6 +119,6 @@ func prepare(c *core.Cluster) (map[string]interface{}, client.Client, string, er
 		"IngresstlsKeyBase64":     getB64Cert(IngresstlsKey),
 		"DeployNamespace":         DeployNamespace,
 	}
-	k8sClient, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	k8sClient, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	return templateConfig, k8sClient, IngresscaCert, err
 }

@@ -85,6 +85,6 @@ func prepare(c *core.Cluster) (map[string]interface{}, client.Client, error) {
 		"PrometheusDiskCapacity":                c.Monitor.PrometheusDiskCapacity,
 		"StorageTypeUse":                        c.Monitor.StorageTypeUse,
 	}
-	k8sClient, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	k8sClient, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	return templateConfig, k8sClient, err
 }
