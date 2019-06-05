@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/core/pki"
@@ -196,6 +198,7 @@ func checkAllIncluded(cluster *core.Cluster) error {
 }
 
 func clusterUpFromCli(ctx *cli.Context) error {
+	startUPtime := time.Now()
 	clusterFile, filePath, err := resolveClusterFile(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
@@ -222,6 +225,10 @@ func clusterUpFromCli(ctx *cli.Context) error {
 		return err
 	}
 	_, _, _, _, _, err = ClusterUp(context.Background(), hosts.DialersOptions{}, flags)
+	if err == nil {
+		endUPtime := time.Since(startUPtime) / 1e9
+		log.Infof(context.TODO(), "This up takes [%s] secends", strconv.FormatInt(int64(endUPtime), 10))
+	}
 	return err
 }
 
