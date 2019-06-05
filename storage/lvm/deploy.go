@@ -10,7 +10,7 @@ import (
 
 func doLVMDDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up storage agent lvmd")
-	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	cli, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func doLVMDDeploy(ctx context.Context, c *core.Cluster) error {
 
 func doLVMStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up storageclass lvm")
-	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	cli, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	if err != nil {
 		return err
 	}

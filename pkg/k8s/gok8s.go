@@ -13,9 +13,7 @@ func DoDeployFromTemplate(cli client.Client, template string, templateConfig int
 	if err != nil {
 		return err
 	}
-	err = DoDeployFromYaml(cli, yaml)
-	return err
-
+	return DoDeployFromYaml(cli, yaml)
 }
 
 func DoDeployFromYaml(cli client.Client, yaml string) error {

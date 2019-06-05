@@ -20,7 +20,7 @@ import (
 
 func doCephCommonDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph common")
-	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	cli, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func doCephCommonDeploy(ctx context.Context, c *core.Cluster) error {
 
 func doCephClusterDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph cluster")
-	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	cli, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func doCephClusterDeploy(ctx context.Context, c *core.Cluster) error {
 
 func doCephFsDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up ceph filesystem")
-	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	cli, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func doCephFsDeploy(ctx context.Context, c *core.Cluster) error {
 
 func doCephFsStorageDeploy(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[storage] Setting up storageclass cephfs")
-	cli, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
+	cli, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
 	if err != nil {
 		return err
 	}
