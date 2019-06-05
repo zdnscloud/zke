@@ -2,8 +2,8 @@ package helper
 
 import (
 	"bufio"
+	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"strings"
 
@@ -17,25 +17,23 @@ import (
 )
 
 func CreateResourceFromYaml(cli client.Client, yaml string) error {
-	return mapOnYamlDocument(yaml, cli.Create)
+	return mapOnRuntimeObject(yaml, cli.Create)
 }
 
 func DeleteResourceFromYaml(cli client.Client, yaml string) error {
-	return mapOnYamlDocument(yaml, func(ctx context.Context, obj runtime.Object) error {
+	return mapOnRuntimeObject(yaml, func(ctx context.Context, obj runtime.Object) error {
 		return cli.Delete(ctx, obj, client.PropagationPolicy(metav1.DeletePropagationForeground))
 	})
 }
 
 func UpdateResourceFromYaml(cli client.Client, yaml string) error {
-	return mapOnYamlDocument(yaml, cli.Update)
+	return mapOnRuntimeObject(yaml, cli.Update)
 }
 
-func mapOnYamlDocument(data string, fn func(context.Context, runtime.Object) error) error {
-	decode := scheme.Codecs.UniversalDeserializer().Decode
+func mapOnYamlDocument(data string, fn func([]byte) error) error {
 	reader := yaml.NewYAMLReader(bufio.NewReader(strings.NewReader(data)))
 	for {
 		doc, err := reader.Read()
-		fmt.Printf("---> doc:%s, err:%v\n", string(doc), err)
 		if err != nil {
 			if err == io.EOF {
 				return nil
@@ -43,7 +41,25 @@ func mapOnYamlDocument(data string, fn func(context.Context, runtime.Object) err
 				return err
 			}
 		}
+		doc = bytes.TrimSpace(doc)
+		if len(doc) > 4 {
+			doc = bytes.TrimPrefix(doc, []byte("---\n"))
+		}
 
+		if len(doc) == 0 {
+			continue
+		}
+
+		if err := fn(doc); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func mapOnRuntimeObject(data string, fn func(context.Context, runtime.Object) error) error {
+	decode := scheme.Codecs.UniversalDeserializer().Decode
+	return mapOnYamlDocument(data, func(doc []byte) error {
 		obj, _, err := decode(doc, nil, nil)
 		if err != nil {
 			return err
@@ -54,6 +70,6 @@ func mapOnYamlDocument(data string, fn func(context.Context, runtime.Object) err
 				return err
 			}
 		}
-	}
-	return nil
+		return nil
+	})
 }

@@ -190,7 +190,7 @@
   branch = "master"
   name = "github.com/zdnscloud/gok8s"
   packages = ["client","client/apiutil","client/config","helper","util"]
-  revision = "495b4dda484ad4d0430a9a3e7391039c58870a1e"
+  revision = "b2362c1f71d119283dfdcc183941fd8624e0d154"
 
 [[projects]]
   branch = "master"
@@ -202,13 +202,13 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","http/httpguts","http2","http2/hpack","idna","internal/socks","proxy"]
-  revision = "f3200d17e092c607f615320ecaad13d87ad9a2b3"
+  revision = "60506f45cf65977eb3a9c6e30f995f54a721c271"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","internal"]
-  revision = "aaccbc9213b0974828f81aaac109d194880e3014"
+  revision = "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
 
 [[projects]]
   branch = "master"
