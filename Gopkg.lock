@@ -190,7 +190,7 @@
   branch = "master"
   name = "github.com/zdnscloud/gok8s"
   packages = ["client","client/apiutil","client/config","helper","util"]
-  revision = "cbe1c72bdc8ec1786f84d2c56a574ebc8d4a8e1a"
+  revision = "5c4947ada147c0cef43f5b375fd5d1903c638de7"
 
 [[projects]]
   branch = "master"

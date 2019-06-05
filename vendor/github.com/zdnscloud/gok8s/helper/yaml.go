@@ -9,6 +9,7 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/zdnscloud/gok8s/client"
@@ -62,8 +63,18 @@ func mapOnRuntimeObject(data string, fn func(context.Context, runtime.Object) er
 	return mapOnYamlDocument(data, func(doc []byte) error {
 		obj, _, err := decode(doc, nil, nil)
 		if err != nil {
-			return err
+			if strings.Index(err.Error(), "no kind") != -1 {
+				json, err := yaml.ToJSON([]byte(data))
+				if err != nil {
+					return err
+				}
+				obj, _, err = unstructured.UnstructuredJSONScheme.Decode(json, nil, nil)
+				if err != nil {
+					return err
+				}
+			}
 		}
+
 		if err := fn(context.TODO(), obj); err != nil {
 			if apierrors.IsAlreadyExists(err) == false &&
 				apierrors.IsNotFound(err) == false {
