@@ -304,6 +304,30 @@ data:
           summary: {{"\"{{$labels.instance}}: High CPU usage detected\""}}
           description: {{"\"{{$labels.instance}}: CPU usage is above 80% (current value is: {{ $value }}\""}}
 ---
+{{ - if eq .StorageTypeUse "lvm" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.beta.kubernetes.io/storage-provisioner: csi-lvmplugin
+  finalizers:
+  - kubernetes.io/pvc-protection
+  labels:
+    app: prometheus
+    component: server-data
+  name: prometheus-data
+  namespace: {{ .DeployNamespace }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  dataSource: null
+  resources:
+    requests:
+      storage: {{ .PrometheusDiskCapacity }}
+  storageClassName: lvm
+  volumeMode: Filesystem
+{{ - end }}
+---
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -414,9 +438,15 @@ spec:
       - configMap:
           defaultMode: 420
           name: prometheus-server
-        name: config-volume
+		name: config-volume
+	{{ - if eq .StorageTypeUse "lvm" }}
+      - persistentVolumeClaim: 
+          claimName: prometheus-data
+		name: storage-volume
+	{{ - else }}
       - emptyDir: {}
-        name: storage-volume
+		name: storage-volume
+	{{ - end }}
 ---
 apiVersion: v1
 kind: Service

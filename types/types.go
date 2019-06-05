@@ -402,6 +402,8 @@ type MonitorConfig struct {
 	MetricsOptions                        map[string]string `yaml:"metrics_options" json:"metrics_options,omitempty"`
 	PrometheusAlertManagerIngressEndpoint string            `yaml:"prometheus_alertmanager_ingress_endpoint" json:"prometheus_alertmanager_ingress_endpoint"`
 	GrafanaIngressEndpoint                string            `yaml:"grafana_ingress_endpoint" json:"grafana_ingress_endpoint"`
+	StorageTypeUse                        string            `yaml:"storage_class_use" json:"storage_class_use"`
+	PrometheusDiskCapacity                string            `yaml:"prometheus_disk_capacity" json:"prometheus_disk_capacity"`
 }
 
 type RestoreConfig struct {

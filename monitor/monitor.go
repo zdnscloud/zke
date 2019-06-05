@@ -82,6 +82,8 @@ func prepare(c *core.Cluster) (map[string]interface{}, client.Client, error) {
 		"MetricsServerOptions":                  c.Monitor.MetricsOptions,
 		"MetricsServerMajorVersion":             "v0.3",
 		"DeployNamespace":                       DeployNamespace,
+		"PrometheusDiskCapacity":                c.Monitor.PrometheusDiskCapacity,
+		"StorageTypeUse":                        c.Monitor.StorageTypeUse,
 	}
 	k8sClient, err := k8s.GetK8sClientFromConfig("./kube_config_cluster.yml")
 	return templateConfig, k8sClient, err

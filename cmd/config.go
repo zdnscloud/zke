@@ -233,13 +233,18 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Services = *serviceConfig
-	cluster.Monitor.GrafanaIngressEndpoint = "grafana.zcloud." + cluster.Services.Kubelet.ClusterDomain
-	cluster.Monitor.PrometheusAlertManagerIngressEndpoint = "alertmanager.zcloud." + cluster.Services.Kubelet.ClusterDomain
+
 	registryConfig, err := getRegistryConfig(reader, &cluster)
 	if err != nil {
 		return err
 	}
 	cluster.Registry = *registryConfig
+
+	monitorConfig, err := getMonitorConfig(reader, &cluster)
+	if err != nil {
+		return err
+	}
+	cluster.Monitor = *monitorConfig
 	return writeConfig(&cluster, configFile, print)
 }
 
@@ -567,6 +572,23 @@ func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConf
 		registryCfg.ChartmuseumDiskCapacity = core.DefaultRegistryChartmuseumDiskCapacity
 	}
 	return &registryCfg, nil
+}
+
+func getMonitorConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.MonitorConfig, error) {
+	monitorCfg := types.MonitorConfig{}
+	if len(c.Storage.Lvm) == 0 {
+		monitorCfg.StorageTypeUse = "emptyDir"
+	} else {
+		monitorCfg.StorageTypeUse = "lvm"
+		prometheusDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster prometheus lvm disk capacity"), "20Gi")
+		if err != nil {
+			return nil, err
+		}
+		monitorCfg.PrometheusDiskCapacity = prometheusDiskCapacity
+	}
+	monitorCfg.GrafanaIngressEndpoint = "grafana.zcloud." + c.Services.Kubelet.ClusterDomain
+	monitorCfg.PrometheusAlertManagerIngressEndpoint = "alertmanager.zcloud." + c.Services.Kubelet.ClusterDomain
+	return &monitorCfg, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {
