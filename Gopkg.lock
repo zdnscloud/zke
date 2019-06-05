@@ -190,7 +190,7 @@
   branch = "master"
   name = "github.com/zdnscloud/gok8s"
   packages = ["client","client/apiutil","client/config","helper","util"]
-  revision = "b2362c1f71d119283dfdcc183941fd8624e0d154"
+  revision = "cbe1c72bdc8ec1786f84d2c56a574ebc8d4a8e1a"
 
 [[projects]]
   branch = "master"
@@ -209,12 +209,6 @@
   name = "golang.org/x/oauth2"
   packages = [".","internal"]
   revision = "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/sync"
-  packages = ["errgroup"]
-  revision = "112230192c580c3556b8cee6403af37a4fc5f28c"
 
 [[projects]]
   branch = "master"
@@ -259,6 +253,12 @@
   revision = "5cb15d34447165a97c76ed5a60e4e99c8a01ecfe"
 
 [[projects]]
+  branch = "master"
+  name = "k8s.io/apiextensions-apiserver"
+  packages = ["pkg/apis/apiextensions","pkg/apis/apiextensions/v1beta1"]
+  revision = "451a9c13a3c87cf43a05982a04149884ef7c0d69"
+
+[[projects]]
   branch = "release-1.13"
   name = "k8s.io/apimachinery"
   packages = ["pkg/api/errors","pkg/api/meta","pkg/api/resource","pkg/apis/meta/v1","pkg/apis/meta/v1/unstructured","pkg/apis/meta/v1beta1","pkg/conversion","pkg/conversion/queryparams","pkg/fields","pkg/labels","pkg/runtime","pkg/runtime/schema","pkg/runtime/serializer","pkg/runtime/serializer/json","pkg/runtime/serializer/protobuf","pkg/runtime/serializer/recognizer","pkg/runtime/serializer/streaming","pkg/runtime/serializer/versioning","pkg/selection","pkg/types","pkg/util/clock","pkg/util/errors","pkg/util/framer","pkg/util/intstr","pkg/util/json","pkg/util/naming","pkg/util/net","pkg/util/runtime","pkg/util/sets","pkg/util/validation","pkg/util/validation/field","pkg/util/yaml","pkg/version","pkg/watch","third_party/forked/golang/reflect"]
@@ -279,7 +279,7 @@
 [[projects]]
   branch = "master"
   name = "k8s.io/kube-aggregator"
-  packages = ["pkg/apis/apiregistration","pkg/apis/apiregistration/v1beta1"]
+  packages = ["pkg/apis/apiregistration","pkg/apis/apiregistration/v1","pkg/apis/apiregistration/v1beta1"]
   revision = "b998c87818f673b58e26800667dadc3d2e2f49c7"
 
 [[projects]]
@@ -303,6 +303,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1918866f8db4049e94e31ccaf3b53a7e531a280e870c4887d102567e8fe18f0e"
+  inputs-digest = "fe0e61a88799c8cb67ed243381a00e6f7d3021c91e7891c2b1077d27e2a1ec5f"
   solver-name = "gps-cdcl"
   solver-version = 1
