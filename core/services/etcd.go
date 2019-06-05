@@ -12,14 +12,13 @@ import (
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
 	etcdclient "github.com/coreos/etcd/client"
 	"github.com/docker/docker/api/types/container"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
+	"github.com/zdnscloud/cement/errgroup"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -90,24 +89,15 @@ func RunEtcdPlane(
 
 func RestartEtcdPlane(ctx context.Context, etcdHosts []*hosts.Host) error {
 	log.Infof(ctx, "[%s] Restarting up etcd plane..", ETCDRole)
-	var errgrp errgroup.Group
 
-	hostsQueue := util.GetObjectQueue(etcdHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				if err := docker.DoRestartContainer(ctx, runHost.DClient, EtcdContainerName, runHost.Address); err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
+	_, err := errgroup.Batch(etcdHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		return nil, docker.DoRestartContainer(ctx, runHost.DClient, EtcdContainerName, runHost.Address)
+	})
+	if err != nil {
 		return err
 	}
+
 	log.Infof(ctx, "[%s] Successfully restarted etcd plane..", ETCDRole)
 	return nil
 }
@@ -115,38 +105,32 @@ func RestartEtcdPlane(ctx context.Context, etcdHosts []*hosts.Host) error {
 func RemoveEtcdPlane(ctx context.Context, etcdHosts []*hosts.Host, force bool) error {
 	log.Infof(ctx, "[%s] Tearing down etcd plane..", ETCDRole)
 
-	var errgrp errgroup.Group
-	hostsQueue := util.GetObjectQueue(etcdHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				if err := docker.DoRemoveContainer(ctx, runHost.DClient, EtcdContainerName, runHost.Address); err != nil {
-					errList = append(errList, err)
-				}
-				if !runHost.IsWorker || !runHost.IsControl || force {
-					// remove unschedulable kubelet on etcd host
-					if err := removeKubelet(ctx, runHost); err != nil {
-						errList = append(errList, err)
-					}
-					if err := removeKubeproxy(ctx, runHost); err != nil {
-						errList = append(errList, err)
-					}
-					if err := removeNginxProxy(ctx, runHost); err != nil {
-						errList = append(errList, err)
-					}
-					if err := removeSidekick(ctx, runHost); err != nil {
-						errList = append(errList, err)
-					}
-				}
+	_, err := errgroup.Batch(etcdHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		if err := docker.DoRemoveContainer(ctx, runHost.DClient, EtcdContainerName, runHost.Address); err != nil {
+			return nil, err
+		}
+		if !runHost.IsWorker || !runHost.IsControl || force {
+			// remove unschedulable kubelet on etcd host
+			if err := removeKubelet(ctx, runHost); err != nil {
+				return nil, err
 			}
-			return util.ErrList(errList)
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
+			if err := removeKubeproxy(ctx, runHost); err != nil {
+				return nil, err
+			}
+			if err := removeNginxProxy(ctx, runHost); err != nil {
+				return nil, err
+			}
+			if err := removeSidekick(ctx, runHost); err != nil {
+				return nil, err
+			}
+		}
+		return nil, nil
+	})
+	if err != nil {
 		return err
 	}
+
 	log.Infof(ctx, "[%s] Successfully tore down etcd plane..", ETCDRole)
 	return nil
 }

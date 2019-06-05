@@ -6,10 +6,9 @@ import (
 	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
-	"golang.org/x/sync/errgroup"
+	"github.com/zdnscloud/cement/errgroup"
 )
 
 const (
@@ -19,26 +18,16 @@ const (
 
 func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.ZKEConfigNodePlan, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
 	log.Infof(ctx, "[%s] Building up Worker Plane..", WorkerRole)
-	var errgrp errgroup.Group
 
-	hostsQueue := util.GetObjectQueue(allHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				err := doDeployWorkerPlaneHost(ctx, runHost, prsMap, workerNodePlanMap[runHost.Address].Processes, certMap, updateWorkersOnly, alpineImage)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
+	_, err := errgroup.Batch(allHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		return nil, doDeployWorkerPlaneHost(ctx, runHost, prsMap, workerNodePlanMap[runHost.Address].Processes, certMap, updateWorkersOnly, alpineImage)
 
-	if err := errgrp.Wait(); err != nil {
+	})
+	if err != nil {
 		return err
 	}
+
 	log.Infof(ctx, "[%s] Successfully started Worker Plane..", WorkerRole)
 	return nil
 }
@@ -64,37 +53,31 @@ func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, prsMap map[s
 
 func RemoveWorkerPlane(ctx context.Context, workerHosts []*hosts.Host, force bool) error {
 	log.Infof(ctx, "[%s] Tearing down Worker Plane..", WorkerRole)
-	var errgrp errgroup.Group
-	hostsQueue := util.GetObjectQueue(workerHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				if runHost.IsControl && !force {
-					log.Infof(ctx, "[%s] Host [%s] is already a controlplane host, nothing to do.", WorkerRole, runHost.Address)
-					return nil
-				}
-				if err := removeKubelet(ctx, runHost); err != nil {
-					errList = append(errList, err)
-				}
-				if err := removeKubeproxy(ctx, runHost); err != nil {
-					errList = append(errList, err)
-				}
-				if err := removeNginxProxy(ctx, runHost); err != nil {
-					errList = append(errList, err)
-				}
-				if err := removeSidekick(ctx, runHost); err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
 
-	if err := errgrp.Wait(); err != nil {
+	_, err := errgroup.Batch(workerHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		if runHost.IsControl && !force {
+			log.Infof(ctx, "[%s] Host [%s] is already a controlplane host, nothing to do.", WorkerRole, runHost.Address)
+			return nil, nil
+		}
+		if err := removeKubelet(ctx, runHost); err != nil {
+			return nil, err
+		}
+		if err := removeKubeproxy(ctx, runHost); err != nil {
+			return nil, err
+		}
+		if err := removeNginxProxy(ctx, runHost); err != nil {
+			return nil, err
+		}
+		if err := removeSidekick(ctx, runHost); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
 		return err
 	}
+
 	log.Infof(ctx, "[%s] Successfully tore down Worker Plane..", WorkerRole)
 
 	return nil
@@ -102,30 +85,24 @@ func RemoveWorkerPlane(ctx context.Context, workerHosts []*hosts.Host, force boo
 
 func RestartWorkerPlane(ctx context.Context, workerHosts []*hosts.Host) error {
 	log.Infof(ctx, "[%s] Restarting Worker Plane..", WorkerRole)
-	var errgrp errgroup.Group
 
-	hostsQueue := util.GetObjectQueue(workerHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				if err := RestartKubelet(ctx, runHost); err != nil {
-					errList = append(errList, err)
-				}
-				if err := RestartKubeproxy(ctx, runHost); err != nil {
-					errList = append(errList, err)
-				}
-				if err := RestartNginxProxy(ctx, runHost); err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
+	_, err := errgroup.Batch(workerHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		if err := RestartKubelet(ctx, runHost); err != nil {
+			return nil, err
+		}
+		if err := RestartKubeproxy(ctx, runHost); err != nil {
+			return nil, err
+		}
+		if err := RestartNginxProxy(ctx, runHost); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
 		return err
 	}
+
 	log.Infof(ctx, "[%s] Successfully restarted Worker Plane..", WorkerRole)
 
 	return nil

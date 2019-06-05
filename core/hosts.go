@@ -9,12 +9,11 @@ import (
 	"github.com/zdnscloud/zke/core/services"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
+	"github.com/zdnscloud/cement/errgroup"
 )
 
 const (
@@ -136,22 +135,10 @@ func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
 			forceDeploy = true
 		}
 		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
-		var errgrp errgroup.Group
-
-		hostsQueue := util.GetObjectQueue(hostList)
-		for w := 0; w < WorkerThreads; w++ {
-			errgrp.Go(func() error {
-				var errList []error
-				for host := range hostsQueue {
-					err := pki.DeployCertificatesOnPlaneHost(ctx, host.(*hosts.Host), c.ZcloudKubernetesEngineConfig, c.Certificates, c.SystemImages.CertDownloader, c.PrivateRegistriesMap, forceDeploy)
-					if err != nil {
-						errList = append(errList, err)
-					}
-				}
-				return util.ErrList(errList)
-			})
-		}
-		if err := errgrp.Wait(); err != nil {
+		_, err := errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
+			return nil, pki.DeployCertificatesOnPlaneHost(ctx, h.(*hosts.Host), c.ZcloudKubernetesEngineConfig, c.Certificates, c.SystemImages.CertDownloader, c.PrivateRegistriesMap, forceDeploy)
+		})
+		if err != nil {
 			return err
 		}
 

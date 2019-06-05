@@ -8,10 +8,9 @@ import (
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
-	"golang.org/x/sync/errgroup"
+	"github.com/zdnscloud/cement/errgroup"
 )
 
 func (c *Cluster) ClusterRemove(ctx context.Context) error {
@@ -23,25 +22,13 @@ func (c *Cluster) ClusterRemove(ctx context.Context) error {
 }
 
 func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool, storageMap map[string][]string) error {
-
 	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts)
 
-	var errgrp errgroup.Group
-	hostsQueue := util.GetObjectQueue(uniqueHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				if err := runHost.CleanUpAll(ctx, cleanerImage, prsMap, externalEtcd, storageMap); err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-
-	return errgrp.Wait()
+	_, err := errgroup.Batch(uniqueHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		return nil, runHost.CleanUpAll(ctx, cleanerImage, prsMap, externalEtcd, storageMap)
+	})
+	return err
 }
 
 func (c *Cluster) CleanupNodes(ctx context.Context) error {

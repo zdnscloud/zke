@@ -20,7 +20,7 @@ import (
 
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
+	"github.com/zdnscloud/cement/errgroup"
 	"gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -387,24 +387,12 @@ func setNodeAnnotationsLabelsTaints(k8sClient *kubernetes.Clientset, host *hosts
 
 func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 	log.Infof(ctx, "Pre-pulling kubernetes images")
-	var errgrp errgroup.Group
 	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
-	hostsQueue := util.GetObjectQueue(hostList)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				err := docker.UseLocalOrPull(ctx, runHost.DClient, runHost.Address, c.SystemImages.Kubernetes, "pre-deploy", c.PrivateRegistriesMap)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-
-	if err := errgrp.Wait(); err != nil {
+	_, err := errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		return nil, docker.UseLocalOrPull(ctx, runHost.DClient, runHost.Address, c.SystemImages.Kubernetes, "pre-deploy", c.PrivateRegistriesMap)
+	})
+	if err != nil {
 		return err
 	}
 	log.Infof(ctx, "Kubernetes images pulled successfully")
@@ -425,31 +413,19 @@ func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 		fmt.Sprintf("%s=%s", KubeAppLabel, DefaultMonitoringMetricsProvider),
 		fmt.Sprintf("%s=%s", KubeAppLabel, CoreDNSAddonAppName),
 	}
-	var errgrp errgroup.Group
-	labelQueue := util.GetObjectQueue(labelsList)
-	for w := 0; w < services.WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for label := range labelQueue {
-				runLabel := label.(string)
-				// list pods to be deleted
-				pods, err := k8s.ListPodsByLabel(kubeClient, runLabel)
-				if err != nil {
-					errList = append(errList, err)
-				}
-				// delete pods
-				err = k8s.DeletePods(kubeClient, pods)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
-		return err
-	}
-	return nil
+
+	_, err = errgroup.Batch(labelsList, func(l interface{}) (interface{}, error) {
+		runLabel := l.(string)
+		// list pods to be deleted
+		pods, err := k8s.ListPodsByLabel(kubeClient, runLabel)
+		if err != nil {
+			return nil, err
+		}
+		// delete pods
+		err = k8s.DeletePods(kubeClient, pods)
+		return nil, err
+	})
+	return err
 }
 
 func (c *Cluster) GetHostInfoMap() map[string]dockertypes.Info {

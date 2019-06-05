@@ -12,10 +12,9 @@ import (
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
-	"golang.org/x/sync/errgroup"
+	"github.com/zdnscloud/cement/errgroup"
 )
 
 const (
@@ -155,21 +154,11 @@ func (c *Cluster) deployTCPPortListeners(ctx context.Context, currentCluster *Cl
 }
 
 func (c *Cluster) deployListenerOnPlane(ctx context.Context, portList []string, hostPlane []*hosts.Host, containerName string) error {
-	var errgrp errgroup.Group
-	hostsQueue := util.GetObjectQueue(hostPlane)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				err := c.deployListener(ctx, host.(*hosts.Host), portList, containerName)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	return errgrp.Wait()
+
+	_, err := errgroup.Batch(hostPlane, func(h interface{}) (interface{}, error) {
+		return nil, c.deployListener(ctx, h.(*hosts.Host), portList, containerName)
+	})
+	return err
 }
 
 func (c *Cluster) deployListener(ctx context.Context, host *hosts.Host, portList []string, containerName string) error {
@@ -221,100 +210,45 @@ func (c *Cluster) removeTCPPortListeners(ctx context.Context) error {
 }
 
 func removeListenerFromPlane(ctx context.Context, hostPlane []*hosts.Host, containerName string) error {
-	var errgrp errgroup.Group
-
-	hostsQueue := util.GetObjectQueue(hostPlane)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				runHost := host.(*hosts.Host)
-				err := docker.DoRemoveContainer(ctx, runHost.DClient, containerName, runHost.Address)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	return errgrp.Wait()
+	_, err := errgroup.Batch(hostPlane, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		return nil, docker.DoRemoveContainer(ctx, runHost.DClient, containerName, runHost.Address)
+	})
+	return err
 }
 
 func (c *Cluster) runServicePortChecks(ctx context.Context) error {
-	var errgrp errgroup.Group
 	// check etcd <-> etcd
 	// one etcd host is a pass
 	if len(c.EtcdHosts) > 1 {
 		log.Infof(ctx, "[network] Running etcd <-> etcd port checks")
-		hostsQueue := util.GetObjectQueue(c.EtcdHosts)
-		for w := 0; w < WorkerThreads; w++ {
-			errgrp.Go(func() error {
-				var errList []error
-				for host := range hostsQueue {
-					err := checkPlaneTCPPortsFromHost(ctx, host.(*hosts.Host), EtcdPortList, c.EtcdHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
-					if err != nil {
-						errList = append(errList, err)
-					}
-				}
-				return util.ErrList(errList)
-			})
-		}
-		if err := errgrp.Wait(); err != nil {
-			return err
-		}
+		_, err := errgroup.Batch(c.EtcdHosts, func(h interface{}) (interface{}, error) {
+			return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), EtcdPortList, c.EtcdHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+		})
+		return err
 	}
 	// check control -> etcd connectivity
 	log.Infof(ctx, "[network] Running control plane -> etcd port checks")
-	hostsQueue := util.GetObjectQueue(c.ControlPlaneHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				err := checkPlaneTCPPortsFromHost(ctx, host.(*hosts.Host), EtcdClientPortList, c.EtcdHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
+	_, err := errgroup.Batch(c.ControlPlaneHosts, func(h interface{}) (interface{}, error) {
+		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), EtcdClientPortList, c.EtcdHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+	})
+	if err != nil {
 		return err
 	}
 	// check controle plane -> Workers
 	log.Infof(ctx, "[network] Running control plane -> worker port checks")
-	hostsQueue = util.GetObjectQueue(c.ControlPlaneHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				err := checkPlaneTCPPortsFromHost(ctx, host.(*hosts.Host), WorkerPortList, c.WorkerHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
+	_, err = errgroup.Batch(c.ControlPlaneHosts, func(h interface{}) (interface{}, error) {
+		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), WorkerPortList, c.WorkerHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+	})
+	if err != nil {
 		return err
 	}
 	// check workers -> control plane
 	log.Infof(ctx, "[network] Running workers -> control plane port checks")
-	hostsQueue = util.GetObjectQueue(c.WorkerHosts)
-	for w := 0; w < WorkerThreads; w++ {
-		errgrp.Go(func() error {
-			var errList []error
-			for host := range hostsQueue {
-				err := checkPlaneTCPPortsFromHost(ctx, host.(*hosts.Host), ControlPlanePortList, c.ControlPlaneHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
-				if err != nil {
-					errList = append(errList, err)
-				}
-			}
-			return util.ErrList(errList)
-		})
-	}
-	return errgrp.Wait()
+	_, err = errgroup.Batch(c.WorkerHosts, func(h interface{}) (interface{}, error) {
+		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), ControlPlanePortList, c.ControlPlaneHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+	})
+	return err
 }
 
 func checkPlaneTCPPortsFromHost(ctx context.Context, host *hosts.Host, portList []string, planeHosts []*hosts.Host, image string, prsMap map[string]types.PrivateRegistry) error {
