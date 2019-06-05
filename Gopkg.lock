@@ -182,6 +182,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/zdnscloud/cement"
+  packages = ["errgroup"]
+  revision = "4e659246475c1b00f2644fc6860e49c0c3cdf2b9"
+
+[[projects]]
+  branch = "master"
   name = "github.com/zdnscloud/gok8s"
   packages = ["client","client/apiutil","client/config","helper","util"]
   revision = "495b4dda484ad4d0430a9a3e7391039c58870a1e"
@@ -297,6 +303,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6e7bc56b279fa9c24f0dcfba0f3029e714258f284553ed81c82f451bb853aa79"
+  inputs-digest = "1918866f8db4049e94e31ccaf3b53a7e531a280e870c4887d102567e8fe18f0e"
   solver-name = "gps-cdcl"
   solver-version = 1

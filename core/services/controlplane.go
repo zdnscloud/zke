@@ -9,10 +9,11 @@ import (
 	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
+	zerrgroup "github.com/zdnscloud/cement/errgroup"
 	"golang.org/x/sync/errgroup"
 )
 
-func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.ZKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
+func RunControlPlaneTest(ctx context.Context, controlHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.ZKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
 	if updateWorkersOnly {
 		return nil
 	}
@@ -36,6 +37,43 @@ func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, prsMap map
 	if err := errgrp.Wait(); err != nil {
 		return err
 	}
+	log.Infof(ctx, "[%s] Successfully started Controller Plane..", ControlRole)
+	return nil
+}
+
+func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.ZKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
+	if updateWorkersOnly {
+		return nil
+	}
+	log.Infof(ctx, "[%s] Building up Controller Plane..", ControlRole)
+
+	_, err := zerrgroup.Batch(controlHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		err := doDeployControlHost(ctx, runHost, prsMap, cpNodePlanMap[runHost.Address].Processes, alpineImage, certMap)
+		return nil, err
+	})
+	if err != nil {
+		return err
+	}
+	/*var errgrp errgroup.Group
+
+	hostsQueue := util.GetObjectQueue(controlHosts)
+	for w := 0; w < WorkerThreads; w++ {
+		errgrp.Go(func() error {
+			var errList []error
+			for host := range hostsQueue {
+				runHost := host.(*hosts.Host)
+				err := doDeployControlHost(ctx, runHost, prsMap, cpNodePlanMap[runHost.Address].Processes, alpineImage, certMap)
+				if err != nil {
+					errList = append(errList, err)
+				}
+			}
+			return util.ErrList(errList)
+		})
+	}
+	if err := errgrp.Wait(); err != nil {
+		return err
+	}*/
 	log.Infof(ctx, "[%s] Successfully started Controller Plane..", ControlRole)
 	return nil
 }
