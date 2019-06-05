@@ -304,7 +304,7 @@ data:
           summary: {{"\"{{$labels.instance}}: High CPU usage detected\""}}
           description: {{"\"{{$labels.instance}}: CPU usage is above 80% (current value is: {{ $value }}\""}}
 ---
-{{ - if eq .StorageTypeUse "lvm" }}
+{{- if eq .StorageTypeUse "lvm" }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -326,7 +326,7 @@ spec:
       storage: {{ .PrometheusDiskCapacity }}
   storageClassName: lvm
   volumeMode: Filesystem
-{{ - end }}
+{{- end }}
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -439,14 +439,14 @@ spec:
           defaultMode: 420
           name: prometheus-server
 		name: config-volume
-	{{ - if eq .StorageTypeUse "lvm" }}
+	{{- if eq .StorageTypeUse "lvm" }}
       - persistentVolumeClaim: 
           claimName: prometheus-data
 		name: storage-volume
-	{{ - else }}
+	{{- else }}
       - emptyDir: {}
 		name: storage-volume
-	{{ - end }}
+	{{- end }}
 ---
 apiVersion: v1
 kind: Service
