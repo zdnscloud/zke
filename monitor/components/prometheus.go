@@ -438,15 +438,15 @@ spec:
       - configMap:
           defaultMode: 420
           name: prometheus-server
-		name: config-volume
-	{{- if eq .StorageTypeUse "lvm" }}
+        name: config-volume
+    {{- if eq .StorageTypeUse "lvm" }}
       - persistentVolumeClaim: 
           claimName: prometheus-data
-		name: storage-volume
-	{{- else }}
+        name: storage-volume
+    {{- else }}
       - emptyDir: {}
-		name: storage-volume
-	{{- end }}
+        name: storage-volume
+    {{- end }}
 ---
 apiVersion: v1
 kind: Service
