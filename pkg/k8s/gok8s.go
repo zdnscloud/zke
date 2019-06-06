@@ -17,8 +17,7 @@ func DoDeployFromTemplate(cli client.Client, template string, templateConfig int
 }
 
 func DoDeployFromYaml(cli client.Client, yaml string) error {
-	err := helper.CreateResourceFromYaml(cli, yaml)
-	return err
+	return helper.CreateResourceFromYaml(cli, yaml)
 }
 
 func GetK8sClientFromConfig(kubeConfigPath string) (client.Client, error) {
@@ -26,6 +25,5 @@ func GetK8sClientFromConfig(kubeConfigPath string) (client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	cli, err := client.New(cfg, client.Options{})
-	return cli, err
+	return client.New(cfg, client.Options{})
 }

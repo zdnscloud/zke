@@ -20,7 +20,7 @@ func (s *Nfs) Up(ctx context.Context, c *core.Cluster) error {
 		return nil
 	}
 	if len(c.Storage.Nfs) > 1 {
-		return errors.New("nfs only supports ont host!")
+		return errors.New("nfs only supports one host!")
 	}
 	if err := common.Prepara(ctx, c, c.Storage.Nfs, StorageType, StorageClassName); err != nil {
 		return err

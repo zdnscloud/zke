@@ -3,9 +3,11 @@ package hosts
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/zdnscloud/zke/pkg/docker"
+	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
 
 	dockertypes "github.com/docker/docker/api/types"
@@ -40,6 +42,7 @@ func CleanHeritageStorge(ctx context.Context, h *Host, removeImage string, stora
 		Tty:   true,
 		Cmd: []string{
 			"/bin/sh",
+			"-x",
 			"/remove.sh",
 		},
 	}
@@ -70,11 +73,14 @@ func CleanHeritageStorge(ctx context.Context, h *Host, removeImage string, stora
 	if err := docker.DoRunContainer(ctx, h.DClient, imageCfg, hostCfg, "zke-storge-remover", h.Address, "cleanup", prsMap); err != nil {
 		return err
 	}
-	if _, err := docker.WaitForContainer(ctx, h.DClient, h.Address, "zke-storge-remover"); err != nil {
-		return err
+	waitCheckTime := 0
+	for {
+		_, err := docker.WaitForContainer(ctx, h.DClient, h.Address, "zke-storge-remover")
+		if err == nil {
+			break
+		}
+		waitCheckTime = waitCheckTime + 1
+		log.Warnf(ctx, "waitting for container zke-storge-remover exited on host [%s], has checked [%s] times", h.Address, strconv.Itoa(waitCheckTime))
 	}
-	if err := docker.DoRemoveContainer(ctx, h.DClient, "zke-storge-remover", h.Address); err != nil {
-		return err
-	}
-	return nil
+	return docker.DoRemoveContainer(ctx, h.DClient, "zke-storge-remover", h.Address)
 }
