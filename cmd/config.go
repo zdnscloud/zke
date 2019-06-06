@@ -540,7 +540,7 @@ func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.RegistryConfig, error) {
 	ctx := context.TODO()
 	registryCfg := types.RegistryConfig{}
-	isenabled, err := getConfig(reader, fmt.Sprintf("Is enabled harbor registry (y/n)?"), "y")
+	isenabled, err := getConfig(reader, fmt.Sprintf("Is enabled harbor registry (y/n)?"), "n")
 	if err != nil {
 		return nil, err
 	}
