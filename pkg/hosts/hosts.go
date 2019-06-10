@@ -128,6 +128,15 @@ func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap 
 
 func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]types.PrivateRegistry, storageMap map[string][]string) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
+	if err := CleanHeritageContainers(ctx, h); err != nil {
+		return err
+	}
+	if err := CleanHeritageStorge(ctx, h, types.AllK8sVersions["v1.13.1"].ZKERemover, storageMap, prsMap); err != nil {
+		return err
+	}
+
+	log.Infof(ctx, "[hosts] Successfully cleaned up host [%s]", h.Address)
+
 	imageCfg, hostCfg := buildCleanerConfig(h, toCleanPaths, cleanerImage)
 	log.Infof(ctx, "[hosts] Running cleaner container on host [%s]", h.Address)
 	if err := docker.DoRunContainer(ctx, h.DClient, imageCfg, hostCfg, CleanerContainerName, h.Address, CleanerContainerName, prsMap); err != nil {
@@ -147,14 +156,6 @@ func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage 
 		return err
 	}
 	log.Infof(ctx, "[hosts] Removing cluster container and generated files on host [%s]", h.Address)
-	if err := CleanHeritageContainers(ctx, h); err != nil {
-		return err
-	}
-	if err := CleanHeritageStorge(ctx, h, types.AllK8sVersions["v1.13.1"].ZKERemover, storageMap, prsMap); err != nil {
-		return err
-	}
-
-	log.Infof(ctx, "[hosts] Successfully cleaned up host [%s]", h.Address)
 	return nil
 }
 
