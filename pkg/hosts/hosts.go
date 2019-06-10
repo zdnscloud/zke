@@ -140,18 +140,17 @@ func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage 
 	imageCfg, hostCfg := buildCleanerConfig(h, toCleanPaths, cleanerImage)
 	log.Infof(ctx, "[hosts] Running cleaner container on host [%s]", h.Address)
 	if err := docker.DoRunContainer(ctx, h.DClient, imageCfg, hostCfg, CleanerContainerName, h.Address, CleanerContainerName, prsMap); err != nil {
-		return err
+		return fmt.Errorf("err while run container [%s] on host [%s]:%s", CleanerContainerName, h.Address, err)
 	}
 
 	if _, err := docker.WaitForContainer(ctx, h.DClient, h.Address, CleanerContainerName); err != nil {
-		return err
+		return fmt.Errorf("err while waitting for container [%s] on host [%s]:%s", CleanerContainerName, h.Address, err)
 	}
 
 	log.Infof(ctx, "[hosts] Removing cleaner container on host [%s]", h.Address)
 	if err := docker.RemoveContainer(ctx, h.DClient, h.Address, CleanerContainerName); err != nil {
-		return err
+		return fmt.Errorf("err while remove container [%s] on host [%s]:%s", CleanerContainerName, h.Address, err)
 	}
-	log.Infof(ctx, "[hosts] Removing dead container logs on host [%s]", h.Address)
 	return nil
 }
 
