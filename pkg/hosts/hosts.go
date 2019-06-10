@@ -152,10 +152,6 @@ func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage 
 		return err
 	}
 	log.Infof(ctx, "[hosts] Removing dead container logs on host [%s]", h.Address)
-	if err := DoRunLogCleaner(ctx, h, cleanerImage, prsMap); err != nil {
-		return err
-	}
-	log.Infof(ctx, "[hosts] Removing cluster container and generated files on host [%s]", h.Address)
 	return nil
 }
 
