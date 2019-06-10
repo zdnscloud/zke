@@ -129,10 +129,10 @@ func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap 
 func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]types.PrivateRegistry, storageMap map[string][]string) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
 	if err := CleanHeritageContainers(ctx, h); err != nil {
-		return err
+		return fmt.Errorf("err while cleanheritagecontainers on host [%s]:%s", h.Address, err)
 	}
 	if err := CleanHeritageStorge(ctx, h, types.AllK8sVersions["v1.13.1"].ZKERemover, storageMap, prsMap); err != nil {
-		return err
+		return fmt.Errorf("err while cleanheritagestorage on host [%s]:%s", h.Address, err)
 	}
 
 	log.Infof(ctx, "[hosts] Successfully cleaned up host [%s]", h.Address)
