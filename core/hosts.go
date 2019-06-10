@@ -29,24 +29,23 @@ const (
 func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 	c.InactiveHosts = make([]*hosts.Host, 0)
 	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
-	var errgrp errgroup.Group
-	for _, uniqueHost := range uniqueHosts {
-		runHost := uniqueHost
-		errgrp.Go(func() error {
-			if err := runHost.TunnelUp(ctx, c.DockerDialerFactory, c.PrefixPath, c.Version); err != nil {
-				// Unsupported Docker version is NOT a connectivity problem that we can recover! So we bail out on it
-				if strings.Contains(err.Error(), "Unsupported Docker version found") {
-					return err
-				}
-				log.Warnf(ctx, "Failed to set up SSH tunneling for host [%s]: %v", runHost.Address, err)
-				c.InactiveHosts = append(c.InactiveHosts, runHost)
+
+	_, err := errgroup.Batch(uniqueHosts, func(h interface{}) (interface{}, error) {
+		runHost := h.(*hosts.Host)
+		if err := runHost.TunnelUp(ctx, c.DockerDialerFactory, c.PrefixPath, c.Version); err != nil {
+			// Unsupported Docker version is NOT a connectivity problem that we can recover! So we bail out on it
+			if strings.Contains(err.Error(), "Unsupported Docker version found") {
+				return nil, err
 			}
-			return nil
-		})
-	}
-	if err := errgrp.Wait(); err != nil {
+			log.Warnf(ctx, "Failed to set up SSH tunneling for host [%s]: %v", runHost.Address, err)
+			c.InactiveHosts = append(c.InactiveHosts, runHost)
+		}
+		return nil, nil
+	})
+	if err != nil {
 		return err
 	}
+
 	for _, host := range c.InactiveHosts {
 		log.Warnf(ctx, "Removing host [%s] from node lists", host.Address)
 		c.EtcdHosts = removeFromHosts(host, c.EtcdHosts)

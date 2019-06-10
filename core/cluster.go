@@ -323,30 +323,12 @@ func (c *Cluster) SyncLabelsAndTaints(ctx context.Context, currentCluster *Clust
 			return fmt.Errorf("Failed to initialize new kubernetes client: %v", err)
 		}
 		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
-		var errgrp errgroup.Group
-		hostQueue := make(chan *hosts.Host, len(hostList))
-		for _, host := range hostList {
-			hostQueue <- host
-		}
-		close(hostQueue)
+		_, err = errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
+			logrus.Debugf("worker starting sync for node [%s]", h.(*hosts.Host).HostnameOverride)
+			return nil, setNodeAnnotationsLabelsTaints(k8sClient, h.(*hosts.Host))
+		})
 
-		for i := 0; i < SyncWorkers; i++ {
-			w := i
-			errgrp.Go(func() error {
-				var errs []error
-				for host := range hostQueue {
-					logrus.Debugf("worker [%d] starting sync for node [%s]", w, host.HostnameOverride)
-					if err := setNodeAnnotationsLabelsTaints(k8sClient, host); err != nil {
-						errs = append(errs, err)
-					}
-				}
-				if len(errs) > 0 {
-					return fmt.Errorf("%v", errs)
-				}
-				return nil
-			})
-		}
-		if err := errgrp.Wait(); err != nil {
+		if err != nil {
 			return err
 		}
 		log.Infof(ctx, "[sync] Successfully synced nodes Labels and Taints")
