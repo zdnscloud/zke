@@ -79,7 +79,7 @@ func (c *Cluster) StoreAddonConfigMap(ctx context.Context, addonYaml string, add
 }
 
 func (c *Cluster) ApplySystemAddonExecuteJob(addonJob string, addonUpdated bool) error {
-	if err := k8s.ApplyK8sSystemJob(addonJob, c.LocalKubeConfigPath, c.K8sWrapTransport, c.AddonJobTimeout, addonUpdated); err != nil {
+	if err := k8s.ApplyK8sSystemJob(addonJob, c.LocalKubeConfigPath, c.K8sWrapTransport, k8s.DefaultTimeout, addonUpdated); err != nil {
 		return err
 	}
 	return nil

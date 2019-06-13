@@ -154,7 +154,7 @@ func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage 
 	return nil
 }
 
-func DeleteNode(ctx context.Context, toDeleteHost *Host, kubeClient *kubernetes.Clientset, hasAnotherRole bool, cloudProvider string) error {
+func DeleteNode(ctx context.Context, toDeleteHost *Host, kubeClient *kubernetes.Clientset, hasAnotherRole bool) error {
 	if hasAnotherRole {
 		log.Infof(ctx, "[hosts] host [%s] has another role, skipping delete from kubernetes cluster", toDeleteHost.Address)
 		return nil
@@ -172,7 +172,7 @@ func DeleteNode(ctx context.Context, toDeleteHost *Host, kubeClient *kubernetes.
 		return err
 	}
 	log.Infof(ctx, "[hosts] Deleting host [%s] from the cluster", toDeleteHost.Address)
-	if err := k8s.DeleteNode(kubeClient, toDeleteHost.HostnameOverride, cloudProvider); err != nil {
+	if err := k8s.DeleteNode(kubeClient, toDeleteHost.HostnameOverride, ""); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[hosts] Successfully deleted host [%s] from the cluster", toDeleteHost.Address)

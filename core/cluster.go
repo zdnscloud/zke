@@ -29,29 +29,26 @@ import (
 )
 
 type Cluster struct {
+	types.ZcloudKubernetesEngineConfig `yaml:",inline"`
 	AuthnStrategies                    map[string]bool
 	ConfigPath                         string
 	ConfigDir                          string
-	CloudConfigFile                    string
-	ControlPlaneHosts                  []*hosts.Host
 	Certificates                       map[string]pki.CertificatePKI
 	CertificateDir                     string
 	ClusterDomain                      string
 	ClusterCIDR                        string
 	ClusterDNSServer                   string
 	DockerDialerFactory                hosts.DialerFactory
-	EtcdHosts                          []*hosts.Host
-	EtcdReadyHosts                     []*hosts.Host
-	InactiveHosts                      []*hosts.Host
 	K8sWrapTransport                   k8s.WrapTransport
 	KubeClient                         *kubernetes.Clientset
 	KubernetesServiceIP                net.IP
 	LocalKubeConfigPath                string
 	PrivateRegistriesMap               map[string]types.PrivateRegistry
 	StateFilePath                      string
-	UpdateWorkersOnly                  bool
-	UseKubectlDeploy                   bool
-	types.ZcloudKubernetesEngineConfig `yaml:",inline"`
+	ControlPlaneHosts                  []*hosts.Host
+	EtcdHosts                          []*hosts.Host
+	EtcdReadyHosts                     []*hosts.Host
+	InactiveHosts                      []*hosts.Host
 	WorkerHosts                        []*hosts.Host
 	StorageHosts                       []*hosts.Host
 	EdgeHosts                          []*hosts.Host
@@ -92,7 +89,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	if len(c.Services.Etcd.ExternalURLs) > 0 {
 		log.Infof(ctx, "[etcd] External etcd connection string has been specified, skipping etcd plane")
 	} else {
-		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.PrivateRegistriesMap, c.UpdateWorkersOnly, c.SystemImages.Alpine, c.Services.Etcd, c.Certificates); err != nil {
+		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.PrivateRegistriesMap, c.SystemImages.Alpine, c.Services.Etcd, c.Certificates); err != nil {
 			return fmt.Errorf("[etcd] Failed to bring up Etcd Plane: %v", err)
 		}
 	}
@@ -105,7 +102,6 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	if err := services.RunControlPlane(ctx, c.ControlPlaneHosts,
 		c.PrivateRegistriesMap,
 		cpNodePlanMap,
-		c.UpdateWorkersOnly,
 		c.SystemImages.Alpine,
 		c.Certificates); err != nil {
 		return fmt.Errorf("[controlPlane] Failed to bring up Control Plane: %v", err)
@@ -125,7 +121,6 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 		c.PrivateRegistriesMap,
 		workerNodePlanMap,
 		c.Certificates,
-		c.UpdateWorkersOnly,
 		c.SystemImages.Alpine); err != nil {
 		return fmt.Errorf("[workerPlane] Failed to bring up Worker Plane: %v", err)
 	}

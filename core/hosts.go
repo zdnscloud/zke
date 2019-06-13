@@ -145,18 +145,12 @@ func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
 			return err
 		}
 		log.Infof(ctx, "[certificates] Successfully deployed kubernetes certificates to Cluster nodes")
-		if c.CloudProvider.Name != "" {
-			if err := deployFile(ctx, hostList, c.SystemImages.Alpine, c.PrivateRegistriesMap, cloudConfigFileName, c.CloudConfigFile); err != nil {
-				return err
-			}
-			log.Infof(ctx, "[%s] Successfully deployed kubernetes cloud config to Cluster nodes", cloudConfigFileName)
-		}
 
 		if c.Authentication.Webhook != nil {
 			if err := deployFile(ctx, hostList, c.SystemImages.Alpine, c.PrivateRegistriesMap, authnWebhookFileName, c.Authentication.Webhook.ConfigFile); err != nil {
 				return err
 			}
-			log.Infof(ctx, "[%s] Successfully deployed authentication webhook config Cluster nodes", cloudConfigFileName)
+			log.Infof(ctx, "[%s] Successfully deployed authentication webhook config Cluster nodes", authnWebhookFileName)
 		}
 	}
 	return nil

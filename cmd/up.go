@@ -24,8 +24,6 @@ import (
 	"k8s.io/client-go/util/cert"
 )
 
-const DINDWaitTime = 3
-
 func UpCommand() cli.Command {
 	upFlags := []cli.Flag{
 		cli.StringFlag{
@@ -121,10 +119,8 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 			return APIURL, caCrt, clientCert, clientKey, nil, err
 		}
 	}
-	err = core.SetUpAuthentication(ctx, kubeCluster, currentCluster, clusterState)
-	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
-	}
+	core.SetUpAuthentication(ctx, kubeCluster, currentCluster, clusterState)
+
 	if len(kubeCluster.ControlPlaneHosts) > 0 {
 		APIURL = fmt.Sprintf("https://" + kubeCluster.ControlPlaneHosts[0].Address + ":6443")
 	}
@@ -175,7 +171,7 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-	err = ConfigureCluster(ctx, kubeCluster.ZcloudKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions, false)
+	err = ConfigureCluster(ctx, kubeCluster.ZcloudKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -237,8 +233,7 @@ func ConfigureCluster(
 	zkeConfig types.ZcloudKubernetesEngineConfig,
 	crtBundle map[string]pki.CertificatePKI,
 	flags core.ExternalFlags,
-	dailersOptions hosts.DialersOptions,
-	useKubectl bool) error {
+	dailersOptions hosts.DialersOptions) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
 	kubeCluster, err := core.InitClusterObject(ctx, &zkeConfig, flags)
 	if err != nil {
@@ -247,13 +242,10 @@ func ConfigureCluster(
 	if err := kubeCluster.SetupDialers(ctx, dailersOptions); err != nil {
 		return err
 	}
-	kubeCluster.UseKubectlDeploy = useKubectl
 	if len(kubeCluster.ControlPlaneHosts) > 0 {
 		kubeCluster.Certificates = crtBundle
 		if err := network.DeployNetwork(ctx, kubeCluster); err != nil {
-			if err, ok := err.(*core.AddonError); ok && err.IsCritical {
-				return err
-			}
+			return err
 			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", network.NetworkPluginResourceName, err)
 		}
 

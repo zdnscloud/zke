@@ -16,12 +16,12 @@ const (
 	unschedulableControlTaint = "node-role.kubernetes.io/controlplane=true:NoSchedule"
 )
 
-func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.ZKEConfigNodePlan, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
+func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.ZKEConfigNodePlan, certMap map[string]pki.CertificatePKI, alpineImage string) error {
 	log.Infof(ctx, "[%s] Building up Worker Plane..", WorkerRole)
 
 	_, err := errgroup.Batch(allHosts, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
-		return nil, doDeployWorkerPlaneHost(ctx, runHost, prsMap, workerNodePlanMap[runHost.Address].Processes, certMap, updateWorkersOnly, alpineImage)
+		return nil, doDeployWorkerPlaneHost(ctx, runHost, prsMap, workerNodePlanMap[runHost.Address].Processes, certMap, alpineImage)
 
 	})
 	if err != nil {
@@ -32,12 +32,7 @@ func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, prsMap map[stri
 	return nil
 }
 
-func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, certMap map[string]pki.CertificatePKI, updateWorkersOnly bool, alpineImage string) error {
-	if updateWorkersOnly {
-		if !host.UpdateWorker {
-			return nil
-		}
-	}
+func doDeployWorkerPlaneHost(ctx context.Context, host *hosts.Host, prsMap map[string]types.PrivateRegistry, processMap map[string]types.Process, certMap map[string]pki.CertificatePKI, alpineImage string) error {
 	if !host.IsWorker {
 		if host.IsEtcd {
 			// Add unschedulable taint

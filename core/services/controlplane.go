@@ -11,10 +11,7 @@ import (
 	"github.com/zdnscloud/cement/errgroup"
 )
 
-func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.ZKEConfigNodePlan, updateWorkersOnly bool, alpineImage string, certMap map[string]pki.CertificatePKI) error {
-	if updateWorkersOnly {
-		return nil
-	}
+func RunControlPlane(ctx context.Context, controlHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, cpNodePlanMap map[string]types.ZKEConfigNodePlan, alpineImage string, certMap map[string]pki.CertificatePKI) error {
 	log.Infof(ctx, "[%s] Building up Controller Plane..", ControlRole)
 
 	_, err := errgroup.Batch(controlHosts, func(h interface{}) (interface{}, error) {

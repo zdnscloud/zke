@@ -19,14 +19,12 @@ const (
 type DialerFactory func(h *Host) (func(network, address string) (net.Conn, error), error)
 
 type dialer struct {
-	signer          ssh.Signer
-	sshKeyString    string
-	sshCertString   string
-	sshAddress      string
-	username        string
-	netConn         string
-	dockerSocket    string
-	useSSHAgentAuth bool
+	signer       ssh.Signer
+	sshKeyString string
+	sshAddress   string
+	username     string
+	netConn      string
+	dockerSocket string
 }
 
 type DialersOptions struct {
@@ -43,27 +41,18 @@ func GetDialerOptions(d DialerFactory, w k8s.WrapTransport) DialersOptions {
 
 func NewDialer(h *Host, kind string) (*dialer, error) {
 	dialer := &dialer{
-		sshAddress:      fmt.Sprintf("%s:%s", h.Address, h.Port),
-		username:        h.User,
-		dockerSocket:    h.DockerSocket,
-		sshKeyString:    h.SSHKey,
-		sshCertString:   h.SSHCert,
-		netConn:         "unix",
-		useSSHAgentAuth: h.SSHAgentAuth,
+		sshAddress:   fmt.Sprintf("%s:%s", h.Address, h.Port),
+		username:     h.User,
+		dockerSocket: h.DockerSocket,
+		sshKeyString: h.SSHKey,
+		netConn:      "unix",
 	}
 
-	if dialer.sshKeyString == "" && !dialer.useSSHAgentAuth {
+	if dialer.sshKeyString == "" {
 		var err error
 		dialer.sshKeyString, err = PrivateKeyPath(h.SSHKeyPath)
 		if err != nil {
 			return nil, err
-		}
-
-		if dialer.sshCertString == "" && len(h.SSHCertPath) > 0 {
-			dialer.sshCertString, err = CertificatePath(h.SSHCertPath)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 
@@ -125,7 +114,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 }
 
 func (d *dialer) getSSHTunnelConnection() (*ssh.Client, error) {
-	cfg, err := GetSSHConfig(d.username, d.sshKeyString, d.sshCertString, d.useSSHAgentAuth)
+	cfg, err := GetSSHConfig(d.username, d.sshKeyString)
 	if err != nil {
 		return nil, fmt.Errorf("Error configuring SSH: %v", err)
 	}

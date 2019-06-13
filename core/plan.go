@@ -80,15 +80,11 @@ func BuildZKEConfigNodePlan(ctx context.Context, myCluster *Cluster, host *hosts
 
 		portChecks = append(portChecks, BuildPortChecksFromPortList(host, EtcdPortList, ProtocolTCP)...)
 	}
-	cloudConfig := types.File{
-		Name:     cloudConfigFileName,
-		Contents: b64.StdEncoding.EncodeToString([]byte(myCluster.CloudConfigFile)),
-	}
+
 	return types.ZKEConfigNodePlan{
 		Address:    host.Address,
 		Processes:  processes,
 		PortChecks: portChecks,
-		Files:      []types.File{cloudConfig},
 		Annotations: map[string]string{
 			k8s.ExternalAddressAnnotation: host.Address,
 			k8s.InternalAddressAnnotation: host.InternalAddress,
@@ -132,7 +128,6 @@ func (c *Cluster) BuildKubeAPIProcess(host *hosts.Host, prefixPath string) types
 		"anonymous-auth":                     "false",
 		"bind-address":                       "0.0.0.0",
 		"client-ca-file":                     pki.GetCertPath(pki.CACertName),
-		"cloud-provider":                     c.CloudProvider.Name,
 		"etcd-cafile":                        etcdCAClientCert,
 		"etcd-certfile":                      etcdClientCert,
 		"etcd-keyfile":                       etcdClientKey,
@@ -164,11 +159,6 @@ func (c *Cluster) BuildKubeAPIProcess(host *hosts.Host, prefixPath string) types
 	if c.Authentication.Webhook != nil {
 		CommandArgs["authentication-token-webhook-config-file"] = authnWebhookFileName
 		CommandArgs["authentication-token-webhook-cache-ttl"] = c.Authentication.Webhook.CacheTimeout
-	}
-	if len(c.CloudProvider.Name) > 0 {
-		c.Services.KubeAPI.ExtraEnv = append(
-			c.Services.KubeAPI.ExtraEnv,
-			fmt.Sprintf("%s=%s", CloudConfigSumEnv, getCloudConfigChecksum(c.CloudConfigFile)))
 	}
 	// check if our version has specific options for this component
 	serviceOptions := c.GetKubernetesServicesOptions()
@@ -284,7 +274,6 @@ func (c *Cluster) BuildKubeControllerProcess(prefixPath string) types.Process {
 		"address":                          "127.0.0.1",
 		"allow-untagged-cloud":             "true",
 		"allocate-node-cidrs":              "true",
-		"cloud-provider":                   c.CloudProvider.Name,
 		"cluster-cidr":                     c.ClusterCIDR,
 		"configure-cloud-routes":           "false",
 		"enable-hostpath-provisioner":      "false",
@@ -378,7 +367,6 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) types
 		"authentication-token-webhook":      "true",
 		"cgroups-per-qos":                   "True",
 		"client-ca-file":                    pki.GetCertPath(pki.CACertName),
-		"cloud-provider":                    c.CloudProvider.Name,
 		"cluster-dns":                       c.ClusterDNSServer,
 		"cluster-domain":                    c.ClusterDomain,
 		"cni-bin-dir":                       "/opt/cni/bin",

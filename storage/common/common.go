@@ -1,10 +1,11 @@
 package common
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/zke/core"
@@ -12,11 +13,9 @@ import (
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
 
-	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
-	"strings"
 )
 
 const (
@@ -66,21 +65,22 @@ func checkStorageClassExist(cli client.Client, classname string) error {
 }
 
 func checkBlocks(ctx context.Context, c *core.Cluster, name string, devs []string) error {
-	var node types.ZKEConfigNode
-	for _, n := range c.Nodes {
+	var node *hosts.Host
+	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+	for _, n := range allHosts {
 		if name == n.Address || name == n.HostnameOverride {
 			node = n
 			break
 		}
 	}
-	client, err := makeSSHClient(node)
+	client, err := node.GetSSHClient()
 	if err != nil {
 		return err
 	}
 	var errinfo string
 	for _, d := range devs {
 		cmd := "udevadm info --query=property " + d
-		cmdout, cmderr, err := getSSHCmdOut(client, cmd)
+		cmdout, cmderr, err := node.GetSSHCmdOutput(client, cmd)
 		if err != nil {
 			return err
 		}
@@ -93,46 +93,4 @@ func checkBlocks(ctx context.Context, c *core.Cluster, name string, devs []strin
 		return errors.New("some blocks cat not be used!" + errinfo)
 	}
 	return nil
-}
-
-func makeSSHClient(node types.ZKEConfigNode) (*ssh.Client, error) {
-	var sshKeyString, sshCertString string
-	if !node.SSHAgentAuth {
-		var err error
-		sshKeyString, err = hosts.PrivateKeyPath(node.SSHKeyPath)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(node.SSHCertPath) > 0 {
-			sshCertString, err = hosts.CertificatePath(node.SSHCertPath)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-	cfg, err := hosts.GetSSHConfig(node.User, sshKeyString, sshCertString, node.SSHAgentAuth)
-	if err != nil {
-		return nil, err
-	}
-	addr := node.Address + ":22"
-	return ssh.Dial("tcp", addr, cfg)
-}
-
-func getSSHCmdOut(client *ssh.Client, cmd string) (string, string, error) {
-	var cmdout, cmderr string
-	session, err := client.NewSession()
-	if err != nil {
-		return cmdout, "error", err
-	}
-	defer session.Close()
-	var stdOut, stdErr bytes.Buffer
-	session.Stdout = &stdOut
-	session.Stderr = &stdErr
-	session.Run(cmd)
-	cmdout = strings.TrimSpace(stdOut.String())
-	cmderr = strings.TrimSpace(stdErr.String())
-	//cmdout = strings.Replace(stdOut.String(), "\n", "", -1)
-	//cmderr = strings.Replace(stdErr.String(), "\n", "", -1)
-	return cmdout, cmderr, nil
 }

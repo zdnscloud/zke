@@ -11,21 +11,14 @@ type ZcloudKubernetesEngineConfig struct {
 	Storage StorageConfig `yaml:"storage" json:"storage,omitempty"`
 	// Authentication configuration used in the cluster (default: x509)
 	Authentication AuthnConfig `yaml:"authentication" json:"authentication,omitempty"`
-	// YAML manifest for user provided addons to be deployed on the cluster
-	Addons string `yaml:"addons" json:"addons,omitempty"`
-	// List of urls or paths for addons
-	AddonsInclude []string `yaml:"addons_include" json:"addonsInclude,omitempty"`
 	// List of images used internally for proxy, cert downlaod and kubedns
 	SystemImages ZKESystemImages `yaml:"system_images" json:"systemImages,omitempty"`
 	// SSH Private Key Path
 	SSHKeyPath   string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
+	SSHKey       string `yaml:"ssh_key" json:"sshKey,omitempty"`
 	SSHPort      string `yaml:"port" json:"sshPort,omitempty"`
 	SSHUser      string `yaml:"user" json:"sshUser,omitempty"`
 	DockerSocket string `yaml:"docker_socket" json:"dockerSocket,omitempty"`
-	// SSH Certificate Path
-	SSHCertPath string `yaml:"ssh_cert_path" json:"sshCertPath,omitempty"`
-	// SSH Agent Auth enable
-	SSHAgentAuth bool `yaml:"ssh_agent_auth" json:"sshAgentAuth"`
 	// Authorization mode configuration used in the cluster
 	Authorization AuthzConfig `yaml:"authorization" json:"authorization,omitempty"`
 	// Enable/disable strict docker version checking
@@ -38,16 +31,10 @@ type ZcloudKubernetesEngineConfig struct {
 	Ingress IngressConfig `yaml:"ingress" json:"ingress,omitempty"`
 	// Cluster Name used in the kube config
 	ClusterName string `yaml:"cluster_name" json:"clusterName,omitempty"`
-	// Cloud Provider options
-	CloudProvider CloudProvider `yaml:"cloud_provider" json:"cloudProvider,omitempty"`
 	// kubernetes directory path
 	PrefixPath string `yaml:"prefix_path" json:"prefixPath,omitempty"`
-	// Timeout in seconds for status check on addon deployment jobs
-	AddonJobTimeout int `yaml:"addon_job_timeout" json:"addonJobTimeout,omitempty" norman:"default=30"`
 	// Monitoring Config
 	Monitor MonitorConfig `yaml:"monitoring" json:"monitoring,omitempty"`
-	// RestoreCluster flag
-	Restore RestoreConfig `yaml:"restore" json:"restore,omitempty"`
 	// DNS Config
 	DNS DNSConfig `yaml:"dns" json:"dns,omitempty"`
 	// Harbor Registry Config
@@ -137,16 +124,10 @@ type ZKEConfigNode struct {
 	User string `yaml:"user" json:"user,omitempty"`
 	// Optional - Docker socket on the node that will be used in tunneling
 	DockerSocket string `yaml:"docker_socket" json:"dockerSocket,omitempty"`
-	// SSH Agent Auth enable
-	SSHAgentAuth bool `yaml:"ssh_agent_auth,omitempty" json:"sshAgentAuth,omitempty"`
 	// SSH Private Key
 	SSHKey string `yaml:"ssh_key" json:"sshKey,omitempty" norman:"type=password"`
 	// SSH Private Key Path
 	SSHKeyPath string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
-	// SSH Certificate
-	SSHCert string `yaml:"ssh_cert" json:"sshCert,omitempty"`
-	// SSH Certificate Path
-	SSHCertPath string `yaml:"ssh_cert_path" json:"sshCertPath,omitempty"`
 	// Node Labels
 	Labels map[string]string `yaml:"labels" json:"labels,omitempty"`
 }
@@ -313,8 +294,6 @@ type ZKEConfigNodePlan struct {
 	Processes map[string]Process `json:"processes,omitempty"`
 	// List of portchecks that should be open on the node
 	PortChecks []PortCheck `json:"portChecks,omitempty"`
-	// List of files to deploy on the node
-	Files []File `json:"files,omitempty"`
 	// Node Annotations
 	Annotations map[string]string `json:"annotations,omitempty"`
 	// Node Labels
@@ -368,11 +347,6 @@ type PortCheck struct {
 	Protocol string `json:"protocol,omitempty"`
 }
 
-type CloudProvider struct {
-	Name                string `yaml:"name" json:"name,omitempty"`
-	CustomCloudProvider string `yaml:"customCloudProvider,omitempty" json:"customCloudProvider,omitempty"`
-}
-
 type CalicoNetworkProvider struct {
 	CloudProvider string `json:"cloudProvider"`
 }
@@ -406,11 +380,6 @@ type MonitorConfig struct {
 	PrometheusDiskCapacity                string            `yaml:"prometheus_disk_capacity" json:"prometheus_disk_capacity"`
 }
 
-type RestoreConfig struct {
-	Restore      bool   `yaml:"restore" json:"restore,omitempty"`
-	SnapshotName string `yaml:"snapshot_name" json:"snapshotName,omitempty"`
-}
-
 type DNSConfig struct {
 	// DNS provider
 	Provider string `yaml:"provider" json:"provider,omitempty" norman:"coredns"`
@@ -420,11 +389,6 @@ type DNSConfig struct {
 	ReverseCIDRs []string `yaml:"reversecidrs" json:"reversecidrs,omitempty"`
 	// NodeSelector key pair
 	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector,omitempty"`
-}
-
-type File struct {
-	Name     string `json:"name,omitempty"`
-	Contents string `json:"contents,omitempty"`
 }
 
 type BackupConfig struct {

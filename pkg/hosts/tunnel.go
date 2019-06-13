@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 )
 
 const (
@@ -73,44 +71,15 @@ func parsePrivateKey(keyBuff string) (ssh.Signer, error) {
 	return ssh.ParsePrivateKey([]byte(keyBuff))
 }
 
-func GetSSHConfig(username, sshPrivateKeyString string, sshCertificateString string, useAgentAuth bool) (*ssh.ClientConfig, error) {
+func GetSSHConfig(username, sshPrivateKeyString string) (*ssh.ClientConfig, error) {
 	config := &ssh.ClientConfig{
 		User:            username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	// Kind of a double check now.
-	if useAgentAuth {
-		if sshAgentSock := os.Getenv("SSH_AUTH_SOCK"); sshAgentSock != "" {
-			sshAgent, err := net.Dial("unix", sshAgentSock)
-			if err != nil {
-				return config, fmt.Errorf("Cannot connect to SSH Auth socket %q: %s", sshAgentSock, err)
-			}
-
-			config.Auth = append(config.Auth, ssh.PublicKeysCallback(agent.NewClient(sshAgent).Signers))
-
-			logrus.Debugf("using %q SSH_AUTH_SOCK", sshAgentSock)
-			return config, nil
-		}
-	}
 	signer, err := parsePrivateKey(sshPrivateKeyString)
 	if err != nil {
 		return config, err
-	}
-
-	if len(sshCertificateString) > 0 {
-		key, _, _, _, err := ssh.ParseAuthorizedKey([]byte(sshCertificateString))
-		if err != nil {
-			return config, fmt.Errorf("Unable to parse SSH certificate: %v", err)
-		}
-
-		if _, ok := key.(*ssh.Certificate); !ok {
-			return config, fmt.Errorf("Unable to cast public key to SSH Certificate")
-		}
-		signer, err = ssh.NewCertSigner(key.(*ssh.Certificate), signer)
-		if err != nil {
-			return config, err
-		}
 	}
 
 	config.Auth = append(config.Auth, ssh.PublicKeys(signer))

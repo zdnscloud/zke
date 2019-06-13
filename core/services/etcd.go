@@ -35,15 +35,11 @@ func RunEtcdPlane(
 	etcdHosts []*hosts.Host,
 	etcdNodePlanMap map[string]types.ZKEConfigNodePlan,
 	prsMap map[string]types.PrivateRegistry,
-	updateWorkersOnly bool,
 	alpineImage string,
 	es types.ETCDService,
 	certMap map[string]pki.CertificatePKI) error {
 	log.Infof(ctx, "[%s] Building up etcd plane..", ETCDRole)
 	for _, host := range etcdHosts {
-		if updateWorkersOnly {
-			continue
-		}
 		etcdProcess := etcdNodePlanMap[host.Address].Processes[EtcdContainerName]
 		imageCfg, hostCfg, _ := GetProcessConfig(etcdProcess)
 		if err := docker.DoRunContainer(ctx, host.DClient, imageCfg, hostCfg, EtcdContainerName, host.Address, ETCDRole, prsMap); err != nil {

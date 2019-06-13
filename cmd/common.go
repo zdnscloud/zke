@@ -46,10 +46,7 @@ func resolveClusterFile(ctx *cli.Context) (string, string, error) {
 }
 
 func setOptionsFromCLI(c *cli.Context, zkeConfig *types.ZcloudKubernetesEngineConfig) (*types.ZcloudKubernetesEngineConfig, error) {
-	// If true... override the file.. else let file value go through
-	if c.Bool("ssh-agent-auth") {
-		zkeConfig.SSHAgentAuth = c.Bool("ssh-agent-auth")
-	}
+
 	if c.Bool("ignore-docker-version") {
 		zkeConfig.IgnoreDockerVersion = c.Bool("ignore-docker-version")
 	}

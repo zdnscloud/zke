@@ -6,7 +6,6 @@ import (
 
 	"github.com/zdnscloud/zke/core/services"
 	"github.com/zdnscloud/zke/pkg/docker"
-	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
 )
@@ -127,8 +126,6 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 		}
 
 		c.Nodes[i].HostnameOverride = strings.ToLower(c.Nodes[i].HostnameOverride)
-		// For now, you can set at the global level only.
-		c.Nodes[i].SSHAgentAuth = c.SSHAgentAuth
 	}
 
 	if len(c.Authorization.Mode) == 0 {
@@ -149,9 +146,6 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	}
 	if len(c.Version) == 0 {
 		c.Version = DefaultK8sVersion
-	}
-	if c.AddonJobTimeout == 0 {
-		c.AddonJobTimeout = k8s.DefaultTimeout
 	}
 	if len(c.Monitor.MetricsProvider) == 0 {
 		c.Monitor.MetricsProvider = DefaultMonitoringMetricsProvider

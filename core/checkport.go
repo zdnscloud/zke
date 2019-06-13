@@ -47,14 +47,11 @@ const (
 	FlannelBackendType          = "flannel_backend_type"
 	FlannelBackendDirectrouting = "flannel_vxlan_directrouting"
 
-	// List of map keys to be used with network templates
-
 	// EtcdEndpoints is the server address for Etcd, used by calico
 	EtcdEndpoints = "EtcdEndpoints"
 	// APIRoot is the kubernetes API address
 	APIRoot = "APIRoot"
 	// kubernetes client certificates and kubeconfig paths
-
 	EtcdClientCert     = "EtcdClientCert"
 	EtcdClientKey      = "EtcdClientKey"
 	EtcdClientCA       = "EtcdClientCA"

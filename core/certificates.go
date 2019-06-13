@@ -13,12 +13,10 @@ import (
 	"k8s.io/client-go/util/cert"
 )
 
-func SetUpAuthentication(ctx context.Context, kubeCluster, currentCluster *Cluster, fullState *FullState) error {
+func SetUpAuthentication(ctx context.Context, kubeCluster, currentCluster *Cluster, fullState *FullState) {
 	if kubeCluster.AuthnStrategies[AuthnX509Provider] {
 		kubeCluster.Certificates = fullState.DesiredState.CertificatesBundle
-		return nil
 	}
-	return nil
 }
 
 func GetClusterCertsFromKubernetes(ctx context.Context, kubeCluster *Cluster) (map[string]pki.CertificatePKI, error) {
