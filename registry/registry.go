@@ -16,36 +16,6 @@ const (
 	DeployNamespace = "zcloud"
 )
 
-type RegistryImage struct {
-	HarborAdminserver  string `yaml:"harbor_adminserver" json:"harbor_adminserver"`
-	HarborChartmuseum  string `yaml:"harbor_chartmuseum" json:"harbor_chartmuseum"`
-	HarborClair        string `yaml:"harbor_clair" json:"harbor_clair"`
-	HarborCore         string `yaml:"harbor_core" json:"harbor_core"`
-	HarborDatabase     string `yaml:"harbor_database" json:"harbor_database"`
-	HarborJobservice   string `yaml:"harbor_jobservice" json:"harbor_jobservice"`
-	HarborNotaryServer string `yaml:"harbor_notaryserver" json:"harbor_notaryserver"`
-	HarborNotarySigner string `yaml:"harbor_notarysigner" json:"harbor_notarysigner"`
-	HarborPortal       string `yaml:"harbor_portal" json:"harbor_portal"`
-	HarborRedis        string `yaml:"harbor_redis" json:"harbor_redis"`
-	HarborRegistry     string `yaml:"harbor_registry" json:"harbor_registry"`
-	HarborRegistryctl  string `yaml:"harbor_registryctl" json:"harbor_registryctl"`
-}
-
-var DefaultImage = RegistryImage{
-	HarborAdminserver:  "goharbor/harbor-adminserver:v1.7.5",
-	HarborChartmuseum:  "goharbor/chartmuseum-photon:v0.8.1-v1.7.5",
-	HarborClair:        "goharbor/clair-photon:v2.0.8-v1.7.5",
-	HarborCore:         "goharbor/harbor-core:v1.7.5",
-	HarborDatabase:     "goharbor/harbor-db:v1.7.5",
-	HarborJobservice:   "goharbor/harbor-jobservice:v1.7.5",
-	HarborNotaryServer: "goharbor/notary-server-photon:v0.6.1-v1.7.5",
-	HarborNotarySigner: "goharbor/notary-signer-photon:v0.6.1-v1.7.5",
-	HarborPortal:       "goharbor/harbor-portal:v1.7.5",
-	HarborRedis:        "goharbor/redis-photon:v1.7.5",
-	HarborRegistry:     "goharbor/registry-photon:v2.6.2-v1.7.5",
-	HarborRegistryctl:  "goharbor/harbor-registryctl:v1.7.5",
-}
-
 var componentsTemplates = map[string]string{
 	"redis":         components.RedisTemplate,
 	"database":      components.DatabaseTemplate,
@@ -95,23 +65,23 @@ func prepare(c *core.Cluster) (map[string]interface{}, client.Client, string, er
 	}
 
 	templateConfig := map[string]interface{}{
-		"RedisImage":              DefaultImage.HarborRedis,
+		"RedisImage":              c.SystemImages.HarborRedis,
 		"RedisDiskCapacity":       c.Registry.RedisDiskCapacity,
-		"DatabaseImage":           DefaultImage.HarborDatabase,
+		"DatabaseImage":           c.SystemImages.HarborDatabase,
 		"DatabaseDiskCapacity":    c.Registry.DatabaseDiskCapacity,
-		"CoreImage":               DefaultImage.HarborCore,
-		"RegistryImage":           DefaultImage.HarborRegistry,
-		"RegistryctlImage":        DefaultImage.HarborRegistryctl,
+		"CoreImage":               c.SystemImages.HarborCore,
+		"RegistryImage":           c.SystemImages.HarborRegistry,
+		"RegistryctlImage":        c.SystemImages.HarborRegistryctl,
 		"RegistryDiskCapacity":    c.Registry.RegistryDiskCapacity,
-		"NotaryServerImage":       DefaultImage.HarborNotaryServer,
-		"NotarySignerImage":       DefaultImage.HarborNotarySigner,
-		"ChartmuseumImage":        DefaultImage.HarborChartmuseum,
+		"NotaryServerImage":       c.SystemImages.HarborNotaryServer,
+		"NotarySignerImage":       c.SystemImages.HarborNotarySigner,
+		"ChartmuseumImage":        c.SystemImages.HarborChartmuseum,
 		"ChartmuseumDiskCapacity": c.Registry.ChartmuseumDiskCapacity,
-		"ClairImage":              DefaultImage.HarborClair,
-		"JobserviceImage":         DefaultImage.HarborJobservice,
+		"ClairImage":              c.SystemImages.HarborClair,
+		"JobserviceImage":         c.SystemImages.HarborJobservice,
 		"JobserviceDiskCapacity":  c.Registry.JobserviceDiskCapacity,
-		"PortalImage":             DefaultImage.HarborPortal,
-		"AdminserverImage":        DefaultImage.HarborAdminserver,
+		"PortalImage":             c.SystemImages.HarborPortal,
+		"AdminserverImage":        c.SystemImages.HarborAdminserver,
 		"RegistryIngressURL":      c.Registry.RegistryIngressURL,
 		"NotaryIngressURL":        c.Registry.NotaryIngressURL,
 		"IngresscaCertBase64":     getB64Cert(IngresscaCert),

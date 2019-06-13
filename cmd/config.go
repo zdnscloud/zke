@@ -218,11 +218,7 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 	cluster.Authorization = *authzConfig
 	// Get k8s/system images
-	systemImages, err := getSystemImagesConfig(reader)
-	if err != nil {
-		return err
-	}
-	cluster.SystemImages = *systemImages
+	cluster.SystemImages = types.K8sVersionToZKESystemImages[core.DefaultK8sVersion]
 	cluster.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
 	if err != nil {
 		return err
@@ -306,20 +302,6 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	}
 	host.InternalAddress = internalAddress
 	return &host, nil
-}
-
-func getSystemImagesConfig(reader *bufio.Reader) (*types.ZKESystemImages, error) {
-	imageDefaults := types.K8sVersionToZKESystemImages[core.DefaultK8sVersion]
-	kubeImage, err := getConfig(reader, "Kubernetes Docker image", imageDefaults.Kubernetes)
-	if err != nil {
-		return nil, err
-	}
-	systemImages, ok := types.K8sVersionToZKESystemImages[kubeImage]
-	if ok {
-		return &systemImages, nil
-	}
-	imageDefaults.Kubernetes = kubeImage
-	return &imageDefaults, nil
 }
 
 func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {

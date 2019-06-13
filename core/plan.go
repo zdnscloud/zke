@@ -39,21 +39,6 @@ const (
 
 var admissionControlOptionNames = []string{"enable-admission-plugins", "admission-control"}
 
-func GeneratePlan(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, hostsInfoMap map[string]dockertypes.Info) (types.ZKEPlan, error) {
-	clusterPlan := types.ZKEPlan{}
-	myCluster, err := InitClusterObject(ctx, zkeConfig, ExternalFlags{})
-	if err != nil {
-		return clusterPlan, err
-	}
-	// zkeConfig.Nodes are already unique. But they don't have role flags. So I will use the parsed cluster.Hosts to make use of the role flags.
-	uniqHosts := hosts.GetUniqueHostList(myCluster.EtcdHosts, myCluster.ControlPlaneHosts, myCluster.WorkerHosts, myCluster.StorageHosts, myCluster.EdgeHosts)
-	for _, host := range uniqHosts {
-		host.DockerInfo = hostsInfoMap[host.Address]
-		clusterPlan.Nodes = append(clusterPlan.Nodes, BuildZKEConfigNodePlan(ctx, myCluster, host, hostsInfoMap[host.Address]))
-	}
-	return clusterPlan, nil
-}
-
 func BuildZKEConfigNodePlan(ctx context.Context, myCluster *Cluster, host *hosts.Host, hostDockerInfo dockertypes.Info) types.ZKEConfigNodePlan {
 	prefixPath := myCluster.PrefixPath
 	processes := map[string]types.Process{}
