@@ -2,19 +2,16 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/core/services"
-	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
@@ -198,12 +195,6 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Ingress = *ingressConfig
-	// Get Storage config
-	storageConfig, err := getStorageConfig(reader, cluster.Nodes)
-	if err != nil {
-		return err
-	}
-	cluster.Storage = *storageConfig
 
 	// Get Authentication Config
 	authnConfig, err := getAuthnConfig(reader)
@@ -230,17 +221,6 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 	cluster.Services = *serviceConfig
 
-	registryConfig, err := getRegistryConfig(reader, &cluster)
-	if err != nil {
-		return err
-	}
-	cluster.Registry = *registryConfig
-
-	monitorConfig, err := getMonitorConfig(reader, &cluster)
-	if err != nil {
-		return err
-	}
-	cluster.Monitor = *monitorConfig
 	return writeConfig(&cluster, configFile, print)
 }
 
@@ -406,106 +386,6 @@ func getIngressConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types
 	return &ingressCfg, nil
 }
 
-func getStorageConfig(reader *bufio.Reader, nodes []types.ZKEConfigNode) (*types.StorageConfig, error) {
-	storageinfo := make(map[string][]string)
-	for _, n := range nodes {
-		for _, v := range n.Role {
-			if v == services.StorageRole {
-				var Host string
-				devices, err := getConfig(reader, fmt.Sprintf("Storage disk partitions on host (%s),separated by commas", n.Address), "")
-				if err != nil {
-					return nil, err
-				}
-				if n.HostnameOverride != "" {
-					Host = n.HostnameOverride
-				} else {
-					Host = n.Address
-				}
-				storageinfo[Host] = strings.Split(devices, ",")
-			}
-		}
-	}
-	storageCfg := types.StorageConfig{}
-	hostsequence := promptStorage(storageinfo)
-	storagetypes := []string{"Lvm", "Nfs", "Ceph"}
-	for _, t := range storagetypes {
-		cfg, err := allocateStorage(reader, storageinfo, t, hostsequence)
-		if err != nil {
-			return nil, err
-		}
-		switch t {
-		case "Lvm":
-			storageCfg.Lvm = cfg
-		case "Nfs":
-			storageCfg.Nfs = cfg
-		case "Ceph":
-			storageCfg.Ceph = cfg
-		}
-	}
-	return &storageCfg, nil
-}
-
-func promptStorage(storageinfo map[string][]string) map[int]string {
-	hostsequence := make(map[int]string)
-	var keys []string
-	for k := range storageinfo {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for i, k := range keys {
-		fmt.Printf("%d: %s\n", i+1, k)
-		hostsequence[i+1] = k
-	}
-	return hostsequence
-}
-
-func allocateStorage(reader *bufio.Reader, storageinfo map[string][]string, t string, hostsequence map[int]string) ([]types.Deviceconf, error) {
-	hosts := make([]string, 0)
-	for {
-		hostnums, err := GetConfig(reader, fmt.Sprintf("Host number used for %s storage,separated by commas", t), "")
-		if err != nil {
-			return nil, err
-		}
-		if hostnums == "" {
-			break
-		}
-		nums := strings.Split(strings.TrimSuffix(hostnums, ","), ",")
-		var flag bool
-		var validnum []int
-		for _, v := range nums {
-			num, _ := strconv.Atoi(v)
-			_, ok := hostsequence[num]
-			if ok {
-				validnum = append(validnum, num)
-				flag = true
-			} else {
-				fmt.Printf("The host not exist or has been allocated, please change input!\n")
-				validnum = validnum[0:0]
-				flag = false
-				break
-			}
-		}
-		if flag {
-			for _, v := range validnum {
-				hosts = append(hosts, hostsequence[v])
-				delete(hostsequence, v)
-			}
-			break
-		} else {
-			continue
-		}
-	}
-	devicecfgs := make([]types.Deviceconf, 0)
-	for _, h := range hosts {
-		c := types.Deviceconf{
-			Host: h,
-			Devs: storageinfo[h],
-		}
-		devicecfgs = append(devicecfgs, c)
-	}
-	return devicecfgs, nil
-}
-
 func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 	globalDNS := []string{}
 	inputString, err := getConfig(reader, fmt.Sprintf("Cluster global dns,separated by commas"), core.DefaultClusterGlobalDns)
@@ -517,60 +397,6 @@ func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 		globalDNS = append(globalDNS, server)
 	}
 	return globalDNS, nil
-}
-
-func getRegistryConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.RegistryConfig, error) {
-	ctx := context.TODO()
-	registryCfg := types.RegistryConfig{}
-	isenabled, err := getConfig(reader, fmt.Sprintf("Is enabled harbor registry (y/n)?"), "n")
-	if err != nil {
-		return nil, err
-	}
-	if isenabled == "n" || isenabled == "N" {
-		registryCfg.Isenabled = false
-		return &registryCfg, nil
-	}
-	if isenabled == "y" || isenabled == "Y" {
-		if len(c.Storage.Lvm) == 0 {
-			log.Warnf(ctx, "None available lvm storge, will not enable harbor registry!")
-			registryCfg.Isenabled = false
-			return &registryCfg, nil
-		}
-		registryCfg.Isenabled = true
-		registryDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster registry disk capacity"), "50Gi")
-		if err != nil {
-			return nil, err
-		}
-		registryCfg.RegistryDiskCapacity = registryDiskCapacity
-		registryIngressURL, err := getConfig(reader, fmt.Sprintf("Cluster registry ingress url"), "registry.zcloud."+c.Services.Kubelet.ClusterDomain)
-		if err != nil {
-			return nil, err
-		}
-		registryCfg.RegistryIngressURL = registryIngressURL
-		registryCfg.NotaryIngressURL = "notary.zcloud." + c.Services.Kubelet.ClusterDomain
-		registryCfg.RedisDiskCapacity = core.DefaultRegistryRedisDiskCapacity
-		registryCfg.DatabaseDiskCapacity = core.DefaultRegistryDatabaseDiskCapacity
-		registryCfg.JobserviceDiskCapacity = core.DefaultRegistryJobserviceDiskCapacity
-		registryCfg.ChartmuseumDiskCapacity = core.DefaultRegistryChartmuseumDiskCapacity
-	}
-	return &registryCfg, nil
-}
-
-func getMonitorConfig(reader *bufio.Reader, c *types.ZcloudKubernetesEngineConfig) (*types.MonitorConfig, error) {
-	monitorCfg := types.MonitorConfig{}
-	if len(c.Storage.Lvm) == 0 {
-		monitorCfg.StorageTypeUse = "emptyDir"
-	} else {
-		monitorCfg.StorageTypeUse = "lvm"
-		prometheusDiskCapacity, err := getConfig(reader, fmt.Sprintf("Cluster prometheus lvm disk capacity"), "20Gi")
-		if err != nil {
-			return nil, err
-		}
-		monitorCfg.PrometheusDiskCapacity = prometheusDiskCapacity
-	}
-	monitorCfg.GrafanaIngressEndpoint = "grafana.zcloud." + c.Services.Kubelet.ClusterDomain
-	monitorCfg.PrometheusAlertManagerIngressEndpoint = "alertmanager.zcloud." + c.Services.Kubelet.ClusterDomain
-	return &monitorCfg, nil
 }
 
 func generateSystemImagesList(version string, all bool) error {

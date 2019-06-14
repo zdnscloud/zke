@@ -21,12 +21,12 @@ func (c *Cluster) ClusterRemove(ctx context.Context) error {
 	return nil
 }
 
-func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool, storageMap map[string][]string) error {
+func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
 	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts)
 
 	_, err := errgroup.Batch(uniqueHosts, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
-		return nil, runHost.CleanUpAll(ctx, cleanerImage, prsMap, externalEtcd, storageMap)
+		return nil, runHost.CleanUpAll(ctx, cleanerImage, prsMap, externalEtcd)
 	})
 	return err
 }
@@ -52,10 +52,8 @@ func (c *Cluster) CleanupNodes(ctx context.Context) error {
 		}
 	}
 
-	storageMap := c.getStorageConfigMap()
-
 	// Clean up all hosts
-	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap, externalEtcd, storageMap)
+	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap, externalEtcd)
 }
 
 func (c *Cluster) CleanupFiles(ctx context.Context) error {
@@ -87,18 +85,4 @@ func (c *Cluster) RemoveOldNodes(ctx context.Context) error {
 		}
 	}
 	return nil
-}
-
-func (c *Cluster) getStorageConfigMap() map[string][]string {
-	storageConfigMap := map[string][]string{}
-	for _, i := range c.Storage.Lvm {
-		storageConfigMap[i.Host] = i.Devs
-	}
-	for _, i := range c.Storage.Nfs {
-		storageConfigMap[i.Host] = i.Devs
-	}
-	for _, i := range c.Storage.Ceph {
-		storageConfigMap[i.Host] = i.Devs
-	}
-	return storageConfigMap
 }

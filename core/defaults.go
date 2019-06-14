@@ -150,12 +150,6 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	if len(c.Monitor.MetricsProvider) == 0 {
 		c.Monitor.MetricsProvider = DefaultMonitoringMetricsProvider
 	}
-	if len(c.Monitor.PrometheusAlertManagerIngressEndpoint) == 0 {
-		c.Monitor.PrometheusAlertManagerIngressEndpoint = "alertmanager" + "." + DefaultMonitoringNamespace + "." + DefaultClusterDomain
-	}
-	if len(c.Monitor.GrafanaIngressEndpoint) == 0 {
-		c.Monitor.GrafanaIngressEndpoint = "grafana" + "." + DefaultMonitoringNamespace + "." + DefaultClusterDomain
-	}
 	//set docker private registry URL
 	for _, pr := range c.PrivateRegistries {
 		if pr.URL == "" {

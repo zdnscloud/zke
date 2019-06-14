@@ -14,8 +14,6 @@ import (
 	"github.com/zdnscloud/zke/network"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/registry"
-	"github.com/zdnscloud/zke/storage"
 	"github.com/zdnscloud/zke/types"
 	"github.com/zdnscloud/zke/zcloud"
 
@@ -249,15 +247,7 @@ func ConfigureCluster(
 			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", network.NetworkPluginResourceName, err)
 		}
 
-		if err := storage.DeployStoragePlugin(ctx, kubeCluster); err != nil {
-			return err
-		}
-
 		if err := monitor.DeployMonitoring(ctx, kubeCluster); err != nil {
-			return err
-		}
-
-		if err := registry.DeployRegistry(ctx, kubeCluster); err != nil {
 			return err
 		}
 

@@ -59,7 +59,7 @@ const (
 	ZKELogsPath             = "/var/lib/zdnscloud/zke/log"
 )
 
-func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool, storageMap map[string][]string) error {
+func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
 	toCleanPaths := []string{
 		path.Join(h.PrefixPath, ToCleanSSLDir),
@@ -79,7 +79,7 @@ func (h *Host) CleanUpAll(ctx context.Context, cleanerImage string, prsMap map[s
 	if !externalEtcd {
 		toCleanPaths = append(toCleanPaths, path.Join(h.PrefixPath, ToCleanEtcdDir))
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, storageMap)
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
 func (h *Host) CleanUpWorkerHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
@@ -94,7 +94,7 @@ func (h *Host) CleanUpWorkerHost(ctx context.Context, cleanerImage string, prsMa
 		ToCleanCalicoRun,
 		path.Join(h.PrefixPath, ToCleanCNILib),
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, map[string][]string{})
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
 func (h *Host) CleanUpControlHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
@@ -109,7 +109,7 @@ func (h *Host) CleanUpControlHost(ctx context.Context, cleanerImage string, prsM
 		ToCleanCalicoRun,
 		path.Join(h.PrefixPath, ToCleanCNILib),
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, map[string][]string{})
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
 func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
@@ -123,15 +123,15 @@ func (h *Host) CleanUpEtcdHost(ctx context.Context, cleanerImage string, prsMap 
 			path.Join(h.PrefixPath, ToCleanEtcdDir),
 		}
 	}
-	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap, map[string][]string{})
+	return h.CleanUp(ctx, toCleanPaths, cleanerImage, prsMap)
 }
 
-func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]types.PrivateRegistry, storageMap map[string][]string) error {
+func (h *Host) CleanUp(ctx context.Context, toCleanPaths []string, cleanerImage string, prsMap map[string]types.PrivateRegistry) error {
 	log.Infof(ctx, "[hosts] Cleaning up host [%s]", h.Address)
 	if err := CleanHeritageContainers(ctx, h); err != nil {
 		return fmt.Errorf("err while cleanheritagecontainers on host [%s]:%s", h.Address, err)
 	}
-	if err := CleanHeritageStorge(ctx, h, types.AllK8sVersions["v1.13.1"].ZKERemover, storageMap, prsMap); err != nil {
+	if err := CleanHeritageStorge(ctx, h, types.AllK8sVersions["v1.13.1"].ZKERemover, prsMap); err != nil {
 		return fmt.Errorf("err while cleanheritagestorage on host [%s]:%s", h.Address, err)
 	}
 

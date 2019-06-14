@@ -2,9 +2,7 @@ package hosts
 
 import (
 	"context"
-	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/log"
@@ -36,7 +34,7 @@ func CleanHeritageContainers(ctx context.Context, h *Host) error {
 	return nil
 }
 
-func CleanHeritageStorge(ctx context.Context, h *Host, removeImage string, storageMap map[string][]string, prsMap map[string]types.PrivateRegistry) error {
+func CleanHeritageStorge(ctx context.Context, h *Host, removeImage string, prsMap map[string]types.PrivateRegistry) error {
 	imageCfg := &container.Config{
 		Image: removeImage,
 		Tty:   true,
@@ -46,10 +44,7 @@ func CleanHeritageStorge(ctx context.Context, h *Host, removeImage string, stora
 			"/remove.sh",
 		},
 	}
-	if storageDevs, ok := storageMap[h.HostnameOverride]; ok {
-		arg := strings.Replace(strings.Trim(fmt.Sprint(storageDevs), "[]"), " ", ",", -1)
-		imageCfg.Cmd = append(imageCfg.Cmd, arg)
-	}
+
 	hostcfgMounts := []mount.Mount{
 		{
 			Type:        "bind",

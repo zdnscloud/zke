@@ -6,7 +6,6 @@ type ZcloudKubernetesEngineConfig struct {
 	// Kubernetes components
 	Services ZKEConfigServices `yaml:"services" json:"services,omitempty"`
 	Network  NetworkConfig     `yaml:"network" json:"network,omitempty"`
-	Storage  StorageConfig     `yaml:"storage" json:"storage,omitempty"`
 	// Authentication configuration used in the cluster (default: x509)
 	Authentication AuthnConfig `yaml:"authentication" json:"authentication,omitempty"`
 	// Authorization mode configuration used in the cluster
@@ -30,8 +29,6 @@ type ZcloudKubernetesEngineConfig struct {
 	PrefixPath        string            `yaml:"prefix_path" json:"prefixPath,omitempty"`
 	Monitor           MonitorConfig     `yaml:"monitoring" json:"monitoring,omitempty"`
 	DNS               DNSConfig         `yaml:"dns" json:"dns,omitempty"`
-	// Harbor Registry Config
-	Registry RegistryConfig `yaml:"registry" json:"registry,omitempty"`
 	// ZKE config version
 	ConfigVersion string `yaml:"config_version" json:"config_version"`
 }
