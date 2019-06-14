@@ -2,7 +2,7 @@ package types
 
 type ZKEConfig struct {
 	// ZKE config global options
-	Options ZKEConfigOptions `yaml:"options" json:"options"`
+	Option ZKEConfigOption `yaml:"options" json:"options"`
 	// Kubernetes nodes
 	Nodes []ZKEConfigNode `yaml:"nodes" json:"nodes,omitempty"`
 	// Kubernetes core components
@@ -19,7 +19,7 @@ type ZKEConfig struct {
 	Version string `yaml:"version" json:"Version"`
 }
 
-type ZKEConfigOptions struct {
+type ZKEConfigOption struct {
 	SSHKeyPath          string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
 	SSHKey              string `yaml:"ssh_key" json:"sshKey,omitempty"`
 	SSHPort             string `yaml:"port" json:"sshPort,omitempty"`

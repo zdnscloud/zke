@@ -37,10 +37,10 @@ type ZcloudKubernetesEngineConfig struct {
 }
 
 type PrivateRegistry struct {
-	URL        string `yaml:"url" json:"url,omitempty"`
-	User       string `yaml:"user" json:"user,omitempty"`
-	Password   string `yaml:"password" json:"password,omitempty" norman:"type=password"`
-	CAcertPath string `yaml:"ca_cert_path" json:"ca_cert_path,omitempty"`
+	URL      string `yaml:"url" json:"url,omitempty"`
+	User     string `yaml:"user" json:"user,omitempty"`
+	Password string `yaml:"password" json:"password,omitempty" norman:"type=password"`
+	CAcert   string `yaml:"ca_cert" json:"cacert,omitempty"`
 }
 
 type ZKEConfigNode struct {

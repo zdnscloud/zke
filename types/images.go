@@ -6,7 +6,7 @@ type ZKESystemImages struct {
 	Alpine                    string `yaml:"alpine" json:"alpine,omitempty"`
 	NginxProxy                string `yaml:"nginx_proxy" json:"nginxProxy,omitempty"`
 	CertDownloader            string `yaml:"cert_downloader" json:"certDownloader,omitempty"`
-	ZKERemover                string `yaml:"zke_remover" json:zke_remover`
+	ZKERemover                string `yaml:"zke_remover" json:zkeRemover`
 	KubernetesServicesSidecar string `yaml:"kubernetes_services_sidecar" json:"kubernetesServicesSidecar,omitempty"`
 	// CoreDNS image
 	CoreDNS           string `yaml:"coredns" json:"coredns,omitempty"`
@@ -65,6 +65,6 @@ type ZKESystemImages struct {
 	KubeStateMetrics            string `yaml:"kube_state_metrics" json:"kube_state_metrics"`
 	MetricsServer               string `yaml:"metrics_server" json:"metricsServer,omitempty"`
 	// Zcloud image
-	ClusterAgent string `yaml:"cluster_agent" json:"cluster_agent"`
-	NodeAgent    string `yaml:"node_agent" json:"node_agent"`
+	ClusterAgent string `yaml:"cluster_agent" json:"clusterAgent"`
+	NodeAgent    string `yaml:"node_agent" json:"nodeAgent"`
 }
