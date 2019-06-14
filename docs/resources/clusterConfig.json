@@ -45,8 +45,7 @@
             "dockerSocket": {
                 "type": "string"
             },
-
-            "kubernetsVersion": {
+            "kubernetesVersion": {
                 "type": "string"
             },
             "ignoreDockerVersion": {
@@ -343,6 +342,44 @@
                 "type": "ingress"
             }
         },
+        "dns": {
+            "provider": {
+                "type": "string"
+            },
+            "upstreamnameservers": {
+                "type": "array",
+                "elemType": "string"
+            },
+            "reversecidrs": {
+                "type": "array",
+                "elemType": "string"
+            },
+            "nodeSelector": {
+                "type": "map",
+                "keyType": "string",
+                "valueType": "string"
+            }
+        },
+        "ingress": {
+            "provider": {
+                "type": "string"
+            },
+            "options": {
+                "type": "map",
+                "keyType": "string",
+                "valueType": "string"
+            },
+            "nodeSelector": {
+                "type": "map",
+                "keyType": "string",
+                "valueType": "string"
+            },
+            "extraArgs": {
+                "type": "map",
+                "keyType": "string",
+                "valueType": "string"
+            }
+        },
         "systemImage": {
             "etcd": {
                 "type": "string"
@@ -424,44 +461,6 @@
         },
         "version": {
             "type": "string"
-        },
-        "dns": {
-            "provider": {
-                "type": "string"
-            },
-            "upstreamnameservers": {
-                "type": "array",
-                "elemType": "string"
-            },
-            "reversecidrs": {
-                "type": "array",
-                "elemType": "string"
-            },
-            "nodeSelector": {
-                "type": "map",
-                "keyType": "string",
-                "valueType": "string"
-            }
-        },
-        "ingress": {
-            "provider": {
-                "type": "string"
-            },
-            "options": {
-                "type": "map",
-                "keyType": "string",
-                "valueType": "string"
-            },
-            "nodeSelector": {
-                "type": "map",
-                "keyType": "string",
-                "valueType": "string"
-            },
-            "extraArgs": {
-                "type": "map",
-                "keyType": "string",
-                "valueType": "string"
-            }
         }
     },
 
@@ -545,7 +544,8 @@
                 "roles": {
                     "type": "array",
                     "elemType": "enum",
-                    "validValues": ["controlplane", "worker", "etcd", "storage", "edge"]
+                    "validValues": ["controlplane", "worker", "etcd", "storage", "edge"],
+                    "required": true
                 },
                 "hostnameOverride": {
                     "type": "string"
