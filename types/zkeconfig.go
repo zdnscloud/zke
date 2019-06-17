@@ -1,51 +1,51 @@
 package types
 
 type ZKEConfig struct {
-	ClusterName string `yaml:"cluster_name" json:"name,omitempty"`
+	ClusterName string `json:"name"`
 	// ZKE config global options
-	Option ZKEConfigOption `yaml:"options" json:"options"`
+	Option ZKEConfigOption `json:"option"`
 	// Kubernetes nodes
-	Nodes []ZKEConfigNode `yaml:"nodes" json:"nodes,omitempty"`
+	Nodes []ZKEConfigNode `json:"nodes"`
 	// Kubernetes core components
-	Core ZKEConfigCore `yaml:"core" json:"core,omitempty"`
+	Core ZKEConfigCore `json:"core"`
 	// Network configuration used in the kubernetes cluster (flannel, calico, dns and ingress)
-	Network ZKEConfigNetwork `yaml:"network" json:"network,omitempty"`
+	Network ZKEConfigNetwork `json:"network"`
 	// List images used when ZKE create one kubernetes cluster
-	SystemImage ZKESystemImages `yaml:"system_images" json:"systemImages,omitempty"`
+	SystemImage ZKESystemImages `json:"systemImages"`
 	// List of private registries and their credentials
-	PrivateRegistries []PrivateRegistry `yaml:"private_registries" json:"privateRegistries,omitempty"`
+	PrivateRegistries []PrivateRegistry `json:"privateRegistries"`
 	// ZKE Config version
-	Version string `yaml:"version" json:"Version"`
+	Version string `json:"version"`
 }
 
 type ZKEConfigOption struct {
-	SSHUser               string `yaml:"user" json:"sshUser,omitempty"`
-	SSHKey                string `yaml:"ssh_key" json:"sshKey,omitempty"`
-	SSHPort               string `yaml:"port" json:"sshPort,omitempty"`
-	DockerSocket          string `yaml:"docker_socket" json:"dockerSocket,omitempty"`
-	KubernetesVersion     string `yaml:"kubernetes_version" json:"kubernetesVersion,omitempty"`
-	IgnoreDockerVersion   bool   `yaml:"ignore_docker_version" json:"ignoreDockerVersion" norman:"default=true"`
-	ClusterCidr           string `yaml:"cluster_cidr" json:"clusterCidr"`
-	ServiceClusterIpRange string `yaml:"service_cluster_iprange" json:"serviceClusterIpRange"`
-	ClusterDomain         string `yaml:"cluster_domain" json:"clusterDomain"`
+	SSHUser               string `json:"sshUser"`
+	SSHKey                string `json:"sshKey"`
+	SSHPort               string `json:"sshPort"`
+	DockerSocket          string `json:"dockerSocket"`
+	KubernetesVersion     string `json:"kubernetesVersion"`
+	IgnoreDockerVersion   bool   `json:"ignoreDockerVersion"`
+	ClusterCidr           string `json:"clusterCidr"`
+	ServiceClusterIpRange string `json:"serviceClusterIpRange"`
+	ClusterDomain         string `json:"clusterDomain"`
 }
 
 type ZKEConfigCore struct {
-	Etcd           ETCDService           `yaml:"etcd" json:"etcd,omitempty"`
-	KubeAPI        KubeAPIService        `yaml:"kube-api" json:"kubeApi,omitempty"`
-	KubeController KubeControllerService `yaml:"kube-controller" json:"kubeController,omitempty"`
-	Scheduler      SchedulerService      `yaml:"scheduler" json:"scheduler,omitempty"`
-	Kubelet        KubeletService        `yaml:"kubelet" json:"kubelet,omitempty"`
-	Kubeproxy      KubeproxyService      `yaml:"kubeproxy" json:"kubeproxy,omitempty"`
-	Authentication AuthnConfig           `yaml:"authentication" json:"authentication,omitempty"`
-	Authorization  AuthzConfig           `yaml:"authorization" json:"authorization,omitempty"`
+	Etcd           ETCDService           `json:"etcd"`
+	KubeAPI        KubeAPIService        `json:"kubeApi"`
+	KubeController KubeControllerService `json:"kubeController"`
+	Scheduler      SchedulerService      `json:"scheduler"`
+	Kubelet        KubeletService        `json:"kubelet"`
+	Kubeproxy      KubeproxyService      `json:"kubeproxy"`
+	Authentication AuthnConfig           `json:"authentication"`
+	Authorization  AuthzConfig           `json:"authorization"`
 }
 
 type ZKEConfigNetwork struct {
 	// Network Plugin That will be used in kubernetes cluster
-	Plugin string `yaml:"plugin" json:"plugin,omitempty" norman:"default=canal"`
+	Plugin string `json:"plugin"`
 	// Plugin options to configure network properties
-	Iface   string        `yaml:"iface" json:"iface"`
-	DNS     DNSConfig     `yaml:"dns" json:"dns,omitempty"`
-	Ingress IngressConfig `yaml:"ingress" json:"ingress,omitempty"`
+	Iface   string        `json:"iface"`
+	DNS     DNSConfig     `json:"dns"`
+	Ingress IngressConfig `json:"ingress"`
 }
