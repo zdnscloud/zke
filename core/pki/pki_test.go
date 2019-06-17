@@ -16,7 +16,7 @@ const (
 )
 
 func TestPKI(t *testing.T) {
-	zkeConfig := types.ZcloudKubernetesEngineConfig{
+	zkeConfig := types.ZKEConfig{
 		Nodes: []types.ZKEConfigNode{
 			types.ZKEConfigNode{
 				Address:          "1.1.1.1",
@@ -25,7 +25,7 @@ func TestPKI(t *testing.T) {
 				HostnameOverride: "server1",
 			},
 		},
-		Services: types.ZKEConfigServices{
+		Core: types.ZKEConfigCore{
 			KubeAPI: types.KubeAPIService{
 				ServiceClusterIPRange: FakeClusterCidr,
 			},

@@ -18,7 +18,7 @@ const (
 
 func (c *Cluster) SnapshotEtcd(ctx context.Context, snapshotName string) error {
 	for _, host := range c.EtcdHosts {
-		if err := services.RunEtcdSnapshotSave(ctx, host, c.PrivateRegistriesMap, c.SystemImages.Alpine, snapshotName, true, c.Services.Etcd); err != nil {
+		if err := services.RunEtcdSnapshotSave(ctx, host, c.PrivateRegistriesMap, c.SystemImages.Alpine, snapshotName, true, c.Core.Etcd); err != nil {
 			return err
 		}
 	}
@@ -31,8 +31,8 @@ func (c *Cluster) PrepareBackup(ctx context.Context, snapshotPath string) error 
 	// stop etcd on all etcd nodes, we need this because we start the backup server on the same port
 	if !isAutoSyncSupported(c.SystemImages.Alpine) {
 		log.Warnf(ctx, "Auto local backup sync is not supported. Use `zdnscloud/zke-tools:%s` or up", SupportedSyncToolsVersion)
-	} else if c.Services.Etcd.BackupConfig == nil || // legacy zke local backup
-		c.Services.Etcd.BackupConfig != nil {
+	} else if c.Core.Etcd.BackupConfig == nil || // legacy zke local backup
+		c.Core.Etcd.BackupConfig != nil {
 		for _, host := range c.EtcdHosts {
 			if err := docker.StopContainer(ctx, host.DClient, host.Address, services.EtcdContainerName); err != nil {
 				log.Warnf(ctx, "failed to stop etcd container on host [%s]: %v", host.Address, err)

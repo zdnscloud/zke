@@ -23,7 +23,7 @@ var (
 	}
 
 	// K8sVersionToZKESystemImages is dynamically populated on init() with the latest versions
-	K8sVersionToZKESystemImages map[string]ZKESystemImages
+	K8sVersionToZKESystemImages map[string]ZKEConfigImages
 
 	// K8sVersionServiceOptions - service options per k8s version
 	K8sVersionServiceOptions = map[string]KubernetesServicesOptions{
@@ -38,7 +38,7 @@ var (
 		},
 	}
 
-	AllK8sVersions = map[string]ZKESystemImages{
+	AllK8sVersions = map[string]ZKEConfigImages{
 		"v1.13.1": {
 			Etcd:                      "zdnscloud/coreos-etcd:v3.2.24",
 			Kubernetes:                "zdnscloud/hyperkube:v1.13.1",
@@ -69,7 +69,7 @@ func init() {
 		panic("Do not initialize or add values to K8sVersionToZKESystemImages")
 	}
 
-	K8sVersionToZKESystemImages = map[string]ZKESystemImages{}
+	K8sVersionToZKESystemImages = map[string]ZKEConfigImages{}
 
 	for version, images := range AllK8sVersions {
 		if K8sBadVersions[version] {

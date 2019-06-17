@@ -22,7 +22,7 @@ const (
 	StateDeployerContainerName = "cluster-state-deployer"
 )
 
-func DeployCertificatesOnPlaneHost(ctx context.Context, host *hosts.Host, zkeConfig types.ZcloudKubernetesEngineConfig, crtMap map[string]CertificatePKI, certDownloaderImage string, prsMap map[string]types.PrivateRegistry, forceDeploy bool) error {
+func DeployCertificatesOnPlaneHost(ctx context.Context, host *hosts.Host, zkeConfig types.ZKEConfig, crtMap map[string]CertificatePKI, certDownloaderImage string, prsMap map[string]types.PrivateRegistry, forceDeploy bool) error {
 	crtBundle := GenerateZKENodeCerts(ctx, zkeConfig, host.Address, crtMap)
 	env := []string{}
 	for _, crt := range crtBundle {

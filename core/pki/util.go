@@ -664,7 +664,7 @@ func WriteCertificates(certDirPath string, certBundle map[string]CertificatePKI)
 	return nil
 }
 
-func ValidateBundleContent(zkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI, configPath, configDir string) error {
+func ValidateBundleContent(zkeConfig *types.ZKEConfig, certBundle map[string]CertificatePKI, configPath, configDir string) error {
 	// ensure all needed certs exists
 	// make sure all CA Certs exist
 	if certBundle[CACertName].Certificate == nil {
@@ -715,7 +715,7 @@ func ValidateBundleContent(zkeConfig *types.ZcloudKubernetesEngineConfig, certBu
 	return validateCAIssuer(zkeConfig, certBundle)
 }
 
-func validateCAIssuer(zkeConfig *types.ZcloudKubernetesEngineConfig, certBundle map[string]CertificatePKI) error {
+func validateCAIssuer(zkeConfig *types.ZKEConfig, certBundle map[string]CertificatePKI) error {
 	// make sure all certs are signed by CA cert
 	caCert := certBundle[CACertName].Certificate
 	ComponentsCerts := []string{

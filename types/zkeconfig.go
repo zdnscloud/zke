@@ -1,21 +1,18 @@
 package types
 
 type ZKEConfig struct {
-	ClusterName string `yaml:"name" json:"name"`
-	// ZKE config global options
-	Option ZKEConfigOption `yaml:"option" json:"option"`
-	// Kubernetes nodes
-	Nodes []ZKEConfigNode `yaml:"nodes" json:"nodes"`
-	// Kubernetes core components
-	Core ZKEConfigCore `yaml:"core" json:"core"`
-	// Network configuration used in the kubernetes cluster (flannel, calico, dns and ingress)
-	Network ZKEConfigNetwork `yaml:"network" json:"network"`
-	// List images used when ZKE create one kubernetes cluster
-	SystemImage ZKESystemImages `yaml:"system_images" json:"systemImages"`
-	// List of private registries and their credentials
+	ClusterName string          `yaml:"cluster_name" json:"name"`
+	Option      ZKEConfigOption `yaml:"option" json:"option"`
+	Nodes       []ZKEConfigNode `yaml:"nodes" json:"nodes"`
+	// Kubernetes components
+	Core              ZKEConfigCore     `yaml:"core" json:"core"`
+	Network           ZKEConfigNetwork  `yaml:"network" json:"network"`
+	SystemImages      ZKEConfigImages   `yaml:"system_images" json:"systemImages"`
 	PrivateRegistries []PrivateRegistry `yaml:"private_registries" json:"privateRegistries"`
-	// ZKE Config version
-	Version string `yaml:"version" json:"version"`
+	Authentication    AuthnConfig       `yaml:"authentication" json:"authentication"`
+	Authorization     AuthzConfig       `yaml:"authorization" json:"authorization"`
+	Monitor           MonitorConfig     `yaml:"monitor" json:"monitor"`
+	Version           string            `yaml:"version" json:"version"`
 }
 
 type ZKEConfigOption struct {
@@ -32,22 +29,68 @@ type ZKEConfigOption struct {
 	PrefixPath            string `yaml:"prefix_path" json:"prefixPath"`
 }
 
+type ZKEConfigNode struct {
+	NodeName string `yaml:"node_name" json:"nodeName"`
+	Address  string `yaml:"address" json:"address"`
+	// Optional - Internal address that will be used for components communication
+	InternalAddress string `yaml:"internal_address" json:"internalAddress"`
+	// Node role in kubernetes cluster (controlplane, worker, etcd, storage or edge)
+	Role []string `yaml:"role" json:"role"`
+	// Optional - Hostname of the node
+	HostnameOverride string `yaml:"hostname_override" json:"hostnameOverride"`
+	// SSH config
+	User         string            `yaml:"user" json:"sshUser"`
+	Port         string            `yaml:"port" json:"sshPort"`
+	SSHKey       string            `yaml:"ssh_key" json:"sshKey"`
+	SSHKeyPath   string            `yaml:"ssh_key_path" json:"sshKeyPath"`
+	DockerSocket string            `yaml:"docker_socket" json:"dockerSocket"`
+	Labels       map[string]string `yaml:"labels" json:"labels"`
+}
+
 type ZKEConfigCore struct {
 	Etcd           ETCDService           `yaml:"etcd" json:"etcd"`
-	KubeAPI        KubeAPIService        `yaml:"kube_api" json:"kubeApi"`
-	KubeController KubeControllerService `yaml:"kube_controller" json:"kubeController"`
+	KubeAPI        KubeAPIService        `yaml:"kube-api" json:"kubeApi"`
+	KubeController KubeControllerService `yaml:"kube-controller" json:"kubeController"`
 	Scheduler      SchedulerService      `yaml:"scheduler" json:"scheduler"`
 	Kubelet        KubeletService        `yaml:"kubelet" json:"kubelet"`
-	Kubeproxy      KubeproxyService      `yaml:"kube_proxy" json:"kubeproxy"`
-	Authentication AuthnConfig           `yaml:"authentication" json:"authentication"`
-	Authorization  AuthzConfig           `yaml:"authorization" json:"authorization"`
+	Kubeproxy      KubeproxyService      `yaml:"kubeproxy" json:"kubeproxy"`
 }
 
 type ZKEConfigNetwork struct {
-	// Network Plugin That will be used in kubernetes cluster
-	Plugin string `yaml:"plugin" json:"plugin"`
-	// Plugin options to configure network properties
+	Plugin  string        `yaml:"plugin" json:"plugin"`
 	Iface   string        `yaml:"iface" json:"iface"`
 	DNS     DNSConfig     `yaml:"dns" json:"dns"`
 	Ingress IngressConfig `yaml:"ingress" json:"ingress"`
+}
+
+type ZKEConfigImages struct {
+	Etcd string `yaml:"etcd" json:"etcd"`
+	// ZKE image
+	Alpine                    string `yaml:"alpine" json:"alpine"`
+	NginxProxy                string `yaml:"nginx_proxy" json:"nginxProxy"`
+	CertDownloader            string `yaml:"cert_downloader" json:"certDownloader"`
+	ZKERemover                string `yaml:"zke_remover" json:zkeRemover`
+	KubernetesServicesSidecar string `yaml:"kubernetes_services_sidecar" json:"kubernetesServicesSidecar"`
+	// CoreDNS image
+	CoreDNS           string `yaml:"coredns" json:"coredns"`
+	CoreDNSAutoscaler string `yaml:"coredns_autoscaler" json:"corednsAutoscaler"`
+	// Kubernetes image
+	Kubernetes string `yaml:"kubernetes" json:"kubernetes"`
+	// Flannel image
+	Flannel    string `yaml:"flannel" json:"flannel"`
+	FlannelCNI string `yaml:"flannel_cni" json:"flannelCni"`
+	// Calico image
+	CalicoNode        string `yaml:"calico_node" json:"calicoNode"`
+	CalicoCNI         string `yaml:"calico_cni" json:"calicoCni"`
+	CalicoControllers string `yaml:"calico_controllers" json:"calicoControllers"`
+	CalicoCtl         string `yaml:"calico_ctl" json:"calicoCtl"`
+	// Pod infra container image
+	PodInfraContainer string `yaml:"pod_infra_container" json:"podInfraContainer"`
+	// Ingress Controller image
+	Ingress        string `yaml:"ingress" json:"ingress"`
+	IngressBackend string `yaml:"ingress_backend" json:"ingressBackend"`
+	MetricsServer  string `yaml:"metrics_server" json:"metricsServer"`
+	// Zcloud image
+	ClusterAgent string `yaml:"cluster_agent" json:"clusterAgent"`
+	NodeAgent    string `yaml:"node_agent" json:"nodeAgent"`
 }

@@ -131,9 +131,9 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	if len(c.Authorization.Mode) == 0 {
 		c.Authorization.Mode = DefaultAuthorizationMode
 	}
-	if c.Services.KubeAPI.PodSecurityPolicy && c.Authorization.Mode != services.RBACAuthorizationMode {
+	if c.Core.KubeAPI.PodSecurityPolicy && c.Authorization.Mode != services.RBACAuthorizationMode {
 		log.Warnf(ctx, "PodSecurityPolicy can't be enabled with RBAC support disabled")
-		c.Services.KubeAPI.PodSecurityPolicy = false
+		c.Core.KubeAPI.PodSecurityPolicy = false
 	}
 	if len(c.Network.Ingress.Provider) == 0 {
 		c.Network.Ingress.Provider = DefaultIngressController
@@ -166,50 +166,50 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 
 func (c *Cluster) setClusterServicesDefaults() {
 	// We don't accept per service images anymore.
-	c.Services.KubeAPI.Image = c.SystemImages.Kubernetes
-	c.Services.Scheduler.Image = c.SystemImages.Kubernetes
-	c.Services.KubeController.Image = c.SystemImages.Kubernetes
-	c.Services.Kubelet.Image = c.SystemImages.Kubernetes
-	c.Services.Kubeproxy.Image = c.SystemImages.Kubernetes
-	c.Services.Etcd.Image = c.SystemImages.Etcd
+	c.Core.KubeAPI.Image = c.SystemImages.Kubernetes
+	c.Core.Scheduler.Image = c.SystemImages.Kubernetes
+	c.Core.KubeController.Image = c.SystemImages.Kubernetes
+	c.Core.Kubelet.Image = c.SystemImages.Kubernetes
+	c.Core.Kubeproxy.Image = c.SystemImages.Kubernetes
+	c.Core.Etcd.Image = c.SystemImages.Etcd
 
 	// enable etcd snapshots by default
-	if c.Services.Etcd.Snapshot == nil {
+	if c.Core.Etcd.Snapshot == nil {
 		defaultSnapshot := DefaultEtcdSnapshot
-		c.Services.Etcd.Snapshot = &defaultSnapshot
+		c.Core.Etcd.Snapshot = &defaultSnapshot
 	}
 
 	serviceConfigDefaultsMap := map[*string]string{
-		&c.Services.KubeAPI.ServiceClusterIPRange:        DefaultServiceClusterIPRange,
-		&c.Services.KubeAPI.ServiceNodePortRange:         DefaultNodePortRange,
-		&c.Services.KubeController.ServiceClusterIPRange: DefaultServiceClusterIPRange,
-		&c.Services.KubeController.ClusterCIDR:           DefaultClusterCIDR,
-		&c.Services.Kubelet.ClusterDNSServer:             DefaultClusterDNSService,
-		&c.Services.Kubelet.ClusterDomain:                DefaultClusterDomain,
-		&c.Services.Kubelet.InfraContainerImage:          c.SystemImages.PodInfraContainer,
-		&c.Services.Etcd.Creation:                        DefaultEtcdBackupCreationPeriod,
-		&c.Services.Etcd.Retention:                       DefaultEtcdBackupRetentionPeriod,
+		&c.Core.KubeAPI.ServiceClusterIPRange:        DefaultServiceClusterIPRange,
+		&c.Core.KubeAPI.ServiceNodePortRange:         DefaultNodePortRange,
+		&c.Core.KubeController.ServiceClusterIPRange: DefaultServiceClusterIPRange,
+		&c.Core.KubeController.ClusterCIDR:           DefaultClusterCIDR,
+		&c.Core.Kubelet.ClusterDNSServer:             DefaultClusterDNSService,
+		&c.Core.Kubelet.ClusterDomain:                DefaultClusterDomain,
+		&c.Core.Kubelet.InfraContainerImage:          c.SystemImages.PodInfraContainer,
+		&c.Core.Etcd.Creation:                        DefaultEtcdBackupCreationPeriod,
+		&c.Core.Etcd.Retention:                       DefaultEtcdBackupRetentionPeriod,
 	}
 	for k, v := range serviceConfigDefaultsMap {
 		setDefaultIfEmpty(k, v)
 	}
 	// Add etcd timeouts
-	if c.Services.Etcd.ExtraArgs == nil {
-		c.Services.Etcd.ExtraArgs = make(map[string]string)
+	if c.Core.Etcd.ExtraArgs == nil {
+		c.Core.Etcd.ExtraArgs = make(map[string]string)
 	}
-	if _, ok := c.Services.Etcd.ExtraArgs[DefaultEtcdElectionTimeoutName]; !ok {
-		c.Services.Etcd.ExtraArgs[DefaultEtcdElectionTimeoutName] = DefaultEtcdElectionTimeoutValue
+	if _, ok := c.Core.Etcd.ExtraArgs[DefaultEtcdElectionTimeoutName]; !ok {
+		c.Core.Etcd.ExtraArgs[DefaultEtcdElectionTimeoutName] = DefaultEtcdElectionTimeoutValue
 	}
-	if _, ok := c.Services.Etcd.ExtraArgs[DefaultEtcdHeartbeatIntervalName]; !ok {
-		c.Services.Etcd.ExtraArgs[DefaultEtcdHeartbeatIntervalName] = DefaultEtcdHeartbeatIntervalValue
+	if _, ok := c.Core.Etcd.ExtraArgs[DefaultEtcdHeartbeatIntervalName]; !ok {
+		c.Core.Etcd.ExtraArgs[DefaultEtcdHeartbeatIntervalName] = DefaultEtcdHeartbeatIntervalValue
 	}
 
-	if c.Services.Etcd.BackupConfig != nil {
-		if c.Services.Etcd.BackupConfig.IntervalHours == 0 {
-			c.Services.Etcd.BackupConfig.IntervalHours = DefaultEtcdBackupConfigIntervalHours
+	if c.Core.Etcd.BackupConfig != nil {
+		if c.Core.Etcd.BackupConfig.IntervalHours == 0 {
+			c.Core.Etcd.BackupConfig.IntervalHours = DefaultEtcdBackupConfigIntervalHours
 		}
-		if c.Services.Etcd.BackupConfig.Retention == 0 {
-			c.Services.Etcd.BackupConfig.Retention = DefaultEtcdBackupConfigRetention
+		if c.Core.Etcd.BackupConfig.Retention == 0 {
+			c.Core.Etcd.BackupConfig.Retention = DefaultEtcdBackupConfigRetention
 		}
 	}
 }

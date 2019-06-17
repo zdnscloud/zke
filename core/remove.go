@@ -33,7 +33,7 @@ func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageH
 
 func (c *Cluster) CleanupNodes(ctx context.Context) error {
 	externalEtcd := false
-	if len(c.Services.Etcd.ExternalURLs) > 0 {
+	if len(c.Core.Etcd.ExternalURLs) > 0 {
 		externalEtcd = true
 	}
 	// Remove Worker Plane

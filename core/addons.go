@@ -39,7 +39,7 @@ func (c *Cluster) DoAddonDeploy(ctx context.Context, addonYaml, resourceName str
 	if err != nil {
 		return &AddonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].HostnameOverride, err), IsCritical}
 	}
-	addonJob, err := GetAddonsExecuteJob(resourceName, node.Name, c.Services.KubeAPI.Image)
+	addonJob, err := GetAddonsExecuteJob(resourceName, node.Name, c.Core.KubeAPI.Image)
 	if err != nil {
 		return &AddonError{fmt.Sprintf("Failed to generate addon execute job: %v", err), IsCritical}
 	}

@@ -114,7 +114,7 @@ func getConfig(reader *bufio.Reader, text, def string) (string, error) {
 	}
 }
 
-func writeConfig(cluster *types.ZcloudKubernetesEngineConfig, configFile string, print bool) error {
+func writeConfig(cluster *types.ZKEConfig, configFile string, print bool) error {
 	yamlConfig, err := yaml.Marshal(*cluster)
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 	configFile := ctx.String("name")
 	print := ctx.Bool("print")
-	cluster := types.ZcloudKubernetesEngineConfig{}
+	cluster := types.ZKEConfig{}
 	// set zke config version
 	cluster.Version = defaultConfigVersion
 	// Get cluster config from user
@@ -219,7 +219,7 @@ func clusterConfig(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cluster.Services = *serviceConfig
+	cluster.Core = *serviceConfig
 
 	return writeConfig(&cluster, configFile, print)
 }
@@ -284,8 +284,8 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	return &host, nil
 }
 
-func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigServices, error) {
-	servicesConfig := types.ZKEConfigServices{}
+func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigCore, error) {
+	servicesConfig := types.ZKEConfigCore{}
 	servicesConfig.Etcd = types.ETCDService{}
 	servicesConfig.KubeAPI = types.KubeAPIService{}
 	servicesConfig.KubeController = types.KubeControllerService{}
@@ -345,8 +345,8 @@ func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
 	return &authzConfig, nil
 }
 
-func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
-	networkConfig := types.NetworkConfig{}
+func getNetworkConfig(reader *bufio.Reader) (*types.ZKEConfigNetwork, error) {
+	networkConfig := types.ZKEConfigNetwork{}
 	networkPlugin, err := getConfig(reader, "Network Plugin Type (flannel, calico)", core.DefaultNetworkPlugin)
 	if err != nil {
 		return nil, err
@@ -391,7 +391,7 @@ func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 
 func generateSystemImagesList(version string, all bool) error {
 	allVersions := []string{}
-	currentVersionImages := make(map[string]types.ZKESystemImages)
+	currentVersionImages := make(map[string]types.ZKEConfigImages)
 	for version := range types.AllK8sVersions {
 		err := util.ValidateVersion(version)
 		if err != nil {
@@ -421,7 +421,7 @@ func generateSystemImagesList(version string, all bool) error {
 		version = types.DefaultK8s
 	}
 	zkeSystemImages := types.AllK8sVersions[version]
-	if zkeSystemImages == (types.ZKESystemImages{}) {
+	if zkeSystemImages == (types.ZKEConfigImages{}) {
 		return fmt.Errorf("k8s version is not supported, supported versions are: %v", allVersions)
 	}
 	logrus.Infof("Generating images list for version [%s]:", version)
@@ -435,7 +435,7 @@ func generateSystemImagesList(version string, all bool) error {
 	return nil
 }
 
-func getUniqueSystemImageList(zkeSystemImages types.ZKESystemImages) []string {
+func getUniqueSystemImageList(zkeSystemImages types.ZKEConfigImages) []string {
 	imagesReflect := reflect.ValueOf(zkeSystemImages)
 	images := make([]string, imagesReflect.NumField())
 	for i := 0; i < imagesReflect.NumField(); i++ {

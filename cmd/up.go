@@ -79,7 +79,7 @@ func doUpgradeLegacyCluster(ctx context.Context, kubeCluster *core.Cluster, full
 		if err != nil {
 			return err
 		}
-		fullState.CurrentState.ZcloudKubernetesEngineConfig = recoveredCluster.ZcloudKubernetesEngineConfig.DeepCopy()
+		fullState.CurrentState.ZcloudKubernetesEngineConfig = recoveredCluster.ZKEConfig.DeepCopy()
 		fullState.CurrentState.CertificatesBundle = recoveredCerts
 		// we don't want to regenerate certificates
 		fullState.DesiredState.CertificatesBundle = recoveredCerts
@@ -146,7 +146,7 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
 	// Apply Authz configuration after deploying controlplane
-	err = core.ApplyAuthzResources(ctx, kubeCluster.ZcloudKubernetesEngineConfig, flags, dialersOptions)
+	err = core.ApplyAuthzResources(ctx, kubeCluster.ZKEConfig, flags, dialersOptions)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -169,7 +169,7 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-	err = ConfigureCluster(ctx, kubeCluster.ZcloudKubernetesEngineConfig, kubeCluster.Certificates, flags, dialersOptions)
+	err = ConfigureCluster(ctx, kubeCluster.ZKEConfig, kubeCluster.Certificates, flags, dialersOptions)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -228,7 +228,7 @@ func clusterUpFromCli(ctx *cli.Context) error {
 
 func ConfigureCluster(
 	ctx context.Context,
-	zkeConfig types.ZcloudKubernetesEngineConfig,
+	zkeConfig types.ZKEConfig,
 	crtBundle map[string]pki.CertificatePKI,
 	flags core.ExternalFlags,
 	dailersOptions hosts.DialersOptions) error {

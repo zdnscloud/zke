@@ -32,12 +32,12 @@ type FullState struct {
 }
 
 type State struct {
-	ZcloudKubernetesEngineConfig *types.ZcloudKubernetesEngineConfig `json:"zkeConfig,omitempty"`
-	CertificatesBundle           map[string]pki.CertificatePKI       `json:"certificatesBundle,omitempty"`
+	ZcloudKubernetesEngineConfig *types.ZKEConfig              `json:"zkeConfig,omitempty"`
+	CertificatesBundle           map[string]pki.CertificatePKI `json:"certificatesBundle,omitempty"`
 }
 
 func (c *Cluster) UpdateClusterCurrentState(ctx context.Context, fullState *FullState) error {
-	fullState.CurrentState.ZcloudKubernetesEngineConfig = c.ZcloudKubernetesEngineConfig.DeepCopy()
+	fullState.CurrentState.ZcloudKubernetesEngineConfig = c.ZKEConfig.DeepCopy()
 	fullState.CurrentState.CertificatesBundle = c.Certificates
 	return fullState.WriteStateFile(ctx, c.StateFilePath)
 }
@@ -145,7 +145,7 @@ func GetK8sVersion(localConfigPath string, k8sWrapTransport k8s.WrapTransport) (
 	return fmt.Sprintf("%#v", *serverVersion), nil
 }
 
-func RebuildState(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
+func RebuildState(ctx context.Context, zkeConfig *types.ZKEConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
 	newState := &FullState{
 		DesiredState: State{
 			ZcloudKubernetesEngineConfig: zkeConfig.DeepCopy(),

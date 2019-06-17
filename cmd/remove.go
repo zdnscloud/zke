@@ -41,7 +41,7 @@ func RemoveCommand() cli.Command {
 
 func ClusterRemove(
 	ctx context.Context,
-	zkeConfig *types.ZcloudKubernetesEngineConfig,
+	zkeConfig *types.ZKEConfig,
 	dialersOptions hosts.DialersOptions,
 	flags core.ExternalFlags) error {
 	log.Infof(ctx, "Tearing down Kubernetes cluster")

@@ -58,7 +58,7 @@ func generateCSRFromCli(ctx *cli.Context) error {
 	return GenerateZKECSRs(context.Background(), zkeConfig, externalFlags)
 }
 
-func GenerateZKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags core.ExternalFlags) error {
+func GenerateZKECSRs(ctx context.Context, zkeConfig *types.ZKEConfig, flags core.ExternalFlags) error {
 	log.Infof(ctx, "Generating Kubernetes cluster CSR certificates")
 	if len(flags.CertificateDir) == 0 {
 		flags.CertificateDir = core.GetCertificateDirPath(flags.ClusterFilePath, flags.ConfigDir)
@@ -73,7 +73,7 @@ func GenerateZKECSRs(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngin
 		return err
 	}
 	// Generating csrs for kubernetes components
-	if err := pki.GenerateZKEServicesCSRs(ctx, certBundle, kubeCluster.ZcloudKubernetesEngineConfig); err != nil {
+	if err := pki.GenerateZKEServicesCSRs(ctx, certBundle, kubeCluster.ZKEConfig); err != nil {
 		return err
 	}
 	return pki.WriteCertificates(kubeCluster.CertificateDir, certBundle)

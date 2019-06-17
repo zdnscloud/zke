@@ -45,7 +45,7 @@ func resolveClusterFile(ctx *cli.Context) (string, string, error) {
 	return clusterFileBuff, clusterFile, nil
 }
 
-func setOptionsFromCLI(c *cli.Context, zkeConfig *types.ZcloudKubernetesEngineConfig) (*types.ZcloudKubernetesEngineConfig, error) {
+func setOptionsFromCLI(c *cli.Context, zkeConfig *types.ZKEConfig) (*types.ZKEConfig, error) {
 
 	if c.Bool("ignore-docker-version") {
 		zkeConfig.Option.IgnoreDockerVersion = c.Bool("ignore-docker-version")
@@ -53,7 +53,7 @@ func setOptionsFromCLI(c *cli.Context, zkeConfig *types.ZcloudKubernetesEngineCo
 	return zkeConfig, nil
 }
 
-func ClusterInit(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, dialersOptions hosts.DialersOptions, flags core.ExternalFlags) error {
+func ClusterInit(ctx context.Context, zkeConfig *types.ZKEConfig, dialersOptions hosts.DialersOptions, flags core.ExternalFlags) error {
 	log.Infof(ctx, "Initiating Kubernetes cluster")
 	var fullState *core.FullState
 	stateFilePath := core.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir)
@@ -72,7 +72,7 @@ func ClusterInit(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineCon
 	if err != nil {
 		log.Warnf(ctx, "[state] can't fetch legacy cluster state from Kubernetes")
 	}
-	fullState, err = core.RebuildState(ctx, &kubeCluster.ZcloudKubernetesEngineConfig, zkeFullState, flags)
+	fullState, err = core.RebuildState(ctx, &kubeCluster.ZKEConfig, zkeFullState, flags)
 	if err != nil {
 		return err
 	}

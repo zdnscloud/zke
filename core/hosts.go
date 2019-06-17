@@ -53,7 +53,7 @@ func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 		c.WorkerHosts = removeFromHosts(host, c.WorkerHosts)
 		c.StorageHosts = removeFromHosts(host, c.StorageHosts)
 		c.EdgeHosts = removeFromHosts(host, c.EdgeHosts)
-		c.ZcloudKubernetesEngineConfig.Nodes = removeFromZKENodes(host.ZKEConfigNode, c.ZcloudKubernetesEngineConfig.Nodes)
+		c.ZKEConfig.Nodes = removeFromZKENodes(host.ZKEConfigNode, c.ZKEConfig.Nodes)
 	}
 	return ValidateHostCount(c)
 
@@ -135,7 +135,7 @@ func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
 		}
 		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 		_, err := errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
-			return nil, pki.DeployCertificatesOnPlaneHost(ctx, h.(*hosts.Host), c.ZcloudKubernetesEngineConfig, c.Certificates, c.SystemImages.CertDownloader, c.PrivateRegistriesMap, forceDeploy)
+			return nil, pki.DeployCertificatesOnPlaneHost(ctx, h.(*hosts.Host), c.ZKEConfig, c.Certificates, c.SystemImages.CertDownloader, c.PrivateRegistriesMap, forceDeploy)
 		})
 		if err != nil {
 			return err

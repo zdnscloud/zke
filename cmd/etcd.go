@@ -52,7 +52,7 @@ func EtcdCommand() cli.Command {
 
 func SnapshotSaveEtcdHosts(
 	ctx context.Context,
-	zkeConfig *types.ZcloudKubernetesEngineConfig,
+	zkeConfig *types.ZKEConfig,
 	dialersOptions hosts.DialersOptions,
 	flags core.ExternalFlags, snapshotName string) error {
 	log.Infof(ctx, "Starting saving snapshot on etcd hosts")
@@ -75,7 +75,7 @@ func SnapshotSaveEtcdHosts(
 
 func RestoreEtcdSnapshot(
 	ctx context.Context,
-	zkeConfig *types.ZcloudKubernetesEngineConfig,
+	zkeConfig *types.ZKEConfig,
 	dialersOptions hosts.DialersOptions,
 	flags core.ExternalFlags, snapshotName string) error {
 	log.Infof(ctx, "Restoring etcd snapshot %s", snapshotName)

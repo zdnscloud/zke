@@ -29,29 +29,29 @@ import (
 )
 
 type Cluster struct {
-	types.ZcloudKubernetesEngineConfig `yaml:",inline"`
-	AuthnStrategies                    map[string]bool
-	ConfigPath                         string
-	ConfigDir                          string
-	Certificates                       map[string]pki.CertificatePKI
-	CertificateDir                     string
-	ClusterDomain                      string
-	ClusterCIDR                        string
-	ClusterDNSServer                   string
-	DockerDialerFactory                hosts.DialerFactory
-	K8sWrapTransport                   k8s.WrapTransport
-	KubeClient                         *kubernetes.Clientset
-	KubernetesServiceIP                net.IP
-	LocalKubeConfigPath                string
-	PrivateRegistriesMap               map[string]types.PrivateRegistry
-	StateFilePath                      string
-	ControlPlaneHosts                  []*hosts.Host
-	EtcdHosts                          []*hosts.Host
-	EtcdReadyHosts                     []*hosts.Host
-	InactiveHosts                      []*hosts.Host
-	WorkerHosts                        []*hosts.Host
-	StorageHosts                       []*hosts.Host
-	EdgeHosts                          []*hosts.Host
+	types.ZKEConfig      `yaml:",inline"`
+	AuthnStrategies      map[string]bool
+	ConfigPath           string
+	ConfigDir            string
+	Certificates         map[string]pki.CertificatePKI
+	CertificateDir       string
+	ClusterDomain        string
+	ClusterCIDR          string
+	ClusterDNSServer     string
+	DockerDialerFactory  hosts.DialerFactory
+	K8sWrapTransport     k8s.WrapTransport
+	KubeClient           *kubernetes.Clientset
+	KubernetesServiceIP  net.IP
+	LocalKubeConfigPath  string
+	PrivateRegistriesMap map[string]types.PrivateRegistry
+	StateFilePath        string
+	ControlPlaneHosts    []*hosts.Host
+	EtcdHosts            []*hosts.Host
+	EtcdReadyHosts       []*hosts.Host
+	InactiveHosts        []*hosts.Host
+	WorkerHosts          []*hosts.Host
+	StorageHosts         []*hosts.Host
+	EdgeHosts            []*hosts.Host
 }
 
 const (
@@ -81,20 +81,20 @@ const (
 
 func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	// Deploy Etcd Plane
-	etcdNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
+	etcdNodePlanMap := make(map[string]types.ZKENodePlan)
 	// Build etcd node plan map
 	for _, etcdHost := range c.EtcdHosts {
 		etcdNodePlanMap[etcdHost.Address] = BuildZKEConfigNodePlan(ctx, c, etcdHost, etcdHost.DockerInfo)
 	}
-	if len(c.Services.Etcd.ExternalURLs) > 0 {
+	if len(c.Core.Etcd.ExternalURLs) > 0 {
 		log.Infof(ctx, "[etcd] External etcd connection string has been specified, skipping etcd plane")
 	} else {
-		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.PrivateRegistriesMap, c.SystemImages.Alpine, c.Services.Etcd, c.Certificates); err != nil {
+		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.PrivateRegistriesMap, c.SystemImages.Alpine, c.Core.Etcd, c.Certificates); err != nil {
 			return fmt.Errorf("[etcd] Failed to bring up Etcd Plane: %v", err)
 		}
 	}
 	// Deploy Control plane
-	cpNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
+	cpNodePlanMap := make(map[string]types.ZKENodePlan)
 	// Build cp node plan map
 	for _, cpHost := range c.ControlPlaneHosts {
 		cpNodePlanMap[cpHost.Address] = BuildZKEConfigNodePlan(ctx, c, cpHost, cpHost.DockerInfo)
@@ -111,7 +111,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 
 func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 	// Deploy Worker plane
-	workerNodePlanMap := make(map[string]types.ZKEConfigNodePlan)
+	workerNodePlanMap := make(map[string]types.ZKENodePlan)
 	// Build cp node plan map
 	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	for _, workerHost := range allHosts {
@@ -127,25 +127,25 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 	return nil
 }
 
-func ParseConfig(clusterFile string) (*types.ZcloudKubernetesEngineConfig, error) {
+func ParseConfig(clusterFile string) (*types.ZKEConfig, error) {
 	logrus.Debugf("Parsing cluster file [%v]", clusterFile)
-	var zkeConfig types.ZcloudKubernetesEngineConfig
+	var zkeConfig types.ZKEConfig
 	if err := yaml.Unmarshal([]byte(clusterFile), &zkeConfig); err != nil {
 		return nil, err
 	}
 	return &zkeConfig, nil
 }
 
-func InitClusterObject(ctx context.Context, zkeConfig *types.ZcloudKubernetesEngineConfig, flags ExternalFlags) (*Cluster, error) {
+func InitClusterObject(ctx context.Context, zkeConfig *types.ZKEConfig, flags ExternalFlags) (*Cluster, error) {
 	// basic cluster object from zkeConfig
 	c := &Cluster{
-		AuthnStrategies:              make(map[string]bool),
-		ZcloudKubernetesEngineConfig: *zkeConfig,
-		ConfigPath:                   flags.ClusterFilePath,
-		ConfigDir:                    flags.ConfigDir,
-		CertificateDir:               flags.CertificateDir,
-		StateFilePath:                GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir),
-		PrivateRegistriesMap:         make(map[string]types.PrivateRegistry),
+		AuthnStrategies:      make(map[string]bool),
+		ZKEConfig:            *zkeConfig,
+		ConfigPath:           flags.ClusterFilePath,
+		ConfigDir:            flags.ConfigDir,
+		CertificateDir:       flags.CertificateDir,
+		StateFilePath:        GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir),
+		PrivateRegistriesMap: make(map[string]types.PrivateRegistry),
 	}
 	if len(c.ConfigPath) == 0 {
 		c.ConfigPath = pki.ClusterConfig
@@ -178,13 +178,13 @@ func InitClusterObject(ctx context.Context, zkeConfig *types.ZcloudKubernetesEng
 
 func (c *Cluster) setNetworkOptions() error {
 	var err error
-	c.KubernetesServiceIP, err = pki.GetKubernetesServiceIP(c.Services.KubeAPI.ServiceClusterIPRange)
+	c.KubernetesServiceIP, err = pki.GetKubernetesServiceIP(c.Core.KubeAPI.ServiceClusterIPRange)
 	if err != nil {
 		return fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
 	}
-	c.ClusterDomain = c.Services.Kubelet.ClusterDomain
-	c.ClusterCIDR = c.Services.KubeController.ClusterCIDR
-	c.ClusterDNSServer = c.Services.Kubelet.ClusterDNSServer
+	c.ClusterDomain = c.Core.Kubelet.ClusterDomain
+	c.ClusterCIDR = c.Core.KubeController.ClusterCIDR
+	c.ClusterDNSServer = c.Core.Kubelet.ClusterDNSServer
 	return nil
 }
 
@@ -264,7 +264,7 @@ func getLocalAdminConfigWithNewAddress(localConfigPath, cpAddress string, cluste
 		string(config.KeyData))
 }
 
-func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZcloudKubernetesEngineConfig, flags ExternalFlags, dailersOptions hosts.DialersOptions) error {
+func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZKEConfig, flags ExternalFlags, dailersOptions hosts.DialersOptions) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
 	kubeCluster, err := InitClusterObject(ctx, &zkeConfig, flags)
 	if err != nil {
@@ -287,7 +287,7 @@ func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZcloudKubernetesEn
 			return fmt.Errorf("Failed to apply the ClusterRoleBinding needed for node authorization: %v", err)
 		}
 	}
-	if kubeCluster.Authorization.Mode == services.RBACAuthorizationMode && kubeCluster.Services.KubeAPI.PodSecurityPolicy {
+	if kubeCluster.Authorization.Mode == services.RBACAuthorizationMode && kubeCluster.Core.KubeAPI.PodSecurityPolicy {
 		if err := authz.ApplyDefaultPodSecurityPolicy(ctx, kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport); err != nil {
 			return fmt.Errorf("Failed to apply default PodSecurityPolicy: %v", err)
 		}

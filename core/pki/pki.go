@@ -37,8 +37,8 @@ type CertificatePKI struct {
 	ConfigPath     string                   `json:"configPath"`
 }
 
-type GenFunc func(context.Context, map[string]CertificatePKI, types.ZcloudKubernetesEngineConfig, string, string, bool) error
-type CSRFunc func(context.Context, map[string]CertificatePKI, types.ZcloudKubernetesEngineConfig) error
+type GenFunc func(context.Context, map[string]CertificatePKI, types.ZKEConfig, string, string, bool) error
+type CSRFunc func(context.Context, map[string]CertificatePKI, types.ZKEConfig) error
 
 const (
 	etcdRole            = "etcd"
@@ -47,7 +47,7 @@ const (
 	BundleCertContainer = "zke-bundle-cert"
 )
 
-func GenerateZKECerts(ctx context.Context, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
+func GenerateZKECerts(ctx context.Context, zkeConfig types.ZKEConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
 	certs := make(map[string]CertificatePKI)
 	// generate ZKE CA certificates
 	if err := GenerateZKECACerts(ctx, certs, configPath, configDir); err != nil {
@@ -60,7 +60,7 @@ func GenerateZKECerts(ctx context.Context, zkeConfig types.ZcloudKubernetesEngin
 	return certs, nil
 }
 
-func GenerateZKENodeCerts(ctx context.Context, zkeConfig types.ZcloudKubernetesEngineConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
+func GenerateZKENodeCerts(ctx context.Context, zkeConfig types.ZKEConfig, nodeAddress string, certBundle map[string]CertificatePKI) map[string]CertificatePKI {
 	crtMap := make(map[string]CertificatePKI)
 	crtKeys := []string{}
 	removeCAKey := true

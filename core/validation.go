@@ -76,18 +76,18 @@ func validateHostsOptions(c *Cluster) error {
 
 func validateServicesOptions(c *Cluster) error {
 	servicesOptions := map[string]string{
-		"etcd_image":                               c.Services.Etcd.Image,
-		"kube_api_image":                           c.Services.KubeAPI.Image,
-		"kube_api_service_cluster_ip_range":        c.Services.KubeAPI.ServiceClusterIPRange,
-		"kube_controller_image":                    c.Services.KubeController.Image,
-		"kube_controller_service_cluster_ip_range": c.Services.KubeController.ServiceClusterIPRange,
-		"kube_controller_cluster_cidr":             c.Services.KubeController.ClusterCIDR,
-		"scheduler_image":                          c.Services.Scheduler.Image,
-		"kubelet_image":                            c.Services.Kubelet.Image,
-		"kubelet_cluster_dns_service":              c.Services.Kubelet.ClusterDNSServer,
-		"kubelet_cluster_domain":                   c.Services.Kubelet.ClusterDomain,
-		"kubelet_infra_container_image":            c.Services.Kubelet.InfraContainerImage,
-		"kubeproxy_image":                          c.Services.Kubeproxy.Image,
+		"etcd_image":                               c.Core.Etcd.Image,
+		"kube_api_image":                           c.Core.KubeAPI.Image,
+		"kube_api_service_cluster_ip_range":        c.Core.KubeAPI.ServiceClusterIPRange,
+		"kube_controller_image":                    c.Core.KubeController.Image,
+		"kube_controller_service_cluster_ip_range": c.Core.KubeController.ServiceClusterIPRange,
+		"kube_controller_cluster_cidr":             c.Core.KubeController.ClusterCIDR,
+		"scheduler_image":                          c.Core.Scheduler.Image,
+		"kubelet_image":                            c.Core.Kubelet.Image,
+		"kubelet_cluster_dns_service":              c.Core.Kubelet.ClusterDNSServer,
+		"kubelet_cluster_domain":                   c.Core.Kubelet.ClusterDomain,
+		"kubelet_infra_container_image":            c.Core.Kubelet.InfraContainerImage,
+		"kubeproxy_image":                          c.Core.Kubeproxy.Image,
 	}
 	for optionName, OptionValue := range servicesOptions {
 		if len(OptionValue) == 0 {
@@ -95,17 +95,17 @@ func validateServicesOptions(c *Cluster) error {
 		}
 	}
 	// Validate external etcd information
-	if len(c.Services.Etcd.ExternalURLs) > 0 {
-		if len(c.Services.Etcd.CACert) == 0 {
+	if len(c.Core.Etcd.ExternalURLs) > 0 {
+		if len(c.Core.Etcd.CACert) == 0 {
 			return fmt.Errorf("External CA Certificate for etcd can't be empty")
 		}
-		if len(c.Services.Etcd.Cert) == 0 {
+		if len(c.Core.Etcd.Cert) == 0 {
 			return fmt.Errorf("External Client Certificate for etcd can't be empty")
 		}
-		if len(c.Services.Etcd.Key) == 0 {
+		if len(c.Core.Etcd.Key) == 0 {
 			return fmt.Errorf("External Client Key for etcd can't be empty")
 		}
-		if len(c.Services.Etcd.Path) == 0 {
+		if len(c.Core.Etcd.Path) == 0 {
 			return fmt.Errorf("External etcd path can't be empty")
 		}
 	}
@@ -121,7 +121,7 @@ func validateIngressOptions(c *Cluster) error {
 }
 
 func ValidateHostCount(c *Cluster) error {
-	if len(c.EtcdHosts) == 0 && len(c.Services.Etcd.ExternalURLs) == 0 {
+	if len(c.EtcdHosts) == 0 && len(c.Core.Etcd.ExternalURLs) == 0 {
 		failedEtcdHosts := []string{}
 		for _, host := range c.InactiveHosts {
 			if host.IsEtcd {
@@ -131,7 +131,7 @@ func ValidateHostCount(c *Cluster) error {
 		}
 		return fmt.Errorf("Cluster must have at least one etcd plane host: please specify one or more etcd in cluster config")
 	}
-	if len(c.EtcdHosts) > 0 && len(c.Services.Etcd.ExternalURLs) > 0 {
+	if len(c.EtcdHosts) > 0 && len(c.Core.Etcd.ExternalURLs) > 0 {
 		return fmt.Errorf("Cluster can't have both internal and external etcd")
 	}
 	return nil

@@ -13,15 +13,15 @@ import (
 	"k8s.io/client-go/util/cert"
 )
 
-func GenerateKubeAPICertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeAPICertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	// generate API certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
-	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Services.KubeAPI.ServiceClusterIPRange)
+	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Core.KubeAPI.ServiceClusterIPRange)
 	if err != nil {
 		return fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
 	}
-	clusterDomain := zkeConfig.Services.Kubelet.ClusterDomain
+	clusterDomain := zkeConfig.Core.Kubelet.ClusterDomain
 	cpHosts := hosts.NodesToHosts(zkeConfig.Nodes, controlRole)
 	kubeAPIAltNames := GetAltNames(cpHosts, clusterDomain, kubernetesServiceIP, zkeConfig.Authentication.SANs)
 	kubeAPICert := certs[KubeAPICertName].Certificate
@@ -49,13 +49,13 @@ func GenerateKubeAPICertificate(ctx context.Context, certs map[string]Certificat
 	return nil
 }
 
-func GenerateKubeAPICSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateKubeAPICSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	// generate API csr and key
-	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Services.KubeAPI.ServiceClusterIPRange)
+	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Core.KubeAPI.ServiceClusterIPRange)
 	if err != nil {
 		return fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
 	}
-	clusterDomain := zkeConfig.Services.Kubelet.ClusterDomain
+	clusterDomain := zkeConfig.Core.Kubelet.ClusterDomain
 	cpHosts := hosts.NodesToHosts(zkeConfig.Nodes, controlRole)
 	kubeAPIAltNames := GetAltNames(cpHosts, clusterDomain, kubernetesServiceIP, zkeConfig.Authentication.SANs)
 	kubeAPICert := certs[KubeAPICertName].Certificate
@@ -74,7 +74,7 @@ func GenerateKubeAPICSR(ctx context.Context, certs map[string]CertificatePKI, zk
 	return nil
 }
 
-func GenerateKubeControllerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeControllerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	// generate Kube controller-manager certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -94,7 +94,7 @@ func GenerateKubeControllerCertificate(ctx context.Context, certs map[string]Cer
 	return nil
 }
 
-func GenerateKubeControllerCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateKubeControllerCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	// generate Kube controller-manager csr and key
 	kubeControllerCrt := certs[KubeControllerCertName].Certificate
 	kubeControllerCSRPEM := certs[KubeControllerCertName].CSRPEM
@@ -110,7 +110,7 @@ func GenerateKubeControllerCSR(ctx context.Context, certs map[string]Certificate
 	return nil
 }
 
-func GenerateKubeSchedulerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeSchedulerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	// generate Kube scheduler certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -130,7 +130,7 @@ func GenerateKubeSchedulerCertificate(ctx context.Context, certs map[string]Cert
 	return nil
 }
 
-func GenerateKubeSchedulerCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateKubeSchedulerCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	// generate Kube scheduler csr and key
 	kubeSchedulerCrt := certs[KubeSchedulerCertName].Certificate
 	kubeSchedulerCSRPEM := certs[KubeSchedulerCertName].CSRPEM
@@ -146,7 +146,7 @@ func GenerateKubeSchedulerCSR(ctx context.Context, certs map[string]CertificateP
 	return nil
 }
 
-func GenerateKubeProxyCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeProxyCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	// generate Kube Proxy certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -166,7 +166,7 @@ func GenerateKubeProxyCertificate(ctx context.Context, certs map[string]Certific
 	return nil
 }
 
-func GenerateKubeProxyCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateKubeProxyCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	// generate Kube Proxy csr and key
 	kubeProxyCrt := certs[KubeProxyCertName].Certificate
 	kubeProxyCSRPEM := certs[KubeProxyCertName].CSRPEM
@@ -182,7 +182,7 @@ func GenerateKubeProxyCSR(ctx context.Context, certs map[string]CertificatePKI, 
 	return nil
 }
 
-func GenerateKubeNodeCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeNodeCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	// generate kubelet certificate
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -202,7 +202,7 @@ func GenerateKubeNodeCertificate(ctx context.Context, certs map[string]Certifica
 	return nil
 }
 
-func GenerateKubeNodeCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateKubeNodeCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	// generate kubelet csr and key
 	nodeCrt := certs[KubeNodeCertName].Certificate
 	nodeCSRPEM := certs[KubeNodeCertName].CSRPEM
@@ -218,7 +218,7 @@ func GenerateKubeNodeCSR(ctx context.Context, certs map[string]CertificatePKI, z
 	return nil
 }
 
-func GenerateKubeAdminCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeAdminCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	// generate Admin certificate and key
 	log.Infof(ctx, "[certificates] Generating admin certificates and kubeconfig")
 	caCrt := certs[CACertName].Certificate
@@ -254,7 +254,7 @@ func GenerateKubeAdminCertificate(ctx context.Context, certs map[string]Certific
 	return nil
 }
 
-func GenerateKubeAdminCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateKubeAdminCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	// generate Admin certificate and key
 	kubeAdminCrt := certs[KubeAdminCertName].Certificate
 	kubeAdminCSRPEM := certs[KubeAdminCertName].CSRPEM
@@ -271,7 +271,7 @@ func GenerateKubeAdminCSR(ctx context.Context, certs map[string]CertificatePKI, 
 	return nil
 }
 
-func GenerateAPIProxyClientCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateAPIProxyClientCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	//generate API server proxy client key and certs
 	caCrt := certs[RequestHeaderCACertName].Certificate
 	caKey := certs[RequestHeaderCACertName].Key
@@ -291,7 +291,7 @@ func GenerateAPIProxyClientCertificate(ctx context.Context, certs map[string]Cer
 	return nil
 }
 
-func GenerateAPIProxyClientCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateAPIProxyClientCSR(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	//generate API server proxy client key and certs
 	apiserverProxyClientCrt := certs[APIProxyClientCertName].Certificate
 	apiserverProxyClientCSRPEM := certs[APIProxyClientCertName].CSRPEM
@@ -307,18 +307,18 @@ func GenerateAPIProxyClientCSR(ctx context.Context, certs map[string]Certificate
 	return nil
 }
 
-func GenerateExternalEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
-	clientCert, err := cert.ParseCertsPEM([]byte(zkeConfig.Services.Etcd.Cert))
+func GenerateExternalEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+	clientCert, err := cert.ParseCertsPEM([]byte(zkeConfig.Core.Etcd.Cert))
 	if err != nil {
 		return err
 	}
-	clientKey, err := cert.ParsePrivateKeyPEM([]byte(zkeConfig.Services.Etcd.Key))
+	clientKey, err := cert.ParsePrivateKeyPEM([]byte(zkeConfig.Core.Etcd.Key))
 	if err != nil {
 		return err
 	}
 	certs[EtcdClientCertName] = ToCertObject(EtcdClientCertName, "", "", clientCert[0], clientKey.(*rsa.PrivateKey), nil)
 
-	caCert, err := cert.ParseCertsPEM([]byte(zkeConfig.Services.Etcd.CACert))
+	caCert, err := cert.ParseCertsPEM([]byte(zkeConfig.Core.Etcd.CACert))
 	if err != nil {
 		return err
 	}
@@ -326,14 +326,14 @@ func GenerateExternalEtcdCertificates(ctx context.Context, certs map[string]Cert
 	return nil
 }
 
-func GenerateEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
-	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Services.KubeAPI.ServiceClusterIPRange)
+	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Core.KubeAPI.ServiceClusterIPRange)
 	if err != nil {
 		return fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
 	}
-	clusterDomain := zkeConfig.Services.Kubelet.ClusterDomain
+	clusterDomain := zkeConfig.Core.Kubelet.ClusterDomain
 	etcdHosts := hosts.NodesToHosts(zkeConfig.Nodes, etcdRole)
 	etcdAltNames := GetAltNames(etcdHosts, clusterDomain, kubernetesServiceIP, []string{})
 	for _, host := range etcdHosts {
@@ -355,12 +355,12 @@ func GenerateEtcdCertificates(ctx context.Context, certs map[string]CertificateP
 	return nil
 }
 
-func GenerateEtcdCSRs(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
-	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Services.KubeAPI.ServiceClusterIPRange)
+func GenerateEtcdCSRs(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
+	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Core.KubeAPI.ServiceClusterIPRange)
 	if err != nil {
 		return fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
 	}
-	clusterDomain := zkeConfig.Services.Kubelet.ClusterDomain
+	clusterDomain := zkeConfig.Core.Kubelet.ClusterDomain
 	etcdHosts := hosts.NodesToHosts(zkeConfig.Nodes, etcdRole)
 	etcdAltNames := GetAltNames(etcdHosts, clusterDomain, kubernetesServiceIP, []string{})
 	for _, host := range etcdHosts {
@@ -380,7 +380,7 @@ func GenerateEtcdCSRs(ctx context.Context, certs map[string]CertificatePKI, zkeC
 	return nil
 }
 
-func GenerateServiceTokenKey(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateServiceTokenKey(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	// generate service account token key
 	privateAPIKey := certs[ServiceAccountTokenKeyName].Key
 	caCrt := certs[CACertName].Certificate
@@ -420,7 +420,7 @@ func GenerateZKECACerts(ctx context.Context, certs map[string]CertificatePKI, co
 	return nil
 }
 
-func GenerateZKEServicesCerts(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig, configPath, configDir string, rotate bool) error {
+func GenerateZKEServicesCerts(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
 	ZKECerts := []GenFunc{
 		GenerateKubeAPICertificate,
 		GenerateServiceTokenKey,
@@ -437,13 +437,13 @@ func GenerateZKEServicesCerts(ctx context.Context, certs map[string]CertificateP
 			return err
 		}
 	}
-	if len(zkeConfig.Services.Etcd.ExternalURLs) > 0 {
+	if len(zkeConfig.Core.Etcd.ExternalURLs) > 0 {
 		return GenerateExternalEtcdCertificates(ctx, certs, zkeConfig, configPath, configDir, false)
 	}
 	return nil
 }
 
-func GenerateZKEServicesCSRs(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZcloudKubernetesEngineConfig) error {
+func GenerateZKEServicesCSRs(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig) error {
 	ZKECerts := []CSRFunc{
 		GenerateKubeAPICSR,
 		GenerateKubeControllerCSR,

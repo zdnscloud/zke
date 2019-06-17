@@ -16,7 +16,7 @@ const (
 	unschedulableControlTaint = "node-role.kubernetes.io/controlplane=true:NoSchedule"
 )
 
-func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.ZKEConfigNodePlan, certMap map[string]pki.CertificatePKI, alpineImage string) error {
+func RunWorkerPlane(ctx context.Context, allHosts []*hosts.Host, prsMap map[string]types.PrivateRegistry, workerNodePlanMap map[string]types.ZKENodePlan, certMap map[string]pki.CertificatePKI, alpineImage string) error {
 	log.Infof(ctx, "[%s] Building up Worker Plane..", WorkerRole)
 
 	_, err := errgroup.Batch(allHosts, func(h interface{}) (interface{}, error) {

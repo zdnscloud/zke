@@ -1,20 +1,18 @@
 package types
 
-type ZcloudKubernetesEngineConfig struct {
-	Option ZKEConfigOption `yaml:"option" json:"option"`
-	Nodes  []ZKEConfigNode `yaml:"nodes" json:"nodes"`
-	// Kubernetes components
-	Services          ZKEConfigServices `yaml:"services" json:"services"`
-	Network           NetworkConfig     `yaml:"network" json:"network"`
-	Authentication    AuthnConfig       `yaml:"authentication" json:"authentication"`
-	Authorization     AuthzConfig       `yaml:"authorization" json:"authorization"`
-	SystemImages      ZKESystemImages   `yaml:"system_images" json:"systemImages"`
-	PrivateRegistries []PrivateRegistry `yaml:"private_registries" json:"privateRegistries"`
-	ClusterName       string            `yaml:"cluster_name" json:"name"`
-	Monitor           MonitorConfig     `yaml:"monitor" json:"monitor"`
-	Version           string            `yaml:"version" json:"version"`
+type DNSConfig struct {
+	Provider            string            `yaml:"provider" json:"provider"`
+	UpstreamNameservers []string          `yaml:"upstreamnameservers" json:"upstreamnameservers"`
+	ReverseCIDRs        []string          `yaml:"reversecidrs" json:"reversecidrs"`
+	NodeSelector        map[string]string `yaml:"node_selector" json:"nodeSelector"`
 }
 
+type IngressConfig struct {
+	Provider     string            `yaml:"provider" json:"provider"`
+	Options      map[string]string `yaml:"options" json:"options"`
+	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector"`
+	ExtraArgs    map[string]string `yaml:"extra_args" json:"extraArgs"`
+}
 type PrivateRegistry struct {
 	URL      string `yaml:"url" json:"url"`
 	User     string `yaml:"user" json:"user"`
@@ -22,25 +20,7 @@ type PrivateRegistry struct {
 	CAcert   string `yaml:"ca_cert" json:"caCert"`
 }
 
-type ZKEConfigNode struct {
-	NodeName string `yaml:"node_name" json:"nodeName"`
-	Address  string `yaml:"address" json:"address"`
-	// Optional - Internal address that will be used for components communication
-	InternalAddress string `yaml:"internal_address" json:"internalAddress"`
-	// Node role in kubernetes cluster (controlplane, worker, etcd, storage or edge)
-	Role []string `yaml:"role" json:"role"`
-	// Optional - Hostname of the node
-	HostnameOverride string `yaml:"hostname_override" json:"hostnameOverride"`
-	// SSH config
-	User         string            `yaml:"user" json:"sshUser"`
-	Port         string            `yaml:"port" json:"sshPort"`
-	SSHKey       string            `yaml:"ssh_key" json:"sshKey"`
-	SSHKeyPath   string            `yaml:"ssh_key_path" json:"sshKeyPath"`
-	DockerSocket string            `yaml:"docker_socket" json:"dockerSocket"`
-	Labels       map[string]string `yaml:"labels" json:"labels"`
-}
-
-type ZKEConfigNodePlan struct {
+type ZKENodePlan struct {
 	Address string `json:"address,omitempty"`
 	// map of named processes that should run on the node
 	Processes   map[string]Process `json:"processes,omitempty"`
@@ -49,46 +29,37 @@ type ZKEConfigNodePlan struct {
 	Labels      map[string]string  `json:"labels,omitempty"`
 }
 
-type ZKEConfigServices struct {
-	Etcd           ETCDService           `yaml:"etcd" json:"etcd,omitempty"`
-	KubeAPI        KubeAPIService        `yaml:"kube-api" json:"kubeApi,omitempty"`
-	KubeController KubeControllerService `yaml:"kube-controller" json:"kubeController,omitempty"`
-	Scheduler      SchedulerService      `yaml:"scheduler" json:"scheduler,omitempty"`
-	Kubelet        KubeletService        `yaml:"kubelet" json:"kubelet,omitempty"`
-	Kubeproxy      KubeproxyService      `yaml:"kubeproxy" json:"kubeproxy,omitempty"`
-}
-
 type Process struct {
-	Name    string   `json:"name,omitempty"`
-	Command []string `json:"command,omitempty"`
-	Args    []string `json:"args,omitempty"`
-	Env     []string `json:"env,omitempty"`
-	Image   string   `json:"image,omitempty"`
+	Name    string   `json:"name"`
+	Command []string `json:"command"`
+	Args    []string `json:"args"`
+	Env     []string `json:"env"`
+	Image   string   `json:"image"`
 	//AuthConfig for image private registry
-	ImageRegistryAuthConfig string `json:"imageRegistryAuthConfig,omitempty"`
+	ImageRegistryAuthConfig string `json:"imageRegistryAuthConfig"`
 	// Process docker image VolumesFrom
-	VolumesFrom []string `json:"volumesFrom,omitempty"`
+	VolumesFrom []string `json:"volumesFrom"`
 	// Process docker container bind mounts
-	Binds         []string    `json:"binds,omitempty"`
-	NetworkMode   string      `json:"networkMode,omitempty"`
-	RestartPolicy string      `json:"restartPolicy,omitempty"`
-	PidMode       string      `json:"pidMode,omitempty"`
-	Privileged    bool        `json:"privileged,omitempty"`
-	HealthCheck   HealthCheck `json:"healthCheck,omitempty"`
+	Binds         []string    `json:"binds"`
+	NetworkMode   string      `json:"networkMode"`
+	RestartPolicy string      `json:"restartPolicy"`
+	PidMode       string      `json:"pidMode"`
+	Privileged    bool        `json:"privileged"`
+	HealthCheck   HealthCheck `json:"healthCheck"`
 	// Process docker container Labels
-	Labels map[string]string `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels"`
 	// Process docker publish container's port to host
-	Publish []string `json:"publish,omitempty"`
+	Publish []string `json:"publish"`
 }
 
 type HealthCheck struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 }
 
 type PortCheck struct {
-	Address  string `json:"address,omitempty"`
-	Port     int    `json:"port,omitempty"`
-	Protocol string `json:"protocol,omitempty"`
+	Address  string `json:"address"`
+	Port     int    `json:"port"`
+	Protocol string `json:"protocol"`
 }
 
 type KubernetesServicesOptions struct {
@@ -97,4 +68,9 @@ type KubernetesServicesOptions struct {
 	Kubeproxy      map[string]string `json:"kubeproxy"`
 	KubeController map[string]string `json:"kubeController"`
 	Scheduler      map[string]string `json:"scheduler"`
+}
+
+type MonitorConfig struct {
+	MetricsProvider string            `yaml:"metrics_provider" json:"metrics_provider"`
+	MetricsOptions  map[string]string `yaml:"metrics_options" json:"metrics_options"`
 }
