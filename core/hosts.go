@@ -32,7 +32,7 @@ func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 
 	_, err := errgroup.Batch(uniqueHosts, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
-		if err := runHost.TunnelUp(ctx, c.DockerDialerFactory, c.PrefixPath, c.Version); err != nil {
+		if err := runHost.TunnelUp(ctx, c.DockerDialerFactory, c.Option.PrefixPath, c.Option.KubernetesVersion); err != nil {
 			// Unsupported Docker version is NOT a connectivity problem that we can recover! So we bail out on it
 			if strings.Contains(err.Error(), "Unsupported Docker version found") {
 				return nil, err
@@ -79,7 +79,7 @@ func (c *Cluster) InvertIndexHosts() error {
 		for k, v := range host.Labels {
 			newHost.ToAddLabels[k] = v
 		}
-		newHost.IgnoreDockerVersion = c.IgnoreDockerVersion
+		newHost.IgnoreDockerVersion = c.Option.IgnoreDockerVersion
 		for _, role := range host.Role {
 			logrus.Debugf("Host: " + host.Address + " has role: " + role)
 			switch role {

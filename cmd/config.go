@@ -136,7 +136,7 @@ func clusterConfig(ctx *cli.Context) error {
 	print := ctx.Bool("print")
 	cluster := types.ZcloudKubernetesEngineConfig{}
 	// set zke config version
-	cluster.ConfigVersion = defaultConfigVersion
+	cluster.Version = defaultConfigVersion
 	// Get cluster config from user
 	reader := bufio.NewReader(os.Stdin)
 	// Generate empty configuration file
@@ -148,22 +148,22 @@ func clusterConfig(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cluster.SSHKeyPath = sshKeyPath
+	cluster.Option.SSHKeyPath = sshKeyPath
 	sshPort, err := getConfig(reader, "Cluster Level SSH Port of all host", DefaultClusterSSHPort)
 	if err != nil {
 		return err
 	}
-	cluster.SSHPort = sshPort
+	cluster.Option.SSHPort = sshPort
 	sshUser, err := getConfig(reader, "Cluster Level SSH User of all host", DefaultClusterSSHUser)
 	if err != nil {
 		return err
 	}
-	cluster.SSHUser = sshUser
+	cluster.Option.SSHUser = sshUser
 	dockerSocketPath, err := getConfig(reader, "Cluster Level Docker socket path on all host", DefaultClusterDockerSockPath)
 	if err != nil {
 		return err
 	}
-	cluster.DockerSocket = dockerSocketPath
+	cluster.Option.DockerSocket = dockerSocketPath
 	hostCommonCfg := clusterCommonCfg{sshPort, sshKeyPath, sshUser, dockerSocketPath}
 	// Get number of hosts
 	numberOfHostsString, err := getConfig(reader, "Number of Hosts", "1")
@@ -194,7 +194,7 @@ func clusterConfig(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cluster.Ingress = *ingressConfig
+	cluster.Network.Ingress = *ingressConfig
 
 	// Get Authentication Config
 	authnConfig, err := getAuthnConfig(reader)
@@ -210,7 +210,7 @@ func clusterConfig(ctx *cli.Context) error {
 	cluster.Authorization = *authzConfig
 	// Get k8s/system images
 	cluster.SystemImages = types.K8sVersionToZKESystemImages[core.DefaultK8sVersion]
-	cluster.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
+	cluster.Network.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
 	if err != nil {
 		return err
 	}
@@ -357,18 +357,8 @@ func getNetworkConfig(reader *bufio.Reader) (*types.NetworkConfig, error) {
 		if err != nil {
 			return nil, err
 		}
-		networkConfig.Options = make(map[string]string)
-		networkConfig.Options[FlannelIface] = networkFlannelIface
-		networkFlannelBackendType, err := getConfig(reader, "Flannel Backend Type (vxlan, host-gw)", core.DefaultFlannelBackendType)
-		if err != nil {
-			return nil, err
-		}
-		networkConfig.Options[FlannelBackendType] = networkFlannelBackendType
-		if networkFlannelBackendType == core.DefaultFlannelBackendType {
-			networkConfig.Options[FlannelBackendDirectrouting] = "true"
-		} else {
-			networkConfig.Options[FlannelBackendDirectrouting] = "false"
-		}
+		networkConfig.Iface = networkFlannelIface
+		return &networkConfig, nil
 	}
 	return &networkConfig, nil
 }

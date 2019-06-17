@@ -1,43 +1,30 @@
 package types
 
 type NetworkConfig struct {
-	// Network Plugin That will be used in kubernetes cluster
-	Plugin string `yaml:"plugin" json:"plugin,omitempty" norman:"default=canal"`
-	// Plugin options to configure network properties
-	Options map[string]string `yaml:"options" json:"options,omitempty"`
-	// CalicoNetworkProvider
-	CalicoNetworkProvider *CalicoNetworkProvider `yaml:",omitempty" json:"calicoNetworkProvider,omitempty"`
-	// FlannelNetworkProvider
-	FlannelNetworkProvider *FlannelNetworkProvider `yaml:",omitempty" json:"flannelNetworkProvider,omitempty"`
-}
-
-type CalicoNetworkProvider struct {
-	CloudProvider string `json:"cloudProvider"`
-}
-
-type FlannelNetworkProvider struct {
-	// Alternate cloud interface for flannel
-	Iface string `json:"iface"`
+	Plugin  string        `yaml:"plugin" json:"plugin"`
+	Iface   string        `yaml:"iface" json:"iface"`
+	DNS     DNSConfig     `yaml:"dns" json:"dns"`
+	Ingress IngressConfig `yaml:"ingress" json:"ingress"`
 }
 
 type DNSConfig struct {
 	// DNS provider
-	Provider string `yaml:"provider" json:"provider,omitempty" norman:"coredns"`
+	Provider string `yaml:"provider" json:"provider" norman:"coredns"`
 	// Upstream nameservers
-	UpstreamNameservers []string `yaml:"upstreamnameservers" json:"upstreamnameservers,omitempty"`
+	UpstreamNameservers []string `yaml:"upstreamnameservers" json:"upstreamnameservers"`
 	// ReverseCIDRs
-	ReverseCIDRs []string `yaml:"reversecidrs" json:"reversecidrs,omitempty"`
+	ReverseCIDRs []string `yaml:"reversecidrs" json:"reversecidrs"`
 	// NodeSelector key pair
-	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector,omitempty"`
+	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector"`
 }
 
 type IngressConfig struct {
 	// Ingress controller type used by kubernetes
-	Provider string `yaml:"provider" json:"provider,omitempty" norman:"default=nginx"`
+	Provider string `yaml:"provider" json:"provider"`
 	// Ingress controller options
-	Options map[string]string `yaml:"options" json:"options,omitempty"`
+	Options map[string]string `yaml:"options" json:"options"`
 	// NodeSelector key pair
-	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector,omitempty"`
+	NodeSelector map[string]string `yaml:"node_selector" json:"nodeSelector"`
 	// Ingress controller extra arguments
-	ExtraArgs map[string]string `yaml:"extra_args" json:"extraArgs,omitempty"`
+	ExtraArgs map[string]string `yaml:"extra_args" json:"extraArgs"`
 }

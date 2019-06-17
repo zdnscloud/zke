@@ -102,12 +102,12 @@ func setDefaultIfEmpty(varName *string, defaultValue string) {
 }
 
 func (c *Cluster) setClusterDefaults(ctx context.Context) error {
-	if len(c.SSHKeyPath) == 0 {
-		c.SSHKeyPath = DefaultClusterSSHKeyPath
+	if len(c.Option.SSHKeyPath) == 0 {
+		c.Option.SSHKeyPath = DefaultClusterSSHKeyPath
 	}
 	// Default Path prefix
-	if len(c.PrefixPath) == 0 {
-		c.PrefixPath = "/"
+	if len(c.Option.PrefixPath) == 0 {
+		c.Option.PrefixPath = "/"
 	}
 
 	for i, host := range c.Nodes {
@@ -119,7 +119,7 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 			c.Nodes[i].HostnameOverride = c.Nodes[i].Address
 		}
 		if len(host.SSHKeyPath) == 0 {
-			c.Nodes[i].SSHKeyPath = c.SSHKeyPath
+			c.Nodes[i].SSHKeyPath = c.Option.SSHKeyPath
 		}
 		if len(host.Port) == 0 {
 			c.Nodes[i].Port = DefaultSSHPort
@@ -135,17 +135,17 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 		log.Warnf(ctx, "PodSecurityPolicy can't be enabled with RBAC support disabled")
 		c.Services.KubeAPI.PodSecurityPolicy = false
 	}
-	if len(c.Ingress.Provider) == 0 {
-		c.Ingress.Provider = DefaultIngressController
+	if len(c.Network.Ingress.Provider) == 0 {
+		c.Network.Ingress.Provider = DefaultIngressController
 	}
-	if len(c.DNS.Provider) == 0 {
-		c.DNS.Provider = DefaultDNSProvider
+	if len(c.Network.DNS.Provider) == 0 {
+		c.Network.DNS.Provider = DefaultDNSProvider
 	}
 	if len(c.ClusterName) == 0 {
 		c.ClusterName = DefaultClusterName
 	}
-	if len(c.Version) == 0 {
-		c.Version = DefaultK8sVersion
+	if len(c.Option.KubernetesVersion) == 0 {
+		c.Option.KubernetesVersion = DefaultK8sVersion
 	}
 	if len(c.Monitor.MetricsProvider) == 0 {
 		c.Monitor.MetricsProvider = DefaultMonitoringMetricsProvider
@@ -159,7 +159,6 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	}
 
 	c.setClusterServicesDefaults()
-	c.setClusterNetworkDefaults()
 	c.setClusterAuthnDefaults()
 
 	return nil
@@ -212,40 +211,6 @@ func (c *Cluster) setClusterServicesDefaults() {
 		if c.Services.Etcd.BackupConfig.Retention == 0 {
 			c.Services.Etcd.BackupConfig.Retention = DefaultEtcdBackupConfigRetention
 		}
-	}
-}
-
-func (c *Cluster) setClusterNetworkDefaults() {
-	setDefaultIfEmpty(&c.Network.Plugin, DefaultNetworkPlugin)
-
-	if c.Network.Options == nil {
-		// don't break if the user didn't define options
-		c.Network.Options = make(map[string]string)
-	}
-	networkPluginConfigDefaultsMap := make(map[string]string)
-	// This is still needed because ZKE doesn't use c.Network.*NetworkProvider
-	switch c.Network.Plugin {
-	case CalicoNetworkPlugin:
-		networkPluginConfigDefaultsMap = map[string]string{
-			CalicoCloudProvider: DefaultNetworkCloudProvider,
-		}
-	case FlannelNetworkPlugin:
-		networkPluginConfigDefaultsMap = map[string]string{
-			FlannelIface:                c.Network.Options[FlannelIface],
-			FlannelBackendType:          c.Network.Options[FlannelBackendType],
-			FlannelBackendDirectrouting: c.Network.Options[FlannelBackendDirectrouting],
-		}
-	}
-	if c.Network.CalicoNetworkProvider != nil {
-		setDefaultIfEmpty(&c.Network.CalicoNetworkProvider.CloudProvider, DefaultNetworkCloudProvider)
-		networkPluginConfigDefaultsMap[CalicoCloudProvider] = c.Network.CalicoNetworkProvider.CloudProvider
-	}
-	if c.Network.FlannelNetworkProvider != nil {
-		networkPluginConfigDefaultsMap[FlannelIface] = c.Network.FlannelNetworkProvider.Iface
-
-	}
-	for k, v := range networkPluginConfigDefaultsMap {
-		setDefaultIfEmptyMapValue(c.Network.Options, k, v)
 	}
 }
 

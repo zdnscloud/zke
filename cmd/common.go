@@ -48,7 +48,7 @@ func resolveClusterFile(ctx *cli.Context) (string, string, error) {
 func setOptionsFromCLI(c *cli.Context, zkeConfig *types.ZcloudKubernetesEngineConfig) (*types.ZcloudKubernetesEngineConfig, error) {
 
 	if c.Bool("ignore-docker-version") {
-		zkeConfig.IgnoreDockerVersion = c.Bool("ignore-docker-version")
+		zkeConfig.Option.IgnoreDockerVersion = c.Bool("ignore-docker-version")
 	}
 	return zkeConfig, nil
 }

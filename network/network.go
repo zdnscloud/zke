@@ -89,13 +89,13 @@ func doFlannelDeploy(ctx context.Context, c *core.Cluster, cli client.Client) er
 		ClusterCIDR:      c.ClusterCIDR,
 		Image:            c.SystemImages.Flannel,
 		CNIImage:         c.SystemImages.FlannelCNI,
-		FlannelInterface: c.Network.Options[FlannelIface],
+		FlannelInterface: c.Network.Iface,
 		FlannelBackend: map[string]interface{}{
-			"Type":          c.Network.Options[FlannelBackendType],
-			"Directrouting": c.Network.Options[FlannelBackendDirectrouting],
+			"Type":          "vxlan",
+			"Directrouting": "true",
 		},
 		RBACConfig:        c.Authorization.Mode,
-		ClusterVersion:    core.GetTagMajorVersion(c.Version),
+		ClusterVersion:    core.GetTagMajorVersion(c.Option.KubernetesVersion),
 		"DeployNamespace": DeployNamespace,
 	}
 	if err := k8s.DoDeployFromTemplate(cli, flannel.FlannelTemplate, flannelConfig); err != nil {
@@ -113,13 +113,13 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) err
 		CNIImage:          c.SystemImages.CalicoCNI,
 		NodeImage:         c.SystemImages.CalicoNode,
 		Calicoctl:         c.SystemImages.CalicoCtl,
-		CloudProvider:     c.Network.Options[CalicoCloudProvider],
+		CloudProvider:     "none",
 		RBACConfig:        c.Authorization.Mode,
 		"DeployNamespace": DeployNamespace,
 	}
 
 	var CalicoTemplate string
-	switch c.Version {
+	switch c.Option.KubernetesVersion {
 	case "v1.13.1":
 		CalicoTemplate = calico.CalicoTemplateV113
 	case "default":
@@ -133,15 +133,15 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) err
 }
 
 func doDNSDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
-	log.Infof(ctx, "[DNS] Setting up DNS plugin %s", c.DNS.Provider)
+	log.Infof(ctx, "[DNS] Setting up DNS plugin %s", c.Network.DNS.Provider)
 	CoreDNSConfig := coredns.CoreDNSOptions{
 		CoreDNSImage:           c.SystemImages.CoreDNS,
 		CoreDNSAutoScalerImage: c.SystemImages.CoreDNSAutoscaler,
 		RBACConfig:             c.Authorization.Mode,
 		ClusterDomain:          c.ClusterDomain,
 		ClusterDNSServer:       c.ClusterDNSServer,
-		UpstreamNameservers:    c.DNS.UpstreamNameservers,
-		ReverseCIDRs:           c.DNS.ReverseCIDRs,
+		UpstreamNameservers:    c.Network.DNS.UpstreamNameservers,
+		ReverseCIDRs:           c.Network.DNS.ReverseCIDRs,
 	}
 	if err := k8s.DoDeployFromTemplate(cli, coredns.CoreDNSTemplate, CoreDNSConfig); err != nil {
 		return err
@@ -151,12 +151,12 @@ func doDNSDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error 
 }
 
 func doIngressDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
-	log.Infof(ctx, "[Network] Setting up %s ingress controller", c.Ingress.Provider)
+	log.Infof(ctx, "[Network] Setting up %s ingress controller", c.Network.Ingress.Provider)
 	ingressConfig := ingress.IngressOptions{
 		RBACConfig:     c.Authorization.Mode,
-		Options:        c.Ingress.Options,
-		NodeSelector:   c.Ingress.NodeSelector,
-		ExtraArgs:      c.Ingress.ExtraArgs,
+		Options:        c.Network.Ingress.Options,
+		NodeSelector:   c.Network.Ingress.NodeSelector,
+		ExtraArgs:      c.Network.Ingress.ExtraArgs,
 		IngressImage:   c.SystemImages.Ingress,
 		IngressBackend: c.SystemImages.IngressBackend,
 	}
@@ -170,6 +170,6 @@ func doIngressDeploy(ctx context.Context, c *core.Cluster, cli client.Client) er
 	if err := k8s.DoDeployFromTemplate(cli, ingress.NginxIngressTemplate, ingressConfig); err != nil {
 		return err
 	}
-	log.Infof(ctx, "[Network] ingress controller %s deployed successfully", c.Ingress.Provider)
+	log.Infof(ctx, "[Network] ingress controller %s deployed successfully", c.Network.Ingress.Provider)
 	return nil
 }

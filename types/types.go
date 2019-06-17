@@ -1,61 +1,43 @@
 package types
 
 type ZcloudKubernetesEngineConfig struct {
-	// Kubernetes nodes
-	Nodes []ZKEConfigNode `yaml:"nodes" json:"nodes,omitempty"`
+	Option ZKEConfigOption `yaml:"option" json:"option"`
+	Nodes  []ZKEConfigNode `yaml:"nodes" json:"nodes"`
 	// Kubernetes components
-	Services ZKEConfigServices `yaml:"services" json:"services,omitempty"`
-	Network  NetworkConfig     `yaml:"network" json:"network,omitempty"`
-	// Authentication configuration used in the cluster (default: x509)
-	Authentication AuthnConfig `yaml:"authentication" json:"authentication,omitempty"`
-	// Authorization mode configuration used in the cluster
-	Authorization AuthzConfig `yaml:"authorization" json:"authorization,omitempty"`
-	// List of images used internally for proxy, cert downlaod and kubedns
-	SystemImages ZKESystemImages `yaml:"system_images" json:"systemImages,omitempty"`
-	// SSH Private Key Path
-	SSHKeyPath   string `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
-	SSHKey       string `yaml:"ssh_key" json:"sshKey,omitempty"`
-	SSHPort      string `yaml:"port" json:"sshPort,omitempty"`
-	SSHUser      string `yaml:"user" json:"sshUser,omitempty"`
-	DockerSocket string `yaml:"docker_socket" json:"dockerSocket,omitempty"`
-	// Enable/disable strict docker version checking
-	IgnoreDockerVersion bool `yaml:"ignore_docker_version" json:"ignoreDockerVersion" norman:"default=true"`
-	// Kubernetes version to use (if kubernetes image is specifed, image version takes precedence)
-	Version string `yaml:"kubernetes_version" json:"kubernetesVersion,omitempty"`
-	// List of private registries and their credentials
-	PrivateRegistries []PrivateRegistry `yaml:"private_registries" json:"privateRegistries,omitempty"`
-	Ingress           IngressConfig     `yaml:"ingress" json:"ingress,omitempty"`
-	ClusterName       string            `yaml:"cluster_name" json:"clusterName,omitempty"`
-	PrefixPath        string            `yaml:"prefix_path" json:"prefixPath,omitempty"`
-	Monitor           MonitorConfig     `yaml:"monitoring" json:"monitoring,omitempty"`
-	DNS               DNSConfig         `yaml:"dns" json:"dns,omitempty"`
-	// ZKE config version
-	ConfigVersion string `yaml:"config_version" json:"config_version"`
+	Services          ZKEConfigServices `yaml:"services" json:"services"`
+	Network           NetworkConfig     `yaml:"network" json:"network"`
+	Authentication    AuthnConfig       `yaml:"authentication" json:"authentication"`
+	Authorization     AuthzConfig       `yaml:"authorization" json:"authorization"`
+	SystemImages      ZKESystemImages   `yaml:"system_images" json:"systemImages"`
+	PrivateRegistries []PrivateRegistry `yaml:"private_registries" json:"privateRegistries"`
+	ClusterName       string            `yaml:"cluster_name" json:"name"`
+	Monitor           MonitorConfig     `yaml:"monitor" json:"monitor"`
+	Version           string            `yaml:"version" json:"version"`
 }
 
 type PrivateRegistry struct {
-	URL      string `yaml:"url" json:"url,omitempty"`
-	User     string `yaml:"user" json:"user,omitempty"`
-	Password string `yaml:"password" json:"password,omitempty" norman:"type=password"`
-	CAcert   string `yaml:"ca_cert" json:"cacert,omitempty"`
+	URL      string `yaml:"url" json:"url"`
+	User     string `yaml:"user" json:"user"`
+	Password string `yaml:"password" json:"password"`
+	CAcert   string `yaml:"ca_cert" json:"caCert"`
 }
 
 type ZKEConfigNode struct {
-	NodeName string `yaml:"nodeName,omitempty" json:"nodeName,omitempty" norman:"type=reference[node]"`
-	Address  string `yaml:"address" json:"address,omitempty"`
+	NodeName string `yaml:"node_name" json:"nodeName"`
+	Address  string `yaml:"address" json:"address"`
 	// Optional - Internal address that will be used for components communication
-	InternalAddress string `yaml:"internal_address" json:"internalAddress,omitempty"`
+	InternalAddress string `yaml:"internal_address" json:"internalAddress"`
 	// Node role in kubernetes cluster (controlplane, worker, etcd, storage or edge)
-	Role []string `yaml:"role" json:"role,omitempty" norman:"type=array[enum],options=etcd|worker|controlplane"`
+	Role []string `yaml:"role" json:"role"`
 	// Optional - Hostname of the node
-	HostnameOverride string `yaml:"hostname_override" json:"hostnameOverride,omitempty"`
+	HostnameOverride string `yaml:"hostname_override" json:"hostnameOverride"`
 	// SSH config
-	User         string            `yaml:"user" json:"user,omitempty"`
-	Port         string            `yaml:"port" json:"port,omitempty"`
-	SSHKey       string            `yaml:"ssh_key" json:"sshKey,omitempty" norman:"type=password"`
-	SSHKeyPath   string            `yaml:"ssh_key_path" json:"sshKeyPath,omitempty"`
-	DockerSocket string            `yaml:"docker_socket" json:"dockerSocket,omitempty"`
-	Labels       map[string]string `yaml:"labels" json:"labels,omitempty"`
+	User         string            `yaml:"user" json:"sshUser"`
+	Port         string            `yaml:"port" json:"sshPort"`
+	SSHKey       string            `yaml:"ssh_key" json:"sshKey"`
+	SSHKeyPath   string            `yaml:"ssh_key_path" json:"sshKeyPath"`
+	DockerSocket string            `yaml:"docker_socket" json:"dockerSocket"`
+	Labels       map[string]string `yaml:"labels" json:"labels"`
 }
 
 type ZKEConfigNodePlan struct {

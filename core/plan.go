@@ -40,7 +40,7 @@ const (
 var admissionControlOptionNames = []string{"enable-admission-plugins", "admission-control"}
 
 func BuildZKEConfigNodePlan(ctx context.Context, myCluster *Cluster, host *hosts.Host, hostDockerInfo dockertypes.Info) types.ZKEConfigNodePlan {
-	prefixPath := myCluster.PrefixPath
+	prefixPath := myCluster.Option.PrefixPath
 	processes := map[string]types.Process{}
 	portChecks := []types.PortCheck{}
 	// Everybody gets a sidecar and a kubelet..
@@ -158,7 +158,7 @@ func (c *Cluster) BuildKubeAPIProcess(host *hosts.Host, prefixPath string) types
 		}
 	}
 	// check api server count for k8s v1.8
-	if GetTagMajorVersion(c.Version) == "v1.8" {
+	if GetTagMajorVersion(c.Option.KubernetesVersion) == "v1.8" {
 		CommandArgs["apiserver-count"] = strconv.Itoa(len(c.ControlPlaneHosts))
 	}
 
@@ -752,7 +752,7 @@ func BuildPortChecksFromPortList(host *hosts.Host, portList []string, proto stri
 }
 
 func (c *Cluster) GetKubernetesServicesOptions() types.KubernetesServicesOptions {
-	clusterMajorVersion := GetTagMajorVersion(c.Version)
+	clusterMajorVersion := GetTagMajorVersion(c.Option.KubernetesVersion)
 	NamedkK8sImage, _ := ref.ParseNormalizedNamed(c.SystemImages.Kubernetes)
 
 	k8sImageTag := NamedkK8sImage.(ref.Tagged).Tag()

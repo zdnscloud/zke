@@ -1,0 +1,151 @@
+{
+    "name": "local",
+    "option": {
+        "sshUser": "root",
+        "sshKey": "xxxx",
+        "sshPort": "22",
+        "dockerSocket": "/var/run/docker.sock",
+        "kubernetesVersion": "",
+        "ignoreDockerVersion": false,
+        "clusterCidr": "",
+        "serviceClusterIpRange": "",
+        "clusterDomain": ""
+    },
+    "nodes": [{
+            "name": "master",
+            "address": "192.168.1.10",
+            "internalAddress": "",
+            "roles": [
+                "controlPannel",
+                "etcd"
+            ],
+            "hostnameOverride": "",
+            "sshUser": "",
+            "sshPort": "",
+            "sshKey": "",
+            "dockerSocket": "",
+            "labels": null
+        },
+        {
+            "name": "worker",
+            "address": "192.168.1.11",
+            "internalAddress": "",
+            "roles": [
+                "worker"
+            ],
+            "hostnameOverride": "",
+            "sshUser": "",
+            "sshPort": "",
+            "sshKey": "",
+            "dockerSocket": "",
+            "labels": null
+        }
+    ],
+    "core": {
+        "etcd": {
+            "image": "",
+            "extraArgs": null,
+            "extraBinds": null,
+            "extraEnv": null,
+            "externalUrls": null,
+            "caCert": "",
+            "cert": "",
+            "key": "",
+            "path": "",
+            "snapshot": null,
+            "retention": "",
+            "creation": "",
+            "backupConfig": null
+        },
+        "kubeApi": {
+            "image": "",
+            "extraArgs": null,
+            "extraBinds": null,
+            "extraEnv": null,
+            "serviceClusterIpRange": "",
+            "serviceNodePortRange": "",
+            "podSecurityPolicy": false,
+            "alwaysPullImages": false
+        },
+        "kubeController": {
+            "image": "",
+            "extraArgs": null,
+            "extraBinds": null,
+            "extraEnv": null,
+            "clusterCidr": "",
+            "serviceClusterIpRange": ""
+        },
+        "scheduler": {
+            "image": "",
+            "extraArgs": null,
+            "extraBinds": null,
+            "extraEnv": null
+        },
+        "kubelet": {
+            "image": "",
+            "extraArgs": null,
+            "extraBinds": null,
+            "extraEnv": null,
+            "clusterDomain": "",
+            "infraContainerImage": "",
+            "clusterDnsServer": "",
+            "failSwapOn": false
+        },
+        "kubeproxy": {
+            "image": "",
+            "extraArgs": null,
+            "extraBinds": null,
+            "extraEnv": null
+        },
+        "authentication": {
+            "strategy": "",
+            "sans": null,
+            "webhook": null
+        },
+        "authorization": {
+            "mode": "",
+            "options": null
+        }
+    },
+    "network": {
+        "plugin": "",
+        "iface": "",
+        "dns": {
+            "provider": "",
+            "upstreamnameservers": null,
+            "reversecidrs": null,
+            "nodeSelector": null
+        },
+        "ingress": {
+            "provider": "",
+            "options": null,
+            "nodeSelector": null,
+            "extraArgs": null
+        }
+    },
+    "systemImages": {
+        "etcd": "",
+        "alpine": "",
+        "nginxProxy": "",
+        "certDownloader": "",
+        "ZKERemover": "",
+        "kubernetesServicesSidecar": "",
+        "coredns": "",
+        "corednsAutoscaler": "",
+        "kubernetes": "",
+        "flannel": "",
+        "flannelCni": "",
+        "calicoNode": "",
+        "calicoCni": "",
+        "calicoControllers": "",
+        "calicoCtl": "",
+        "podInfraContainer": "",
+        "ingress": "",
+        "ingressBackend": "",
+        "metricsServer": "",
+        "clusterAgent": "",
+        "nodeAgent": ""
+    },
+    "privateRegistries": null,
+    "version": ""
+}
