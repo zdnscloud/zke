@@ -89,7 +89,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	if len(c.Core.Etcd.ExternalURLs) > 0 {
 		log.Infof(ctx, "[etcd] External etcd connection string has been specified, skipping etcd plane")
 	} else {
-		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.PrivateRegistriesMap, c.SystemImages.Alpine, c.Core.Etcd, c.Certificates); err != nil {
+		if err := services.RunEtcdPlane(ctx, c.EtcdHosts, etcdNodePlanMap, c.PrivateRegistriesMap, c.Image.Alpine, c.Core.Etcd, c.Certificates); err != nil {
 			return fmt.Errorf("[etcd] Failed to bring up Etcd Plane: %v", err)
 		}
 	}
@@ -102,7 +102,7 @@ func (c *Cluster) DeployControlPlane(ctx context.Context) error {
 	if err := services.RunControlPlane(ctx, c.ControlPlaneHosts,
 		c.PrivateRegistriesMap,
 		cpNodePlanMap,
-		c.SystemImages.Alpine,
+		c.Image.Alpine,
 		c.Certificates); err != nil {
 		return fmt.Errorf("[controlPlane] Failed to bring up Control Plane: %v", err)
 	}
@@ -121,7 +121,7 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 		c.PrivateRegistriesMap,
 		workerNodePlanMap,
 		c.Certificates,
-		c.SystemImages.Alpine); err != nil {
+		c.Image.Alpine); err != nil {
 		return fmt.Errorf("[workerPlane] Failed to bring up Worker Plane: %v", err)
 	}
 	return nil
@@ -367,7 +367,7 @@ func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
 	_, err := errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
-		return nil, docker.UseLocalOrPull(ctx, runHost.DClient, runHost.Address, c.SystemImages.Kubernetes, "pre-deploy", c.PrivateRegistriesMap)
+		return nil, docker.UseLocalOrPull(ctx, runHost.DClient, runHost.Address, c.Image.Kubernetes, "pre-deploy", c.PrivateRegistriesMap)
 	})
 	if err != nil {
 		return err

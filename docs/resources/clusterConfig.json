@@ -11,7 +11,7 @@
         },
         "nodes": {
             "type": "array",
-            "elemType": "node"
+            "elemType": "zkeConfigNode"
         },
         "core": {
             "type": "zkeConfigCore"
@@ -19,8 +19,17 @@
         "network": {
             "type": "zkeConfigNetwork"
         },
-        "systemImage": {
-            "type": "systemImage"
+        "authentication": {
+            "type": "zkeConfigAuthn"
+        },
+        "authorization": {
+            "type": "zkeConfigAuthz"
+        },
+        "monitor": {
+            "type": "zkeConfigMonitor"
+        },
+        "image": {
+            "type": "zkeConfigImage"
         },
         "privateRegistries": {
             "type": "array",
@@ -42,6 +51,9 @@
             "sshKey": {
                 "type": "string"
             },
+            "sshKeyPath": {
+                "type": "string"
+            },
             "dockerSocket": {
                 "type": "string"
             },
@@ -59,10 +71,13 @@
             },
             "clusterDomain": {
                 "type": "string"
+            },
+            "prefixPath": {
+                "type": "string"
             }
         },
-        "node": {
-            "name": {
+        "zkeConfigNode": {
+            "nodeName": {
                 "type": "string"
             },
             "address": {
@@ -74,7 +89,7 @@
             "roles": {
                 "type": "array",
                 "elemType": "enum",
-                "validValues": ["controlplane", "worker", "etcd", "storage", "edge"]
+                "validValues": ["controlplane", "worker", "etcd", "edge"]
             },
             "hostnameOverride": {
                 "type": "string"
@@ -86,6 +101,9 @@
                 "type": "string"
             },
             "sshKey": {
+                "type": "string"
+            },
+            "sshKeyPath": {
                 "type": "string"
             },
             "dockerSocket": {
@@ -115,12 +133,6 @@
             },
             "kubeproxy": {
                 "type": "kubeproxy"
-            },
-            "authentication": {
-                "type": "authentication"
-            },
-            "authorization": {
-                "type": "authorization"
             }
         },
         "etcd": {
@@ -380,7 +392,17 @@
                 "valueType": "string"
             }
         },
-        "systemImage": {
+        "zkeConfigMonitor": {
+            "metricsProvider": {
+                "type": "string"
+            },
+            "metricsOptions": {
+                "type": "map",
+                "keyType": "string",
+                "valueType": "string"
+            }
+        },
+        "zkeConfigImage": {
             "etcd": {
                 "type": "string"
             },
@@ -455,7 +477,7 @@
             "password": {
                 "type": "string"
             },
-            "cacert": {
+            "caCert": {
                 "type": "string"
             }
         },
@@ -479,7 +501,7 @@
             },
             "nodes": {
                 "type": "array",
-                "elemType": "node",
+                "elemType": "zkeConfigNode",
                 "required": true
             },
             "network": {
@@ -505,6 +527,9 @@
                     "type": "string",
                     "required": true
                 },
+                "sshKeyPath": {
+                    "type": "string"
+                },
                 "dockerSocket": {
                     "type": "string",
                     "required": true
@@ -527,9 +552,12 @@
                 "clusterDomain": {
                     "type": "string",
                     "required": true
+                },
+                "prefixPath": {
+                    "type": "string"
                 }
             },
-            "node": {
+            "zkeConfigNode": {
                 "name": {
                     "type": "string",
                     "required": true
@@ -544,7 +572,7 @@
                 "roles": {
                     "type": "array",
                     "elemType": "enum",
-                    "validValues": ["controlplane", "worker", "etcd", "storage", "edge"],
+                    "validValues": ["controlplane", "worker", "etcd", "edge"],
                     "required": true
                 },
                 "hostnameOverride": {
@@ -557,6 +585,9 @@
                     "type": "string"
                 },
                 "sshKey": {
+                    "type": "string"
+                },
+                "sshKeyPath": {
                     "type": "string"
                 },
                 "dockerSocket": {

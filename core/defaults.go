@@ -166,12 +166,12 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 
 func (c *Cluster) setClusterServicesDefaults() {
 	// We don't accept per service images anymore.
-	c.Core.KubeAPI.Image = c.SystemImages.Kubernetes
-	c.Core.Scheduler.Image = c.SystemImages.Kubernetes
-	c.Core.KubeController.Image = c.SystemImages.Kubernetes
-	c.Core.Kubelet.Image = c.SystemImages.Kubernetes
-	c.Core.Kubeproxy.Image = c.SystemImages.Kubernetes
-	c.Core.Etcd.Image = c.SystemImages.Etcd
+	c.Core.KubeAPI.Image = c.Image.Kubernetes
+	c.Core.Scheduler.Image = c.Image.Kubernetes
+	c.Core.KubeController.Image = c.Image.Kubernetes
+	c.Core.Kubelet.Image = c.Image.Kubernetes
+	c.Core.Kubeproxy.Image = c.Image.Kubernetes
+	c.Core.Etcd.Image = c.Image.Etcd
 
 	// enable etcd snapshots by default
 	if c.Core.Etcd.Snapshot == nil {
@@ -186,7 +186,7 @@ func (c *Cluster) setClusterServicesDefaults() {
 		&c.Core.KubeController.ClusterCIDR:           DefaultClusterCIDR,
 		&c.Core.Kubelet.ClusterDNSServer:             DefaultClusterDNSService,
 		&c.Core.Kubelet.ClusterDomain:                DefaultClusterDomain,
-		&c.Core.Kubelet.InfraContainerImage:          c.SystemImages.PodInfraContainer,
+		&c.Core.Kubelet.InfraContainerImage:          c.Image.PodInfraContainer,
 		&c.Core.Etcd.Creation:                        DefaultEtcdBackupCreationPeriod,
 		&c.Core.Etcd.Retention:                       DefaultEtcdBackupRetentionPeriod,
 	}

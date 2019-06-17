@@ -7,11 +7,11 @@ type ZKEConfig struct {
 	// Kubernetes components
 	Core              ZKEConfigCore     `yaml:"core" json:"core"`
 	Network           ZKEConfigNetwork  `yaml:"network" json:"network"`
-	SystemImages      ZKEConfigImages   `yaml:"system_images" json:"systemImages"`
+	Image             ZKEConfigImages   `yaml:"image" json:"image"`
 	PrivateRegistries []PrivateRegistry `yaml:"private_registries" json:"privateRegistries"`
-	Authentication    AuthnConfig       `yaml:"authentication" json:"authentication"`
-	Authorization     AuthzConfig       `yaml:"authorization" json:"authorization"`
-	Monitor           MonitorConfig     `yaml:"monitor" json:"monitor"`
+	Authentication    ZKEConfigAuthn    `yaml:"authentication" json:"authentication"`
+	Authorization     ZKEConfigAuthz    `yaml:"authorization" json:"authorization"`
+	Monitor           ZKEConfigMonitor  `yaml:"monitor" json:"monitor"`
 	Version           string            `yaml:"version" json:"version"`
 }
 
@@ -35,7 +35,7 @@ type ZKEConfigNode struct {
 	// Optional - Internal address that will be used for components communication
 	InternalAddress string `yaml:"internal_address" json:"internalAddress"`
 	// Node role in kubernetes cluster (controlplane, worker, etcd, storage or edge)
-	Role []string `yaml:"role" json:"role"`
+	Role []string `yaml:"roles" json:"roles"`
 	// Optional - Hostname of the node
 	HostnameOverride string `yaml:"hostname_override" json:"hostnameOverride"`
 	// SSH config

@@ -87,8 +87,8 @@ func deployNetworkPlugin(ctx context.Context, c *core.Cluster, cli client.Client
 func doFlannelDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	flannelConfig := map[string]interface{}{
 		ClusterCIDR:      c.ClusterCIDR,
-		Image:            c.SystemImages.Flannel,
-		CNIImage:         c.SystemImages.FlannelCNI,
+		Image:            c.Image.Flannel,
+		CNIImage:         c.Image.FlannelCNI,
 		FlannelInterface: c.Network.Iface,
 		FlannelBackend: map[string]interface{}{
 			"Type":          "vxlan",
@@ -110,9 +110,9 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) err
 	calicoConfig := map[string]interface{}{
 		KubeCfg:           clientConfig,
 		ClusterCIDR:       c.ClusterCIDR,
-		CNIImage:          c.SystemImages.CalicoCNI,
-		NodeImage:         c.SystemImages.CalicoNode,
-		Calicoctl:         c.SystemImages.CalicoCtl,
+		CNIImage:          c.Image.CalicoCNI,
+		NodeImage:         c.Image.CalicoNode,
+		Calicoctl:         c.Image.CalicoCtl,
 		CloudProvider:     "none",
 		RBACConfig:        c.Authorization.Mode,
 		"DeployNamespace": DeployNamespace,
@@ -135,8 +135,8 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) err
 func doDNSDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[DNS] Setting up DNS plugin %s", c.Network.DNS.Provider)
 	CoreDNSConfig := coredns.CoreDNSOptions{
-		CoreDNSImage:           c.SystemImages.CoreDNS,
-		CoreDNSAutoScalerImage: c.SystemImages.CoreDNSAutoscaler,
+		CoreDNSImage:           c.Image.CoreDNS,
+		CoreDNSAutoScalerImage: c.Image.CoreDNSAutoscaler,
 		RBACConfig:             c.Authorization.Mode,
 		ClusterDomain:          c.ClusterDomain,
 		ClusterDNSServer:       c.ClusterDNSServer,
@@ -157,14 +157,14 @@ func doIngressDeploy(ctx context.Context, c *core.Cluster, cli client.Client) er
 		Options:        c.Network.Ingress.Options,
 		NodeSelector:   c.Network.Ingress.NodeSelector,
 		ExtraArgs:      c.Network.Ingress.ExtraArgs,
-		IngressImage:   c.SystemImages.Ingress,
-		IngressBackend: c.SystemImages.IngressBackend,
+		IngressImage:   c.Image.Ingress,
+		IngressBackend: c.Image.IngressBackend,
 	}
-	ingressSplits := strings.SplitN(c.SystemImages.Ingress, ":", 2)
+	ingressSplits := strings.SplitN(c.Image.Ingress, ":", 2)
 	if len(ingressSplits) == 2 {
 		version := strings.Split(ingressSplits[1], "-")[0]
 		if version < "0.16.0" {
-			ingressConfig.AlpineImage = c.SystemImages.Alpine
+			ingressConfig.AlpineImage = c.Image.Alpine
 		}
 	}
 	if err := k8s.DoDeployFromTemplate(cli, ingress.NginxIngressTemplate, ingressConfig); err != nil {

@@ -38,7 +38,7 @@ func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 
 func prepare(c *core.Cluster) (map[string]interface{}, client.Client, error) {
 	templateConfig := map[string]interface{}{
-		"MetricsServerImage":        c.SystemImages.MetricsServer,
+		"MetricsServerImage":        c.Image.MetricsServer,
 		"RBACConfig":                c.Authorization.Mode,
 		"MetricsServerOptions":      c.Monitor.MetricsOptions,
 		"MetricsServerMajorVersion": "v0.3",

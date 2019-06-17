@@ -543,7 +543,7 @@ func (c *Cluster) BuildProxyProcess() types.Process {
 	}
 	Env := []string{fmt.Sprintf("%s=%s", services.NginxProxyEnvName, nginxProxyEnv)}
 
-	registryAuthConfig, _, _ := docker.GetImageRegistryConfig(c.SystemImages.NginxProxy, c.PrivateRegistriesMap)
+	registryAuthConfig, _, _ := docker.GetImageRegistryConfig(c.Image.NginxProxy, c.PrivateRegistriesMap)
 	return types.Process{
 		Name: services.NginxProxyContainerName,
 		Env:  Env,
@@ -553,7 +553,7 @@ func (c *Cluster) BuildProxyProcess() types.Process {
 		NetworkMode:             "host",
 		RestartPolicy:           "always",
 		HealthCheck:             types.HealthCheck{},
-		Image:                   c.SystemImages.NginxProxy,
+		Image:                   c.Image.NginxProxy,
 		ImageRegistryAuthConfig: registryAuthConfig,
 		Labels: map[string]string{
 			ContainerNameLabel: services.NginxProxyContainerName,
@@ -634,11 +634,11 @@ func (c *Cluster) BuildSchedulerProcess(prefixPath string) types.Process {
 }
 
 func (c *Cluster) BuildSidecarProcess() types.Process {
-	registryAuthConfig, _, _ := docker.GetImageRegistryConfig(c.SystemImages.KubernetesServicesSidecar, c.PrivateRegistriesMap)
+	registryAuthConfig, _, _ := docker.GetImageRegistryConfig(c.Image.KubernetesServicesSidecar, c.PrivateRegistriesMap)
 	return types.Process{
 		Name:                    services.SidekickContainerName,
 		NetworkMode:             "none",
-		Image:                   c.SystemImages.KubernetesServicesSidecar,
+		Image:                   c.Image.KubernetesServicesSidecar,
 		HealthCheck:             types.HealthCheck{},
 		ImageRegistryAuthConfig: registryAuthConfig,
 		Labels: map[string]string{
@@ -753,7 +753,7 @@ func BuildPortChecksFromPortList(host *hosts.Host, portList []string, proto stri
 
 func (c *Cluster) GetKubernetesServicesOptions() types.KubernetesServicesOptions {
 	clusterMajorVersion := GetTagMajorVersion(c.Option.KubernetesVersion)
-	NamedkK8sImage, _ := ref.ParseNormalizedNamed(c.SystemImages.Kubernetes)
+	NamedkK8sImage, _ := ref.ParseNormalizedNamed(c.Image.Kubernetes)
 
 	k8sImageTag := NamedkK8sImage.(ref.Tagged).Tag()
 	k8sImageMajorVersion := GetTagMajorVersion(k8sImageTag)
@@ -795,10 +795,10 @@ func getUniqStringList(l []string) []string {
 }
 
 func (c *Cluster) getZKEToolsEntryPoint() string {
-	v := strings.Split(c.SystemImages.KubernetesServicesSidecar, ":")
+	v := strings.Split(c.Image.KubernetesServicesSidecar, ":")
 	last := v[len(v)-1]
 
-	logrus.Debugf("Extracted version [%s] from image [%s]", last, c.SystemImages.KubernetesServicesSidecar)
+	logrus.Debugf("Extracted version [%s] from image [%s]", last, c.Image.KubernetesServicesSidecar)
 
 	sv, err := util.StrToSemVer(last)
 	if err != nil {

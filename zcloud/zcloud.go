@@ -52,7 +52,7 @@ func doSADeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 func doClusterAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[zcloud] Setting up ClusterAgentDeploy : %s", ClusterAgentResourceName)
 	clusteragentConfig := map[string]interface{}{
-		Image: c.SystemImages.ClusterAgent,
+		Image: c.Image.ClusterAgent,
 	}
 	return k8s.DoDeployFromTemplate(cli, clusteragent.ClusterAgentTemplate, clusteragentConfig)
 }
@@ -60,7 +60,7 @@ func doClusterAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Clien
 func doNodeAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[zcloud] Setting up NodeAgent")
 	cfg := map[string]interface{}{
-		"Image":         c.SystemImages.NodeAgent,
+		"Image":         c.Image.NodeAgent,
 		"NodeAgentPort": NodeAgentPort,
 	}
 	return k8s.DoDeployFromTemplate(cli, nodeagent.NodeAgentTemplate, cfg)

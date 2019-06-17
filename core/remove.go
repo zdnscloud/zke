@@ -53,7 +53,7 @@ func (c *Cluster) CleanupNodes(ctx context.Context) error {
 	}
 
 	// Clean up all hosts
-	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap, externalEtcd)
+	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.Image.Alpine, c.PrivateRegistriesMap, externalEtcd)
 }
 
 func (c *Cluster) CleanupFiles(ctx context.Context) error {

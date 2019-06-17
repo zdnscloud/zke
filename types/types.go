@@ -70,7 +70,7 @@ type KubernetesServicesOptions struct {
 	Scheduler      map[string]string `json:"scheduler"`
 }
 
-type MonitorConfig struct {
-	MetricsProvider string            `yaml:"metrics_provider" json:"metrics_provider"`
-	MetricsOptions  map[string]string `yaml:"metrics_options" json:"metrics_options"`
+type ZKEConfigMonitor struct {
+	MetricsProvider string            `yaml:"metrics_provider" json:"metricsProvider"`
+	MetricsOptions  map[string]string `yaml:"metrics_options" json:"metricsOptions"`
 }

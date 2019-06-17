@@ -160,7 +160,7 @@ func (c *Cluster) deployListenerOnPlane(ctx context.Context, portList []string, 
 
 func (c *Cluster) deployListener(ctx context.Context, host *hosts.Host, portList []string, containerName string) error {
 	imageCfg := &container.Config{
-		Image: c.SystemImages.Alpine,
+		Image: c.Image.Alpine,
 		Cmd: []string{
 			"nc",
 			"-kl",
@@ -220,14 +220,14 @@ func (c *Cluster) runServicePortChecks(ctx context.Context) error {
 	if len(c.EtcdHosts) > 1 {
 		log.Infof(ctx, "[network] Running etcd <-> etcd port checks")
 		_, err := errgroup.Batch(c.EtcdHosts, func(h interface{}) (interface{}, error) {
-			return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), EtcdPortList, c.EtcdHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+			return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), EtcdPortList, c.EtcdHosts, c.Image.Alpine, c.PrivateRegistriesMap)
 		})
 		return err
 	}
 	// check control -> etcd connectivity
 	log.Infof(ctx, "[network] Running control plane -> etcd port checks")
 	_, err := errgroup.Batch(c.ControlPlaneHosts, func(h interface{}) (interface{}, error) {
-		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), EtcdClientPortList, c.EtcdHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), EtcdClientPortList, c.EtcdHosts, c.Image.Alpine, c.PrivateRegistriesMap)
 	})
 	if err != nil {
 		return err
@@ -235,7 +235,7 @@ func (c *Cluster) runServicePortChecks(ctx context.Context) error {
 	// check controle plane -> Workers
 	log.Infof(ctx, "[network] Running control plane -> worker port checks")
 	_, err = errgroup.Batch(c.ControlPlaneHosts, func(h interface{}) (interface{}, error) {
-		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), WorkerPortList, c.WorkerHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), WorkerPortList, c.WorkerHosts, c.Image.Alpine, c.PrivateRegistriesMap)
 	})
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func (c *Cluster) runServicePortChecks(ctx context.Context) error {
 	// check workers -> control plane
 	log.Infof(ctx, "[network] Running workers -> control plane port checks")
 	_, err = errgroup.Batch(c.WorkerHosts, func(h interface{}) (interface{}, error) {
-		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), ControlPlanePortList, c.ControlPlaneHosts, c.SystemImages.Alpine, c.PrivateRegistriesMap)
+		return nil, checkPlaneTCPPortsFromHost(ctx, h.(*hosts.Host), ControlPlanePortList, c.ControlPlaneHosts, c.Image.Alpine, c.PrivateRegistriesMap)
 	})
 	return err
 }

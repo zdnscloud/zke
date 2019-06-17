@@ -69,7 +69,7 @@ type BackupConfig struct {
 	Retention int `yaml:"retention" json:"retention"`
 }
 
-type AuthnConfig struct {
+type ZKEConfigAuthn struct {
 	Strategy string `yaml:"strategy" json:"strategy"`
 	// List of additional hostnames and IPs to include in the api server PKI cert
 	SANs []string `yaml:"sans" json:"sans"`
@@ -77,7 +77,7 @@ type AuthnConfig struct {
 	Webhook *AuthWebhookConfig `yaml:"webhook" json:"webhook"`
 }
 
-type AuthzConfig struct {
+type ZKEConfigAuthz struct {
 	Mode    string            `yaml:"mode" json:"mode"`
 	Options map[string]string `yaml:"options" json:"options"`
 }

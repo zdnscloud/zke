@@ -173,7 +173,7 @@ func clusterConfig(ctx *cli.Context) error {
 	}
 	cluster.Authorization = *authzConfig
 	// Get k8s/system images
-	cluster.SystemImages = types.K8sVersionToZKESystemImages[core.DefaultK8sVersion]
+	cluster.Image = types.K8sVersionToZKESystemImages[core.DefaultK8sVersion]
 	cluster.Network.DNS.UpstreamNameservers, err = getGlobalDNSConfig(reader)
 	if err != nil {
 		return err
@@ -276,8 +276,8 @@ func getServiceConfig(reader *bufio.Reader, cluster *types.ZKEConfig) (*types.ZK
 	return &servicesConfig, nil
 }
 
-func getAuthnConfig(reader *bufio.Reader) (*types.AuthnConfig, error) {
-	authnConfig := types.AuthnConfig{}
+func getAuthnConfig(reader *bufio.Reader) (*types.ZKEConfigAuthn, error) {
+	authnConfig := types.ZKEConfigAuthn{}
 	authnType, err := getConfig(reader, "Authentication Strategy", core.DefaultAuthStrategy)
 	if err != nil {
 		return nil, err
@@ -286,8 +286,8 @@ func getAuthnConfig(reader *bufio.Reader) (*types.AuthnConfig, error) {
 	return &authnConfig, nil
 }
 
-func getAuthzConfig(reader *bufio.Reader) (*types.AuthzConfig, error) {
-	authzConfig := types.AuthzConfig{}
+func getAuthzConfig(reader *bufio.Reader) (*types.ZKEConfigAuthz, error) {
+	authzConfig := types.ZKEConfigAuthz{}
 	authzMode, err := getConfig(reader, "Authorization Mode (rbac, none)", core.DefaultAuthorizationMode)
 	if err != nil {
 		return nil, err
