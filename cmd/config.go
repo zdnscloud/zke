@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/core/services"
-	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
 	"github.com/sirupsen/logrus"
@@ -23,9 +21,6 @@ import (
 const (
 	comments = `# If you intened to deploy Kubernetes in an air-gapped environment,
 # please consult the documentation on how to configure custom ZKE images.`
-	FlannelIface                 = "flannel_iface"
-	FlannelBackendType           = "flannel_backend_type"
-	FlannelBackendDirectrouting  = "flannel_vxlan_directrouting"
 	DefaultClusterSSHKeyPath     = "~/.ssh/id_rsa"
 	DefaultClusterSSHKey         = ""
 	DefaultClusterSSHPort        = "22"
@@ -34,13 +29,6 @@ const (
 
 	IngressSelectLabel = "node-role.kubernetes.io/edge"
 )
-
-type clusterCommonCfg struct {
-	sshPort      string
-	sshKeyPath   string
-	sshUser      string
-	dockerSocket string
-}
 
 func ConfigCommand() cli.Command {
 	return cli.Command{
@@ -57,44 +45,10 @@ func ConfigCommand() cli.Command {
 				Name:  "empty,e",
 				Usage: "Generate Empty configuration file",
 			},
-			cli.BoolFlag{
-				Name:  "print,p",
-				Usage: "Print configuration",
-			},
-			cli.BoolFlag{
-				Name:  "system-images",
-				Usage: "Generate the default system images",
-			},
-			cli.BoolFlag{
-				Name:  "all",
-				Usage: "Generate the default system images for all versions",
-			},
-			cli.StringFlag{
-				Name:  "version",
-				Usage: "Generate the default system images for specific k8s versions",
-			},
 		},
 	}
 }
 
-func GetConfig(reader *bufio.Reader, text, def string) (string, error) {
-	for {
-		if def == "" {
-			fmt.Printf("[+] %s [%s]: ", text, "none")
-		} else {
-			fmt.Printf("[+] %s [%s]: ", text, def)
-		}
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			return "", err
-		}
-		input = strings.TrimSpace(input)
-		if input != "" {
-			return input, nil
-		}
-		return def, nil
-	}
-}
 func getConfig(reader *bufio.Reader, text, def string) (string, error) {
 	for {
 		if def == "" {
@@ -114,26 +68,18 @@ func getConfig(reader *bufio.Reader, text, def string) (string, error) {
 	}
 }
 
-func writeConfig(cluster *types.ZKEConfig, configFile string, print bool) error {
+func writeConfig(cluster *types.ZKEConfig, configFile string) error {
 	yamlConfig, err := yaml.Marshal(*cluster)
 	if err != nil {
 		return err
 	}
 	logrus.Debugf("Deploying cluster configuration file: %s", configFile)
 	configString := fmt.Sprintf("%s\n%s", comments, string(yamlConfig))
-	if print {
-		fmt.Printf("Configuration File: \n%s", configString)
-		return nil
-	}
 	return ioutil.WriteFile(configFile, []byte(configString), 0640)
 }
 
 func clusterConfig(ctx *cli.Context) error {
-	if ctx.Bool("system-images") {
-		return generateSystemImagesList(ctx.String("version"), ctx.Bool("all"))
-	}
 	configFile := ctx.String("name")
-	print := ctx.Bool("print")
 	cluster := types.ZKEConfig{}
 	// set zke config version
 	cluster.Version = defaultConfigVersion
@@ -142,7 +88,7 @@ func clusterConfig(ctx *cli.Context) error {
 	// Generate empty configuration file
 	if ctx.Bool("empty") {
 		cluster.Nodes = make([]types.ZKEConfigNode, 1)
-		return writeConfig(&cluster, configFile, print)
+		return writeConfig(&cluster, configFile)
 	}
 	sshKeyPath, err := getConfig(reader, "Cluster Level SSH Private Key Path", DefaultClusterSSHKeyPath)
 	if err != nil {
@@ -164,7 +110,25 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Option.DockerSocket = dockerSocketPath
-	hostCommonCfg := clusterCommonCfg{sshPort, sshKeyPath, sshUser, dockerSocketPath}
+
+	clusterDomain, err := getConfig(reader, "Cluster domain", core.DefaultClusterDomain)
+	if err != nil {
+		return err
+	}
+	cluster.Option.ClusterDomain = clusterDomain
+
+	serviceClusterIPRange, err := getConfig(reader, "Service Cluster IP Range", core.DefaultServiceClusterIPRange)
+	if err != nil {
+		return err
+	}
+	cluster.Option.ServiceClusterIpRange = serviceClusterIPRange
+
+	clusterNetworkCidr, err := getConfig(reader, "Cluster Network CIDR", core.DefaultClusterCIDR)
+	if err != nil {
+		return err
+	}
+	cluster.Option.ClusterCidr = clusterNetworkCidr
+
 	// Get number of hosts
 	numberOfHostsString, err := getConfig(reader, "Number of Hosts", "1")
 	if err != nil {
@@ -177,7 +141,7 @@ func clusterConfig(ctx *cli.Context) error {
 	// Get Hosts config
 	cluster.Nodes = make([]types.ZKEConfigNode, 0)
 	for i := 0; i < numberOfHostsInt; i++ {
-		hostCfg, err := getHostConfig(reader, i, hostCommonCfg)
+		hostCfg, err := getHostConfig(reader, i, &cluster)
 		if err != nil {
 			return err
 		}
@@ -215,27 +179,28 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	// Get Services Config
-	serviceConfig, err := getServiceConfig(reader)
+	coreServiceConfig, err := getServiceConfig(reader, &cluster)
 	if err != nil {
 		return err
 	}
-	cluster.Core = *serviceConfig
+	cluster.Core = *coreServiceConfig
 
-	return writeConfig(&cluster, configFile, print)
+	return writeConfig(&cluster, configFile)
 }
 
-func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonCfg) (*types.ZKEConfigNode, error) {
+func getHostConfig(reader *bufio.Reader, index int, cluster *types.ZKEConfig) (*types.ZKEConfigNode, error) {
 	host := types.ZKEConfigNode{}
 	address, err := getConfig(reader, fmt.Sprintf("SSH Address of host (%d)", index+1), "")
 	if err != nil {
 		return nil, err
 	}
 	host.Address = address
-	host.Port = hostCommonCfg.sshPort
-	host.User = hostCommonCfg.sshUser
-	host.SSHKey = DefaultClusterSSHKey
-	host.SSHKeyPath = hostCommonCfg.sshKeyPath
-	host.DockerSocket = hostCommonCfg.dockerSocket
+	host.Port = cluster.Option.SSHPort
+	host.User = cluster.Option.SSHUser
+	host.SSHKey = cluster.Option.SSHKey
+	host.SSHKeyPath = cluster.Option.SSHKeyPath
+	host.DockerSocket = cluster.Option.DockerSocket
+
 	isControlHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) a Control Plane host (y/n)?", address), "y")
 	if err != nil {
 		return nil, err
@@ -243,6 +208,7 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if isControlHost == "y" || isControlHost == "Y" {
 		host.Role = append(host.Role, services.ControlRole)
 	}
+
 	isWorkerHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) a Worker host (y/n)?", address), "n")
 	if err != nil {
 		return nil, err
@@ -250,6 +216,7 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if isWorkerHost == "y" || isWorkerHost == "Y" {
 		host.Role = append(host.Role, services.WorkerRole)
 	}
+
 	isEtcdHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an etcd host (y/n)?", address), "n")
 	if err != nil {
 		return nil, err
@@ -257,25 +224,21 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	if isEtcdHost == "y" || isEtcdHost == "Y" {
 		host.Role = append(host.Role, services.ETCDRole)
 	}
-	isStorageHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Storage host (y/n)?", address), "n")
+
+	isEdgeHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Edge host (y/n)?", address), "y")
 	if err != nil {
 		return nil, err
 	}
-	if isStorageHost == "y" || isStorageHost == "Y" {
-		host.Role = append(host.Role, services.StorageRole)
-	}
-	isNetBorderHost, err := getConfig(reader, fmt.Sprintf("Is host (%s) an Edge host (y/n)?", address), "y")
-	if err != nil {
-		return nil, err
-	}
-	if isNetBorderHost == "y" || isNetBorderHost == "Y" {
+	if isEdgeHost == "y" || isEdgeHost == "Y" {
 		host.Role = append(host.Role, services.EdgeRole)
 	}
+
 	hostnameOverride, err := getConfig(reader, fmt.Sprintf("Override Hostname of host (%s)", address), "")
 	if err != nil {
 		return nil, err
 	}
 	host.HostnameOverride = hostnameOverride
+
 	internalAddress, err := getConfig(reader, fmt.Sprintf("Internal IP of host (%s)", address), "")
 	if err != nil {
 		return nil, err
@@ -284,7 +247,7 @@ func getHostConfig(reader *bufio.Reader, index int, hostCommonCfg clusterCommonC
 	return &host, nil
 }
 
-func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigCore, error) {
+func getServiceConfig(reader *bufio.Reader, cluster *types.ZKEConfig) (*types.ZKEConfigCore, error) {
 	servicesConfig := types.ZKEConfigCore{}
 	servicesConfig.Etcd = types.ETCDService{}
 	servicesConfig.KubeAPI = types.KubeAPIService{}
@@ -292,17 +255,9 @@ func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigCore, error) {
 	servicesConfig.Scheduler = types.SchedulerService{}
 	servicesConfig.Kubelet = types.KubeletService{}
 	servicesConfig.Kubeproxy = types.KubeproxyService{}
-	clusterDomain, err := getConfig(reader, "Cluster domain", core.DefaultClusterDomain)
-	if err != nil {
-		return nil, err
-	}
-	servicesConfig.Kubelet.ClusterDomain = clusterDomain
-	serviceClusterIPRange, err := getConfig(reader, "Service Cluster IP Range", core.DefaultServiceClusterIPRange)
-	if err != nil {
-		return nil, err
-	}
-	servicesConfig.KubeAPI.ServiceClusterIPRange = serviceClusterIPRange
-	servicesConfig.KubeController.ServiceClusterIPRange = serviceClusterIPRange
+	servicesConfig.Kubelet.ClusterDomain = cluster.Option.ClusterDomain
+	servicesConfig.KubeAPI.ServiceClusterIPRange = cluster.Option.ServiceClusterIpRange
+	servicesConfig.KubeController.ServiceClusterIPRange = cluster.Option.ServiceClusterIpRange
 	podSecurityPolicy, err := getConfig(reader, "Enable PodSecurityPolicy", "n")
 	if err != nil {
 		return nil, err
@@ -312,11 +267,7 @@ func getServiceConfig(reader *bufio.Reader) (*types.ZKEConfigCore, error) {
 	} else {
 		servicesConfig.KubeAPI.PodSecurityPolicy = false
 	}
-	clusterNetworkCidr, err := getConfig(reader, "Cluster Network CIDR", core.DefaultClusterCIDR)
-	if err != nil {
-		return nil, err
-	}
-	servicesConfig.KubeController.ClusterCIDR = clusterNetworkCidr
+	servicesConfig.KubeController.ClusterCIDR = cluster.Option.ClusterCidr
 	clusterDNSServiceIP, err := getConfig(reader, "Cluster DNS Service IP", core.DefaultClusterDNSService)
 	if err != nil {
 		return nil, err
@@ -358,7 +309,6 @@ func getNetworkConfig(reader *bufio.Reader) (*types.ZKEConfigNetwork, error) {
 			return nil, err
 		}
 		networkConfig.Iface = networkFlannelIface
-		return &networkConfig, nil
 	}
 	return &networkConfig, nil
 }
@@ -387,73 +337,4 @@ func getGlobalDNSConfig(reader *bufio.Reader) ([]string, error) {
 		globalDNS = append(globalDNS, server)
 	}
 	return globalDNS, nil
-}
-
-func generateSystemImagesList(version string, all bool) error {
-	allVersions := []string{}
-	currentVersionImages := make(map[string]types.ZKEConfigImages)
-	for version := range types.AllK8sVersions {
-		err := util.ValidateVersion(version)
-		if err != nil {
-			continue
-		}
-		allVersions = append(allVersions, version)
-		currentVersionImages[version] = types.AllK8sVersions[version]
-	}
-	if all {
-		for version, zkeSystemImages := range currentVersionImages {
-			err := util.ValidateVersion(version)
-			if err != nil {
-				continue
-			}
-			logrus.Infof("Generating images list for version [%s]:", version)
-			uniqueImages := getUniqueSystemImageList(zkeSystemImages)
-			for _, image := range uniqueImages {
-				if image == "" {
-					continue
-				}
-				fmt.Printf("%s\n", image)
-			}
-		}
-		return nil
-	}
-	if len(version) == 0 {
-		version = types.DefaultK8s
-	}
-	zkeSystemImages := types.AllK8sVersions[version]
-	if zkeSystemImages == (types.ZKEConfigImages{}) {
-		return fmt.Errorf("k8s version is not supported, supported versions are: %v", allVersions)
-	}
-	logrus.Infof("Generating images list for version [%s]:", version)
-	uniqueImages := getUniqueSystemImageList(zkeSystemImages)
-	for _, image := range uniqueImages {
-		if image == "" {
-			continue
-		}
-		fmt.Printf("%s\n", image)
-	}
-	return nil
-}
-
-func getUniqueSystemImageList(zkeSystemImages types.ZKEConfigImages) []string {
-	imagesReflect := reflect.ValueOf(zkeSystemImages)
-	images := make([]string, imagesReflect.NumField())
-	for i := 0; i < imagesReflect.NumField(); i++ {
-		images[i] = imagesReflect.Field(i).Interface().(string)
-	}
-	return getUniqueSlice(images)
-}
-
-func getUniqueSlice(slice []string) []string {
-	encountered := map[string]bool{}
-	unqiue := []string{}
-	for i := range slice {
-		if encountered[slice[i]] {
-			continue
-		} else {
-			encountered[slice[i]] = true
-			unqiue = append(unqiue, slice[i])
-		}
-	}
-	return unqiue
 }
