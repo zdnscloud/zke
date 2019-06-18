@@ -26,6 +26,7 @@ type ZKEConfigOption struct {
 	ClusterCidr           string `yaml:"cluster_cidr" json:"clusterCidr"`
 	ServiceClusterIpRange string `yaml:"service_cluster_ip_range" json:"serviceClusterIpRange"`
 	ClusterDomain         string `yaml:"cluster_domain" json:"clusterDomain"`
+	ClusterDNSServiceIP   string `yaml:"cluster_dns_serviceip" json:"clusterDNSServiceIP"`
 	PrefixPath            string `yaml:"prefix_path" json:"prefixPath"`
 }
 

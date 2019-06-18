@@ -55,7 +55,7 @@ func DeployNetwork(ctx context.Context, c *core.Cluster) error {
 	if err != nil {
 		return err
 	}
-	if err := deployNetworkPlugin(ctx, c, k8sClient); err != nil {
+	if err := doNetworkPluginDeploy(ctx, c, k8sClient); err != nil {
 		return err
 	}
 
@@ -69,7 +69,7 @@ func DeployNetwork(ctx context.Context, c *core.Cluster) error {
 	return nil
 }
 
-func deployNetworkPlugin(ctx context.Context, c *core.Cluster, cli client.Client) error {
+func doNetworkPluginDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[network] Setting up network plugin: %s", c.Network.Plugin)
 	switch c.Network.Plugin {
 	case FlannelNetworkPlugin:
@@ -86,7 +86,7 @@ func deployNetworkPlugin(ctx context.Context, c *core.Cluster, cli client.Client
 
 func doFlannelDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	flannelConfig := map[string]interface{}{
-		ClusterCIDR:      c.ClusterCIDR,
+		ClusterCIDR:      c.Option.ClusterCidr,
 		Image:            c.Image.Flannel,
 		CNIImage:         c.Image.FlannelCNI,
 		FlannelInterface: c.Network.Iface,
@@ -98,7 +98,7 @@ func doFlannelDeploy(ctx context.Context, c *core.Cluster, cli client.Client) er
 		ClusterVersion:    core.GetTagMajorVersion(c.Option.KubernetesVersion),
 		"DeployNamespace": DeployNamespace,
 	}
-	if err := k8s.DoDeployFromTemplate(cli, flannel.FlannelTemplate, flannelConfig); err != nil {
+	if err := k8s.DoCreateFromTemplate(cli, flannel.FlannelTemplate, flannelConfig); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[Network] network plugin flannel deployed successfully")
@@ -109,7 +109,7 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) err
 	clientConfig := pki.GetConfigPath(pki.KubeNodeCertName)
 	calicoConfig := map[string]interface{}{
 		KubeCfg:           clientConfig,
-		ClusterCIDR:       c.ClusterCIDR,
+		ClusterCIDR:       c.Option.ClusterCidr,
 		CNIImage:          c.Image.CalicoCNI,
 		NodeImage:         c.Image.CalicoNode,
 		Calicoctl:         c.Image.CalicoCtl,
@@ -125,7 +125,7 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) err
 	case "default":
 		CalicoTemplate = calico.CalicoTemplateV112
 	}
-	if err := k8s.DoDeployFromTemplate(cli, CalicoTemplate, calicoConfig); err != nil {
+	if err := k8s.DoCreateFromTemplate(cli, CalicoTemplate, calicoConfig); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[Network] network plugin calico deployed successfully")
@@ -138,12 +138,12 @@ func doDNSDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error 
 		CoreDNSImage:           c.Image.CoreDNS,
 		CoreDNSAutoScalerImage: c.Image.CoreDNSAutoscaler,
 		RBACConfig:             c.Authorization.Mode,
-		ClusterDomain:          c.ClusterDomain,
-		ClusterDNSServer:       c.ClusterDNSServer,
+		ClusterDomain:          c.Option.ClusterDomain,
+		ClusterDNSServer:       c.Option.ClusterDNSServiceIP,
 		UpstreamNameservers:    c.Network.DNS.UpstreamNameservers,
 		ReverseCIDRs:           c.Network.DNS.ReverseCIDRs,
 	}
-	if err := k8s.DoDeployFromTemplate(cli, coredns.CoreDNSTemplate, CoreDNSConfig); err != nil {
+	if err := k8s.DoCreateFromTemplate(cli, coredns.CoreDNSTemplate, CoreDNSConfig); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[Network] DNS plugin coredns deployed successfully")
@@ -167,7 +167,7 @@ func doIngressDeploy(ctx context.Context, c *core.Cluster, cli client.Client) er
 			ingressConfig.AlpineImage = c.Image.Alpine
 		}
 	}
-	if err := k8s.DoDeployFromTemplate(cli, ingress.NginxIngressTemplate, ingressConfig); err != nil {
+	if err := k8s.DoCreateFromTemplate(cli, ingress.NginxIngressTemplate, ingressConfig); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[Network] ingress controller %s deployed successfully", c.Network.Ingress.Provider)

@@ -259,7 +259,7 @@ func (c *Cluster) BuildKubeControllerProcess(prefixPath string) types.Process {
 		"address":                          "127.0.0.1",
 		"allow-untagged-cloud":             "true",
 		"allocate-node-cidrs":              "true",
-		"cluster-cidr":                     c.ClusterCIDR,
+		"cluster-cidr":                     c.Option.ClusterCidr,
 		"configure-cloud-routes":           "false",
 		"enable-hostpath-provisioner":      "false",
 		"kubeconfig":                       pki.GetConfigPath(pki.KubeControllerCertName),
@@ -352,8 +352,8 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) types
 		"authentication-token-webhook":      "true",
 		"cgroups-per-qos":                   "True",
 		"client-ca-file":                    pki.GetCertPath(pki.CACertName),
-		"cluster-dns":                       c.ClusterDNSServer,
-		"cluster-domain":                    c.ClusterDomain,
+		"cluster-dns":                       c.Option.ClusterDNSServiceIP,
+		"cluster-domain":                    c.Option.ClusterDomain,
 		"cni-bin-dir":                       "/opt/cni/bin",
 		"cni-conf-dir":                      "/etc/cni/net.d",
 		"enforce-node-allocatable":          "",
@@ -471,7 +471,7 @@ func (c *Cluster) BuildKubeProxyProcess(host *hosts.Host, prefixPath string) typ
 	}
 
 	CommandArgs := map[string]string{
-		"cluster-cidr":         c.ClusterCIDR,
+		"cluster-cidr":         c.Option.ClusterCidr,
 		"v":                    "2",
 		"healthz-bind-address": "127.0.0.1",
 		"hostname-override":    host.HostnameOverride,

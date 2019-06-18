@@ -15,7 +15,6 @@ import (
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
-	"github.com/zdnscloud/zke/pkg/util"
 	"github.com/zdnscloud/zke/types"
 
 	dockertypes "github.com/docker/docker/api/types"
@@ -35,9 +34,6 @@ type Cluster struct {
 	ConfigDir            string
 	Certificates         map[string]pki.CertificatePKI
 	CertificateDir       string
-	ClusterDomain        string
-	ClusterCIDR          string
-	ClusterDNSServer     string
 	DockerDialerFactory  hosts.DialerFactory
 	K8sWrapTransport     k8s.WrapTransport
 	KubeClient           *kubernetes.Clientset
@@ -62,12 +58,10 @@ const (
 	UpdateStateTimeout      = 30
 	GetStateTimeout         = 30
 	KubernetesClientTimeOut = 30
-	SyncWorkers             = 10
 	NoneAuthorizationMode   = "none"
 	LocalNodeAddress        = "127.0.0.1"
 	LocalNodeHostname       = "localhost"
 	LocalNodeUser           = "root"
-	CloudProvider           = "CloudProvider"
 	ControlPlane            = "controlPlane"
 	WorkerPlane             = "workerPlan"
 	EtcdPlane               = "etcd"
@@ -75,8 +69,6 @@ const (
 	KubeAppLabel = "k8s-app"
 	AppLabel     = "app"
 	NameLabel    = "name"
-
-	WorkerThreads = util.WorkerThreads
 )
 
 func (c *Cluster) DeployControlPlane(ctx context.Context) error {
@@ -182,9 +174,6 @@ func (c *Cluster) setNetworkOptions() error {
 	if err != nil {
 		return fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
 	}
-	c.ClusterDomain = c.Core.Kubelet.ClusterDomain
-	c.ClusterCIDR = c.Core.KubeController.ClusterCIDR
-	c.ClusterDNSServer = c.Core.Kubelet.ClusterDNSServer
 	return nil
 }
 

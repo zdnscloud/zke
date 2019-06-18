@@ -1,6 +1,6 @@
-package components
+package monitor
 
-const MetricsServerTemplate = `
+const metricsServerTemplate = `
 apiVersion: v1
 kind: Namespace
 metadata:

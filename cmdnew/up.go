@@ -1,4 +1,4 @@
-package cmd
+package cmdnew
 
 import (
 	"context"
@@ -99,7 +99,6 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-
 	log.Infof(ctx, "Building Kubernetes cluster")
 	err = kubeCluster.SetupDialers(ctx, dialersOptions)
 	if err != nil {
@@ -113,11 +112,6 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-	isNewCluster := true
-	if currentCluster != nil {
-		isNewCluster = false
-	}
-
 	if !flags.DisablePortCheck {
 		if err = kubeCluster.CheckClusterPorts(ctx, currentCluster); err != nil {
 			return APIURL, caCrt, clientCert, clientKey, nil, err
@@ -175,7 +169,7 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags c
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
-	err = ConfigureCluster(ctx, kubeCluster.ZKEConfig, kubeCluster.Certificates, flags, dialersOptions, isNewCluster)
+	err = ConfigureCluster(ctx, kubeCluster.ZKEConfig, kubeCluster.Certificates, flags, dialersOptions)
 	if err != nil {
 		return APIURL, caCrt, clientCert, clientKey, nil, err
 	}
@@ -237,8 +231,7 @@ func ConfigureCluster(
 	zkeConfig types.ZKEConfig,
 	crtBundle map[string]pki.CertificatePKI,
 	flags core.ExternalFlags,
-	dailersOptions hosts.DialersOptions,
-	isNewCluster bool) error {
+	dailersOptions hosts.DialersOptions) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
 	kubeCluster, err := core.InitClusterObject(ctx, &zkeConfig, flags)
 	if err != nil {
@@ -247,11 +240,11 @@ func ConfigureCluster(
 	if err := kubeCluster.SetupDialers(ctx, dailersOptions); err != nil {
 		return err
 	}
-	if len(kubeCluster.ControlPlaneHosts) > 0 && isNewCluster {
+	if len(kubeCluster.ControlPlaneHosts) > 0 {
 		kubeCluster.Certificates = crtBundle
 		if err := network.DeployNetwork(ctx, kubeCluster); err != nil {
 			return err
-			log.Warnf(ctx, "Failed to deploy [%s]: %v", network.NetworkPluginResourceName, err)
+			log.Warnf(ctx, "Failed to deploy addon execute job [%s]: %v", network.NetworkPluginResourceName, err)
 		}
 
 		if err := monitor.DeployMonitoring(ctx, kubeCluster); err != nil {

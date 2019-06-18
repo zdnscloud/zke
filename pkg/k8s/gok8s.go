@@ -8,16 +8,28 @@ import (
 	"github.com/zdnscloud/gok8s/helper"
 )
 
-func DoDeployFromTemplate(cli client.Client, template string, templateConfig interface{}) error {
+func DoCreateFromTemplate(cli client.Client, template string, templateConfig interface{}) error {
 	yaml, err := templates.CompileTemplateFromMap(template, templateConfig)
 	if err != nil {
 		return err
 	}
-	return DoDeployFromYaml(cli, yaml)
+	return doCreateFromYaml(cli, yaml)
 }
 
-func DoDeployFromYaml(cli client.Client, yaml string) error {
+func doCreateFromYaml(cli client.Client, yaml string) error {
 	return helper.CreateResourceFromYaml(cli, yaml)
+}
+
+func DoUpdateFromTemplate(cli client.Client, template string, templateConfig interface{}) error {
+	yaml, err := templates.CompileTemplateFromMap(template, templateConfig)
+	if err != nil {
+		return err
+	}
+	return doUpdateFromYaml(cli, yaml)
+}
+
+func doUpdateFromYaml(cli client.Client, yaml string) error {
+	return helper.UpdateResourceFromYaml(cli, yaml)
 }
 
 func GetK8sClientFromConfig(kubeConfigPath string) (client.Client, error) {

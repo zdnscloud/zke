@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/zdnscloud/zke/core"
-	"github.com/zdnscloud/zke/monitor/components"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 
@@ -13,10 +12,6 @@ import (
 
 const DeployNamespace = "zcloud"
 
-var componentsTemplates = map[string]string{
-	"metrics-server": components.MetricsServerTemplate,
-}
-
 func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 	log.Infof(ctx, "[Monitor] Setting up Monitor Plugin")
 	templateConfig, k8sClient, err := prepare(c)
@@ -24,12 +19,10 @@ func DeployMonitoring(ctx context.Context, c *core.Cluster) error {
 		return err
 	}
 
-	for component, template := range componentsTemplates {
-		err := k8s.DoDeployFromTemplate(k8sClient, template, templateConfig)
-		if err != nil {
-			log.Infof(ctx, "[Monitor] component %s deploy failed", component)
-			return err
-		}
+	err = k8s.DoCreateFromTemplate(k8sClient, metricsServerTemplate, templateConfig)
+	if err != nil {
+		log.Infof(ctx, "[Monitor] deploy metrics server failed")
+		return err
 	}
 
 	log.Infof(ctx, "[Monitor] Successfully deployed Monitor Plugin")

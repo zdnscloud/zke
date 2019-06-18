@@ -46,7 +46,7 @@ func doSADeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	saconfig := map[string]interface{}{
 		RBACConfig: c.Authorization.Mode,
 	}
-	return k8s.DoDeployFromTemplate(cli, zcloudsa.SATemplate, saconfig)
+	return k8s.DoCreateFromTemplate(cli, zcloudsa.SATemplate, saconfig)
 }
 
 func doClusterAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
@@ -54,7 +54,7 @@ func doClusterAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Clien
 	clusteragentConfig := map[string]interface{}{
 		Image: c.Image.ClusterAgent,
 	}
-	return k8s.DoDeployFromTemplate(cli, clusteragent.ClusterAgentTemplate, clusteragentConfig)
+	return k8s.DoCreateFromTemplate(cli, clusteragent.ClusterAgentTemplate, clusteragentConfig)
 }
 
 func doNodeAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
@@ -63,5 +63,5 @@ func doNodeAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Client) 
 		"Image":         c.Image.NodeAgent,
 		"NodeAgentPort": NodeAgentPort,
 	}
-	return k8s.DoDeployFromTemplate(cli, nodeagent.NodeAgentTemplate, cfg)
+	return k8s.DoCreateFromTemplate(cli, nodeagent.NodeAgentTemplate, cfg)
 }

@@ -1,4 +1,4 @@
-package cmd
+package cmdnew
 
 import (
 	"bufio"
@@ -128,12 +128,6 @@ func clusterConfig(ctx *cli.Context) error {
 		return err
 	}
 	cluster.Option.ClusterCidr = clusterNetworkCidr
-
-	clusterDNSServiceIP, err := getConfig(reader, "Cluster DNS Service IP", core.DefaultClusterDNSService)
-	if err != nil {
-		return err
-	}
-	cluster.Option.ClusterDNSServiceIP = clusterDNSServiceIP
 
 	// Get number of hosts
 	numberOfHostsString, err := getConfig(reader, "Number of Hosts", "1")
@@ -274,7 +268,11 @@ func getServiceConfig(reader *bufio.Reader, cluster *types.ZKEConfig) (*types.ZK
 		servicesConfig.KubeAPI.PodSecurityPolicy = false
 	}
 	servicesConfig.KubeController.ClusterCIDR = cluster.Option.ClusterCidr
-	servicesConfig.Kubelet.ClusterDNSServer = cluster.Option.ClusterDNSServiceIP
+	clusterDNSServiceIP, err := getConfig(reader, "Cluster DNS Service IP", core.DefaultClusterDNSService)
+	if err != nil {
+		return nil, err
+	}
+	servicesConfig.Kubelet.ClusterDNSServer = clusterDNSServiceIP
 	return &servicesConfig, nil
 }
 
