@@ -30,23 +30,17 @@ import (
 type Cluster struct {
 	types.ZKEConfig      `yaml:",inline"`
 	AuthnStrategies      map[string]bool
-	ConfigPath           string
-	ConfigDir            string
 	Certificates         map[string]pki.CertificatePKI
-	CertificateDir       string
 	DockerDialerFactory  hosts.DialerFactory
 	K8sWrapTransport     k8s.WrapTransport
 	KubeClient           *kubernetes.Clientset
 	KubernetesServiceIP  net.IP
-	LocalKubeConfigPath  string
 	PrivateRegistriesMap map[string]types.PrivateRegistry
-	StateFilePath        string
 	ControlPlaneHosts    []*hosts.Host
 	EtcdHosts            []*hosts.Host
 	EtcdReadyHosts       []*hosts.Host
 	InactiveHosts        []*hosts.Host
 	WorkerHosts          []*hosts.Host
-	StorageHosts         []*hosts.Host
 	EdgeHosts            []*hosts.Host
 }
 
@@ -105,7 +99,7 @@ func (c *Cluster) DeployWorkerPlane(ctx context.Context) error {
 	// Deploy Worker plane
 	workerNodePlanMap := make(map[string]types.ZKENodePlan)
 	// Build cp node plan map
-	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 	for _, workerHost := range allHosts {
 		workerNodePlanMap[workerHost.Address] = BuildZKEConfigNodePlan(ctx, c, workerHost, workerHost.DockerInfo)
 	}
@@ -128,25 +122,12 @@ func ParseConfig(clusterFile string) (*types.ZKEConfig, error) {
 	return &zkeConfig, nil
 }
 
-func InitClusterObject(ctx context.Context, zkeConfig *types.ZKEConfig, flags ExternalFlags) (*Cluster, error) {
+func InitClusterObject(ctx context.Context, zkeConfig *types.ZKEConfig) (*Cluster, error) {
 	// basic cluster object from zkeConfig
 	c := &Cluster{
 		AuthnStrategies:      make(map[string]bool),
 		ZKEConfig:            *zkeConfig,
-		ConfigPath:           flags.ClusterFilePath,
-		ConfigDir:            flags.ConfigDir,
-		CertificateDir:       flags.CertificateDir,
-		StateFilePath:        GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir),
 		PrivateRegistriesMap: make(map[string]types.PrivateRegistry),
-	}
-	if len(c.ConfigPath) == 0 {
-		c.ConfigPath = pki.ClusterConfig
-	}
-	// set kube_config, state file, and certificate dir
-	c.LocalKubeConfigPath = pki.GetLocalKubeConfig(c.ConfigPath, c.ConfigDir)
-	c.StateFilePath = GetStateFilePath(c.ConfigPath, c.ConfigDir)
-	if len(c.CertificateDir) == 0 {
-		c.CertificateDir = GetCertificateDirPath(c.ConfigPath, c.ConfigDir)
 	}
 
 	// Setting cluster Defaults
@@ -198,7 +179,7 @@ func rebuildLocalAdminConfig(ctx context.Context, kubeCluster *Cluster) error {
 	for _, cpHost := range kubeCluster.ControlPlaneHosts {
 		if (currentKubeConfig == pki.CertificatePKI{}) {
 			kubeCluster.Certificates = make(map[string]pki.CertificatePKI)
-			newConfig = getLocalAdminConfigWithNewAddress(kubeCluster.LocalKubeConfigPath, cpHost.Address, kubeCluster.ClusterName)
+			newConfig = getLocalAdminConfigWithNewAddress(pki.KubeAdminConfigName, cpHost.Address, kubeCluster.ClusterName)
 		} else {
 			kubeURL := fmt.Sprintf("https://%s:6443", cpHost.Address)
 			caData := string(cert.EncodeCertPEM(caCrt))
@@ -206,11 +187,11 @@ func rebuildLocalAdminConfig(ctx context.Context, kubeCluster *Cluster) error {
 			keyData := string(cert.EncodePrivateKeyPEM(currentKubeConfig.Key))
 			newConfig = pki.GetKubeConfigX509WithData(kubeURL, kubeCluster.ClusterName, pki.KubeAdminCertName, caData, crtData, keyData)
 		}
-		if err := pki.DeployAdminConfig(ctx, newConfig, kubeCluster.LocalKubeConfigPath); err != nil {
+		if err := pki.DeployAdminConfig(ctx, newConfig, pki.KubeAdminConfigName); err != nil {
 			return fmt.Errorf("Failed to redeploy local admin config with new host")
 		}
 		workingConfig = newConfig
-		if _, err := GetK8sVersion(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport); err == nil {
+		if _, err := GetK8sVersion(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport); err == nil {
 			log.Infof(ctx, "[reconcile] host [%s] is active master on the cluster", cpHost.Address)
 			break
 		}
@@ -253,9 +234,9 @@ func getLocalAdminConfigWithNewAddress(localConfigPath, cpAddress string, cluste
 		string(config.KeyData))
 }
 
-func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZKEConfig, flags ExternalFlags, dailersOptions hosts.DialersOptions) error {
+func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZKEConfig, dailersOptions hosts.DialersOptions) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
-	kubeCluster, err := InitClusterObject(ctx, &zkeConfig, flags)
+	kubeCluster, err := InitClusterObject(ctx, &zkeConfig)
 	if err != nil {
 		return err
 	}
@@ -265,22 +246,22 @@ func ApplyAuthzResources(ctx context.Context, zkeConfig types.ZKEConfig, flags E
 	if len(kubeCluster.ControlPlaneHosts) == 0 {
 		return nil
 	}
-	if err := authz.ApplyJobDeployerServiceAccount(ctx, kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport); err != nil {
+	if err := authz.ApplyJobDeployerServiceAccount(ctx, pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport); err != nil {
 		return fmt.Errorf("Failed to apply the ServiceAccount needed for job execution: %v", err)
 	}
 	if kubeCluster.Authorization.Mode == NoneAuthorizationMode {
 		return nil
 	}
 	if kubeCluster.Authorization.Mode == services.RBACAuthorizationMode {
-		if err := authz.ApplySystemNodeClusterRoleBinding(ctx, kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport); err != nil {
+		if err := authz.ApplySystemNodeClusterRoleBinding(ctx, pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport); err != nil {
 			return fmt.Errorf("Failed to apply the ClusterRoleBinding needed for node authorization: %v", err)
 		}
 	}
 	if kubeCluster.Authorization.Mode == services.RBACAuthorizationMode && kubeCluster.Core.KubeAPI.PodSecurityPolicy {
-		if err := authz.ApplyDefaultPodSecurityPolicy(ctx, kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport); err != nil {
+		if err := authz.ApplyDefaultPodSecurityPolicy(ctx, pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport); err != nil {
 			return fmt.Errorf("Failed to apply default PodSecurityPolicy: %v", err)
 		}
-		if err := authz.ApplyDefaultPodSecurityPolicyRole(ctx, kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport); err != nil {
+		if err := authz.ApplyDefaultPodSecurityPolicyRole(ctx, pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport); err != nil {
 			return fmt.Errorf("Failed to apply default PodSecurityPolicy ClusterRole and ClusterRoleBinding: %v", err)
 		}
 	}
@@ -302,11 +283,11 @@ func (c *Cluster) SyncLabelsAndTaints(ctx context.Context, currentCluster *Clust
 
 	if len(c.ControlPlaneHosts) > 0 {
 		log.Infof(ctx, "[sync] Syncing nodes Labels and Taints")
-		k8sClient, err := k8s.NewClient(c.LocalKubeConfigPath, c.K8sWrapTransport)
+		k8sClient, err := k8s.NewClient(pki.KubeAdminConfigName, c.K8sWrapTransport)
 		if err != nil {
 			return fmt.Errorf("Failed to initialize new kubernetes client: %v", err)
 		}
-		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 		_, err = errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
 			logrus.Debugf("worker starting sync for node [%s]", h.(*hosts.Host).HostnameOverride)
 			return nil, setNodeAnnotationsLabelsTaints(k8sClient, h.(*hosts.Host))
@@ -353,7 +334,7 @@ func setNodeAnnotationsLabelsTaints(k8sClient *kubernetes.Clientset, host *hosts
 
 func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 	log.Infof(ctx, "Pre-pulling kubernetes images")
-	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+	hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 	_, err := errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
 		return nil, docker.UseLocalOrPull(ctx, runHost.DClient, runHost.Address, c.Image.Kubernetes, "pre-deploy", c.PrivateRegistriesMap)
@@ -368,7 +349,7 @@ func (c *Cluster) PrePullK8sImages(ctx context.Context) error {
 func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 	log.Infof(ctx, "Restarting network, ingress, and metrics pods")
 	// this will remove the pods created by ZKE and let the controller creates them again
-	kubeClient, err := k8s.NewClient(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport)
+	kubeClient, err := k8s.NewClient(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize new kubernetes client: %v", err)
 	}
@@ -396,7 +377,7 @@ func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 
 func (c *Cluster) GetHostInfoMap() map[string]dockertypes.Info {
 	hostsInfoMap := make(map[string]dockertypes.Info)
-	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+	allHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 	for _, host := range allHosts {
 		hostsInfoMap[host.Address] = host.DockerInfo
 	}

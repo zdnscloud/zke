@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/util/cert"
 )
 
-func GenerateKubeAPICertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeAPICertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	// generate API certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -74,7 +74,7 @@ func GenerateKubeAPICSR(ctx context.Context, certs map[string]CertificatePKI, zk
 	return nil
 }
 
-func GenerateKubeControllerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeControllerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	// generate Kube controller-manager certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -110,7 +110,7 @@ func GenerateKubeControllerCSR(ctx context.Context, certs map[string]Certificate
 	return nil
 }
 
-func GenerateKubeSchedulerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeSchedulerCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	// generate Kube scheduler certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -146,7 +146,7 @@ func GenerateKubeSchedulerCSR(ctx context.Context, certs map[string]CertificateP
 	return nil
 }
 
-func GenerateKubeProxyCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeProxyCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	// generate Kube Proxy certificate and key
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -182,7 +182,7 @@ func GenerateKubeProxyCSR(ctx context.Context, certs map[string]CertificatePKI, 
 	return nil
 }
 
-func GenerateKubeNodeCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeNodeCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	// generate kubelet certificate
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
@@ -218,16 +218,13 @@ func GenerateKubeNodeCSR(ctx context.Context, certs map[string]CertificatePKI, z
 	return nil
 }
 
-func GenerateKubeAdminCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateKubeAdminCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	// generate Admin certificate and key
 	log.Infof(ctx, "[certificates] Generating admin certificates and kubeconfig")
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
 	cpHosts := hosts.NodesToHosts(zkeConfig.Nodes, controlRole)
-	if len(configPath) == 0 {
-		configPath = ClusterConfig
-	}
-	localKubeConfigPath := GetLocalKubeConfig(configPath, configDir)
+
 	var serviceKey *rsa.PrivateKey
 	if !rotate {
 		serviceKey = certs[KubeAdminCertName].Key
@@ -246,7 +243,7 @@ func GenerateKubeAdminCertificate(ctx context.Context, certs map[string]Certific
 			string(cert.EncodeCertPEM(kubeAdminCrt)),
 			string(cert.EncodePrivateKeyPEM(kubeAdminKey)))
 		kubeAdminCertObj.Config = kubeAdminConfig
-		kubeAdminCertObj.ConfigPath = localKubeConfigPath
+		kubeAdminCertObj.ConfigPath = KubeAdminConfigName
 	} else {
 		kubeAdminCertObj.Config = ""
 	}
@@ -271,7 +268,7 @@ func GenerateKubeAdminCSR(ctx context.Context, certs map[string]CertificatePKI, 
 	return nil
 }
 
-func GenerateAPIProxyClientCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateAPIProxyClientCertificate(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	//generate API server proxy client key and certs
 	caCrt := certs[RequestHeaderCACertName].Certificate
 	caKey := certs[RequestHeaderCACertName].Key
@@ -307,7 +304,7 @@ func GenerateAPIProxyClientCSR(ctx context.Context, certs map[string]Certificate
 	return nil
 }
 
-func GenerateExternalEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateExternalEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	clientCert, err := cert.ParseCertsPEM([]byte(zkeConfig.Core.Etcd.Cert))
 	if err != nil {
 		return err
@@ -326,7 +323,7 @@ func GenerateExternalEtcdCertificates(ctx context.Context, certs map[string]Cert
 	return nil
 }
 
-func GenerateEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateEtcdCertificates(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	caCrt := certs[CACertName].Certificate
 	caKey := certs[CACertName].Key
 	kubernetesServiceIP, err := GetKubernetesServiceIP(zkeConfig.Core.KubeAPI.ServiceClusterIPRange)
@@ -380,7 +377,7 @@ func GenerateEtcdCSRs(ctx context.Context, certs map[string]CertificatePKI, zkeC
 	return nil
 }
 
-func GenerateServiceTokenKey(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateServiceTokenKey(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	// generate service account token key
 	privateAPIKey := certs[ServiceAccountTokenKeyName].Key
 	caCrt := certs[CACertName].Certificate
@@ -400,7 +397,7 @@ func GenerateServiceTokenKey(ctx context.Context, certs map[string]CertificatePK
 	return nil
 }
 
-func GenerateZKECACerts(ctx context.Context, certs map[string]CertificatePKI, configPath, configDir string) error {
+func GenerateZKECACerts(ctx context.Context, certs map[string]CertificatePKI) error {
 	// generate kubernetes CA certificate and key
 	log.Infof(ctx, "[certificates] Generating CA kubernetes certificates")
 
@@ -420,7 +417,7 @@ func GenerateZKECACerts(ctx context.Context, certs map[string]CertificatePKI, co
 	return nil
 }
 
-func GenerateZKEServicesCerts(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, configPath, configDir string, rotate bool) error {
+func GenerateZKEServicesCerts(ctx context.Context, certs map[string]CertificatePKI, zkeConfig types.ZKEConfig, rotate bool) error {
 	ZKECerts := []GenFunc{
 		GenerateKubeAPICertificate,
 		GenerateServiceTokenKey,
@@ -433,12 +430,12 @@ func GenerateZKEServicesCerts(ctx context.Context, certs map[string]CertificateP
 		GenerateEtcdCertificates,
 	}
 	for _, gen := range ZKECerts {
-		if err := gen(ctx, certs, zkeConfig, configPath, configDir, rotate); err != nil {
+		if err := gen(ctx, certs, zkeConfig, rotate); err != nil {
 			return err
 		}
 	}
 	if len(zkeConfig.Core.Etcd.ExternalURLs) > 0 {
-		return GenerateExternalEtcdCertificates(ctx, certs, zkeConfig, configPath, configDir, false)
+		return GenerateExternalEtcdCertificates(ctx, certs, zkeConfig, false)
 	}
 	return nil
 }

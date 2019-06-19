@@ -19,46 +19,23 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"k8s.io/client-go/util/cert"
 )
 
 func UpCommand() cli.Command {
-	upFlags := []cli.Flag{
-		cli.StringFlag{
-			Name:   "config",
-			Usage:  "Specify an alternate cluster YAML file",
-			Value:  pki.ClusterConfig,
-			EnvVar: "ZKE_CONFIG",
-		},
-		cli.BoolFlag{
-			Name:  "disable-port-check",
-			Usage: "Disable port check validation between nodes",
-		},
-		cli.StringFlag{
-			Name:  "cert-dir",
-			Usage: "Specify a certificate dir path",
-		},
-		cli.BoolFlag{
-			Name:  "custom-certs",
-			Usage: "Use custom certificates from a cert dir",
-		},
-	}
-	upFlags = append(upFlags, commonFlags...)
 	return cli.Command{
 		Name:   "up",
 		Usage:  "Bring the cluster up",
 		Action: clusterUpFromCli,
-		Flags:  upFlags,
 	}
 }
 
 func doUpgradeLegacyCluster(ctx context.Context, kubeCluster *core.Cluster, fullState *core.FullState) error {
-	if _, err := os.Stat(kubeCluster.LocalKubeConfigPath); os.IsNotExist(err) {
+	if _, err := os.Stat(pki.KubeAdminConfigName); os.IsNotExist(err) {
 		// there is no kubeconfig. This is a new cluster
 		logrus.Debug("[state] local kubeconfig not found, this is a new cluster")
 		return nil
 	}
-	if _, err := os.Stat(kubeCluster.StateFilePath); err == nil {
+	if _, err := os.Stat(pki.StateFileName); err == nil {
 		// this cluster has a previous state, I don't need to upgrade!
 		logrus.Debug("[state] previous state found, this is not a legacy cluster")
 		return nil
@@ -79,111 +56,115 @@ func doUpgradeLegacyCluster(ctx context.Context, kubeCluster *core.Cluster, full
 		if err != nil {
 			return err
 		}
-		fullState.CurrentState.ZcloudKubernetesEngineConfig = recoveredCluster.ZKEConfig.DeepCopy()
+		fullState.CurrentState.ZKEConfig = recoveredCluster.ZKEConfig.DeepCopy()
 		fullState.CurrentState.CertificatesBundle = recoveredCerts
 		// we don't want to regenerate certificates
 		fullState.DesiredState.CertificatesBundle = recoveredCerts
-		return fullState.WriteStateFile(ctx, kubeCluster.StateFilePath)
+		return fullState.WriteStateFile(ctx, pki.StateFileName)
 	}
 	return nil
 }
 
-func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions, flags core.ExternalFlags) (string, string, string, string, map[string]pki.CertificatePKI, error) {
-	var APIURL, caCrt, clientCert, clientKey string
-	clusterState, err := core.ReadStateFile(ctx, core.GetStateFilePath(flags.ClusterFilePath, flags.ConfigDir))
+func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions) error {
+	clusterState, err := core.ReadStateFile(ctx, pki.StateFileName)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
 
-	kubeCluster, err := core.InitClusterObject(ctx, clusterState.DesiredState.ZcloudKubernetesEngineConfig.DeepCopy(), flags)
+	kubeCluster, err := core.InitClusterObject(ctx, clusterState.DesiredState.ZKEConfig.DeepCopy())
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
 
 	log.Infof(ctx, "Building Kubernetes cluster")
+
 	err = kubeCluster.SetupDialers(ctx, dialersOptions)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
-	err = kubeCluster.TunnelHosts(ctx, flags)
+
+	err = kubeCluster.TunnelHosts(ctx)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
+
 	currentCluster, err := kubeCluster.GetClusterState(ctx, clusterState)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
+
 	isNewCluster := true
 	if currentCluster != nil {
 		isNewCluster = false
 	}
 
-	if !flags.DisablePortCheck {
+	if !kubeCluster.Option.DisablePortCheck {
 		if err = kubeCluster.CheckClusterPorts(ctx, currentCluster); err != nil {
-			return APIURL, caCrt, clientCert, clientKey, nil, err
+			return err
 		}
 	}
 	core.SetUpAuthentication(ctx, kubeCluster, currentCluster, clusterState)
 
-	if len(kubeCluster.ControlPlaneHosts) > 0 {
-		APIURL = fmt.Sprintf("https://" + kubeCluster.ControlPlaneHosts[0].Address + ":6443")
-	}
-	clientCert = string(cert.EncodeCertPEM(kubeCluster.Certificates[pki.KubeAdminCertName].Certificate))
-	clientKey = string(cert.EncodePrivateKeyPEM(kubeCluster.Certificates[pki.KubeAdminCertName].Key))
-	caCrt = string(cert.EncodeCertPEM(kubeCluster.Certificates[pki.CACertName].Certificate))
-	// moved deploying certs before reconcile to remove all unneeded certs generation from reconcile
-	err = kubeCluster.SetUpHosts(ctx, flags)
+	err = kubeCluster.SetUpHosts(ctx)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
-	err = core.ReconcileCluster(ctx, kubeCluster, currentCluster, flags)
+
+	err = core.ReconcileCluster(ctx, kubeCluster, currentCluster)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
-	// update APIURL after reconcile
-	if len(kubeCluster.ControlPlaneHosts) > 0 {
-		APIURL = fmt.Sprintf("https://" + kubeCluster.ControlPlaneHosts[0].Address + ":6443")
-	}
+
 	if err := kubeCluster.PrePullK8sImages(ctx); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
+
 	err = kubeCluster.DeployControlPlane(ctx)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
-	// Apply Authz configuration after deploying controlplane
-	err = core.ApplyAuthzResources(ctx, kubeCluster.ZKEConfig, flags, dialersOptions)
+
+	err = core.ApplyAuthzResources(ctx, kubeCluster.ZKEConfig, dialersOptions)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
+
 	err = kubeCluster.UpdateClusterCurrentState(ctx, clusterState)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
+
 	err = core.SaveFullStateToKubernetes(ctx, kubeCluster, clusterState)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
+
 	err = kubeCluster.DeployWorkerPlane(ctx)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
-	if err = kubeCluster.CleanDeadLogs(ctx); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+
+	err = kubeCluster.CleanDeadLogs(ctx)
+	if err != nil {
+		return err
 	}
+
 	err = kubeCluster.SyncLabelsAndTaints(ctx, currentCluster)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
-	err = ConfigureCluster(ctx, kubeCluster.ZKEConfig, kubeCluster.Certificates, flags, dialersOptions, isNewCluster)
+
+	err = ConfigureCluster(ctx, kubeCluster.ZKEConfig, kubeCluster.Certificates, dialersOptions, isNewCluster)
 	if err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+		return err
 	}
-	if err := checkAllIncluded(kubeCluster); err != nil {
-		return APIURL, caCrt, clientCert, clientKey, nil, err
+
+	err = checkAllIncluded(kubeCluster)
+	if err != nil {
+		return err
 	}
 	log.Infof(ctx, "Finished building Kubernetes cluster successfully")
-	return APIURL, caCrt, clientCert, clientKey, kubeCluster.Certificates, nil
+	return nil
 }
 
 func checkAllIncluded(cluster *core.Cluster) error {
@@ -199,7 +180,7 @@ func checkAllIncluded(cluster *core.Cluster) error {
 
 func clusterUpFromCli(ctx *cli.Context) error {
 	startUPtime := time.Now()
-	clusterFile, filePath, err := resolveClusterFile(ctx)
+	clusterFile, err := resolveClusterFile(pki.ClusterConfig)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve cluster file: %v", err)
 	}
@@ -211,20 +192,11 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	zkeConfig, err = setOptionsFromCLI(ctx, zkeConfig)
-	if err != nil {
+
+	if err := ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{}); err != nil {
 		return err
 	}
-	disablePortCheck := ctx.Bool("disable-port-check")
-	// setting up the flags
-	flags := core.GetExternalFlags(disablePortCheck, "", filePath)
-	// Custom certificates and certificate dir flags
-	flags.CertificateDir = ctx.String("cert-dir")
-	flags.CustomCerts = ctx.Bool("custom-certs")
-	if err := ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{}, flags); err != nil {
-		return err
-	}
-	_, _, _, _, _, err = ClusterUp(context.Background(), hosts.DialersOptions{}, flags)
+	err = ClusterUp(context.Background(), hosts.DialersOptions{})
 	if err == nil {
 		endUPtime := time.Since(startUPtime) / 1e9
 		log.Infof(context.TODO(), "This up takes [%s] secends", strconv.FormatInt(int64(endUPtime), 10))
@@ -236,11 +208,10 @@ func ConfigureCluster(
 	ctx context.Context,
 	zkeConfig types.ZKEConfig,
 	crtBundle map[string]pki.CertificatePKI,
-	flags core.ExternalFlags,
 	dailersOptions hosts.DialersOptions,
 	isNewCluster bool) error {
 	// dialer factories are not needed here since we are not uses docker only k8s jobs
-	kubeCluster, err := core.InitClusterObject(ctx, &zkeConfig, flags)
+	kubeCluster, err := core.InitClusterObject(ctx, &zkeConfig)
 	if err != nil {
 		return err
 	}

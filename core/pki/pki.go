@@ -37,7 +37,7 @@ type CertificatePKI struct {
 	ConfigPath     string                   `json:"configPath"`
 }
 
-type GenFunc func(context.Context, map[string]CertificatePKI, types.ZKEConfig, string, string, bool) error
+type GenFunc func(context.Context, map[string]CertificatePKI, types.ZKEConfig, bool) error
 type CSRFunc func(context.Context, map[string]CertificatePKI, types.ZKEConfig) error
 
 const (
@@ -47,14 +47,14 @@ const (
 	BundleCertContainer = "zke-bundle-cert"
 )
 
-func GenerateZKECerts(ctx context.Context, zkeConfig types.ZKEConfig, configPath, configDir string) (map[string]CertificatePKI, error) {
+func GenerateZKECerts(ctx context.Context, zkeConfig types.ZKEConfig) (map[string]CertificatePKI, error) {
 	certs := make(map[string]CertificatePKI)
 	// generate ZKE CA certificates
-	if err := GenerateZKECACerts(ctx, certs, configPath, configDir); err != nil {
+	if err := GenerateZKECACerts(ctx, certs); err != nil {
 		return certs, err
 	}
 	// Generating certificates for kubernetes components
-	if err := GenerateZKEServicesCerts(ctx, certs, zkeConfig, configPath, configDir, false); err != nil {
+	if err := GenerateZKEServicesCerts(ctx, certs, zkeConfig, false); err != nil {
 		return certs, err
 	}
 	return certs, nil

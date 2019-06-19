@@ -33,5 +33,7 @@ const (
 	KubeAdminCertName         = "kube-admin"
 	KubeAdminOrganizationName = "system:masters"
 	KubeAdminConfigPrefix     = "kube_config_"
+	KubeAdminConfigName       = "kube_config_cluster.yml"
+	StateFileName             = "cluster.zkestate"
 	duration365d              = time.Hour * 24 * 365
 )

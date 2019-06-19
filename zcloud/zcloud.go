@@ -2,7 +2,9 @@ package zcloud
 
 import (
 	"context"
+
 	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 
@@ -25,7 +27,7 @@ const (
 )
 
 func DeployZcloudManager(ctx context.Context, c *core.Cluster) error {
-	k8sClient, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
+	k8sClient, err := k8s.GetK8sClientFromConfig(pki.KubeAdminConfigName)
 	if err != nil {
 		return err
 	}

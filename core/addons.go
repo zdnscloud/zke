@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/templates"
@@ -31,7 +32,7 @@ func (c *Cluster) DoAddonDeploy(ctx context.Context, addonYaml, resourceName str
 		return &AddonError{fmt.Sprintf("Failed to save addon ConfigMap: %v", err), IsCritical}
 	}
 	log.Infof(ctx, "[addons] Executing deploy job %s", resourceName)
-	k8sClient, err := k8s.NewClient(c.LocalKubeConfigPath, c.K8sWrapTransport)
+	k8sClient, err := k8s.NewClient(pki.KubeAdminConfigName, c.K8sWrapTransport)
 	if err != nil {
 		return &AddonError{fmt.Sprintf("%v", err), IsCritical}
 	}
@@ -53,7 +54,7 @@ func (c *Cluster) DoAddonDeploy(ctx context.Context, addonYaml, resourceName str
 func (c *Cluster) StoreAddonConfigMap(ctx context.Context, addonYaml string, addonName string) (bool, error) {
 	log.Infof(ctx, "[addons] Saving ConfigMap for addon %s to Kubernetes", addonName)
 	updated := false
-	kubeClient, err := k8s.NewClient(c.LocalKubeConfigPath, c.K8sWrapTransport)
+	kubeClient, err := k8s.NewClient(pki.KubeAdminConfigName, c.K8sWrapTransport)
 	if err != nil {
 		return updated, err
 	}
@@ -79,7 +80,7 @@ func (c *Cluster) StoreAddonConfigMap(ctx context.Context, addonYaml string, add
 }
 
 func (c *Cluster) ApplySystemAddonExecuteJob(addonJob string, addonUpdated bool) error {
-	if err := k8s.ApplyK8sSystemJob(addonJob, c.LocalKubeConfigPath, c.K8sWrapTransport, k8s.DefaultTimeout, addonUpdated); err != nil {
+	if err := k8s.ApplyK8sSystemJob(addonJob, pki.KubeAdminConfigName, c.K8sWrapTransport, k8s.DefaultTimeout, addonUpdated); err != nil {
 		return err
 	}
 	return nil

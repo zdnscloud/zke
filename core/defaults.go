@@ -79,16 +79,6 @@ const (
 	DefaultRegistryChartmuseumDiskCapacity = "5Gi"
 )
 
-type ExternalFlags struct {
-	CertificateDir   string
-	ClusterFilePath  string
-	ConfigDir        string
-	CustomCerts      bool
-	DisablePortCheck bool
-	GenerateCSR      bool
-	UpdateOnly       bool
-}
-
 func setDefaultIfEmptyMapValue(configMap map[string]string, key string, value string) {
 	if _, ok := configMap[key]; !ok {
 		configMap[key] = value
@@ -233,13 +223,5 @@ func (c *Cluster) setClusterAuthnDefaults() {
 		for k, v := range webhookConfigDefaultsMap {
 			setDefaultIfEmpty(k, v)
 		}
-	}
-}
-
-func GetExternalFlags(disablePortCheck bool, configDir, clusterFilePath string) ExternalFlags {
-	return ExternalFlags{
-		DisablePortCheck: disablePortCheck,
-		ConfigDir:        configDir,
-		ClusterFilePath:  clusterFilePath,
 	}
 }

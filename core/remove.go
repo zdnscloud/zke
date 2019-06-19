@@ -21,8 +21,8 @@ func (c *Cluster) ClusterRemove(ctx context.Context) error {
 	return nil
 }
 
-func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
-	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts, storageHosts, edgeHosts)
+func cleanUpHosts(ctx context.Context, cpHosts, workerHosts, etcdHosts, edgeHosts []*hosts.Host, cleanerImage string, prsMap map[string]types.PrivateRegistry, externalEtcd bool) error {
+	uniqueHosts := hosts.GetUniqueHostList(cpHosts, workerHosts, etcdHosts, edgeHosts)
 
 	_, err := errgroup.Batch(uniqueHosts, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
@@ -53,17 +53,17 @@ func (c *Cluster) CleanupNodes(ctx context.Context) error {
 	}
 
 	// Clean up all hosts
-	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.StorageHosts, c.EdgeHosts, c.Image.Alpine, c.PrivateRegistriesMap, externalEtcd)
+	return cleanUpHosts(ctx, c.ControlPlaneHosts, c.WorkerHosts, c.EtcdHosts, c.EdgeHosts, c.Image.Alpine, c.PrivateRegistriesMap, externalEtcd)
 }
 
 func (c *Cluster) CleanupFiles(ctx context.Context) error {
-	pki.RemoveAdminConfig(ctx, c.LocalKubeConfigPath)
-	removeStateFile(ctx, c.StateFilePath)
+	pki.RemoveAdminConfig(ctx, pki.KubeAdminConfigName)
+	removeStateFile(ctx, pki.StateFileName)
 	return nil
 }
 
 func (c *Cluster) RemoveOldNodes(ctx context.Context) error {
-	kubeClient, err := k8s.NewClient(c.LocalKubeConfigPath, c.K8sWrapTransport)
+	kubeClient, err := k8s.NewClient(pki.KubeAdminConfigName, c.K8sWrapTransport)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (c *Cluster) RemoveOldNodes(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 	for _, node := range nodeList.Items {
 		if k8s.IsNodeReady(node) {
 			continue

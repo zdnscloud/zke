@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/zdnscloud/zke/core"
+	"github.com/zdnscloud/zke/core/pki"
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 
@@ -37,6 +38,6 @@ func prepare(c *core.Cluster) (map[string]interface{}, client.Client, error) {
 		"MetricsServerMajorVersion": "v0.3",
 		"DeployNamespace":           DeployNamespace,
 	}
-	k8sClient, err := k8s.GetK8sClientFromConfig(c.LocalKubeConfigPath)
+	k8sClient, err := k8s.GetK8sClientFromConfig(pki.KubeAdminConfigName)
 	return templateConfig, k8sClient, err
 }

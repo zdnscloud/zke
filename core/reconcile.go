@@ -22,14 +22,14 @@ const (
 	unschedulableControlTaint = "node-role.kubernetes.io/controlplane=true:NoSchedule"
 )
 
-func ReconcileCluster(ctx context.Context, kubeCluster, currentCluster *Cluster, flags ExternalFlags) error {
+func ReconcileCluster(ctx context.Context, kubeCluster, currentCluster *Cluster) error {
 	log.Infof(ctx, "[reconcile] Reconciling cluster state")
 	if currentCluster == nil {
 		log.Infof(ctx, "[reconcile] This is newly generated cluster")
 		return nil
 	}
 
-	kubeClient, err := k8s.NewClient(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport)
+	kubeClient, err := k8s.NewClient(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize new kubernetes client: %v", err)
 	}
@@ -46,11 +46,6 @@ func ReconcileCluster(ctx context.Context, kubeCluster, currentCluster *Cluster,
 
 	if err := reconcileControl(ctx, currentCluster, kubeCluster, kubeClient); err != nil {
 		return err
-	}
-	if flags.CustomCerts {
-		if err := restartComponentsWhenCertChanges(ctx, currentCluster, kubeCluster); err != nil {
-			return err
-		}
 	}
 
 	log.Infof(ctx, "[reconcile] Reconciled cluster state successfully")
@@ -88,7 +83,7 @@ func reconcileWorker(ctx context.Context, currentCluster, kubeCluster *Cluster, 
 
 func reconcileControl(ctx context.Context, currentCluster, kubeCluster *Cluster, kubeClient *kubernetes.Clientset) error {
 	logrus.Debugf("[reconcile] Check Control plane hosts to be deleted")
-	selfDeleteAddress, err := getLocalConfigAddress(kubeCluster.LocalKubeConfigPath)
+	selfDeleteAddress, err := getLocalConfigAddress(pki.KubeAdminConfigName)
 	if err != nil {
 		return err
 	}
@@ -204,8 +199,8 @@ func reconcileEtcd(ctx context.Context, currentCluster, kubeCluster *Cluster, ku
 }
 
 func syncLabels(ctx context.Context, currentCluster, kubeCluster *Cluster) {
-	currentHosts := hosts.GetUniqueHostList(currentCluster.EtcdHosts, currentCluster.ControlPlaneHosts, currentCluster.WorkerHosts, currentCluster.StorageHosts, currentCluster.EdgeHosts)
-	configHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts, kubeCluster.StorageHosts, kubeCluster.EdgeHosts)
+	currentHosts := hosts.GetUniqueHostList(currentCluster.EtcdHosts, currentCluster.ControlPlaneHosts, currentCluster.WorkerHosts, currentCluster.EdgeHosts)
+	configHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts, kubeCluster.EdgeHosts)
 	for _, host := range configHosts {
 		for _, currentHost := range currentHosts {
 			if host.Address == currentHost.Address {
@@ -231,7 +226,7 @@ func (c *Cluster) setReadyEtcdHosts() {
 }
 
 func cleanControlNode(ctx context.Context, kubeCluster, currentCluster *Cluster, toDeleteHost *hosts.Host) error {
-	kubeClient, err := k8s.NewClient(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport)
+	kubeClient, err := k8s.NewClient(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize new kubernetes client: %v", err)
 	}
@@ -263,7 +258,7 @@ func restartComponentsWhenCertChanges(ctx context.Context, currentCluster, kubeC
 	}
 	checkCertificateChanges(ctx, currentCluster, kubeCluster, AllCertsMap)
 	// check Restart Function
-	allHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts, kubeCluster.StorageHosts, kubeCluster.EdgeHosts)
+	allHosts := hosts.GetUniqueHostList(kubeCluster.EtcdHosts, kubeCluster.ControlPlaneHosts, kubeCluster.WorkerHosts, kubeCluster.EdgeHosts)
 	AllCertsFuncMap := map[string][]services.RestartFunc{
 		pki.CACertName:                 []services.RestartFunc{services.RestartKubeAPI, services.RestartKubeController, services.RestartKubelet},
 		pki.KubeAPICertName:            []services.RestartFunc{services.RestartKubeAPI, services.RestartKubeController},

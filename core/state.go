@@ -32,25 +32,23 @@ type FullState struct {
 }
 
 type State struct {
-	ZcloudKubernetesEngineConfig *types.ZKEConfig              `json:"zkeConfig,omitempty"`
-	CertificatesBundle           map[string]pki.CertificatePKI `json:"certificatesBundle,omitempty"`
+	ZKEConfig          *types.ZKEConfig              `json:"zkeConfig,omitempty"`
+	CertificatesBundle map[string]pki.CertificatePKI `json:"certificatesBundle,omitempty"`
 }
 
 func (c *Cluster) UpdateClusterCurrentState(ctx context.Context, fullState *FullState) error {
-	fullState.CurrentState.ZcloudKubernetesEngineConfig = c.ZKEConfig.DeepCopy()
+	fullState.CurrentState.ZKEConfig = c.ZKEConfig.DeepCopy()
 	fullState.CurrentState.CertificatesBundle = c.Certificates
-	return fullState.WriteStateFile(ctx, c.StateFilePath)
+	return fullState.WriteStateFile(ctx, pki.StateFileName)
 }
 
 func (c *Cluster) GetClusterState(ctx context.Context, fullState *FullState) (*Cluster, error) {
 	var err error
-	if fullState.CurrentState.ZcloudKubernetesEngineConfig == nil {
+	if fullState.CurrentState.ZKEConfig == nil {
 		return nil, nil
 	}
 
-	// resetup external flags
-	flags := GetExternalFlags(false, c.ConfigDir, c.ConfigPath)
-	currentCluster, err := InitClusterObject(ctx, fullState.CurrentState.ZcloudKubernetesEngineConfig, flags)
+	currentCluster, err := InitClusterObject(ctx, fullState.CurrentState.ZKEConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +63,7 @@ func (c *Cluster) GetClusterState(ctx context.Context, fullState *FullState) (*C
 }
 
 func SaveFullStateToKubernetes(ctx context.Context, kubeCluster *Cluster, fullState *FullState) error {
-	k8sClient, err := k8s.NewClient(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport)
+	k8sClient, err := k8s.NewClient(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport)
 	if err != nil {
 		return fmt.Errorf("Failed to create Kubernetes Client: %v", err)
 	}
@@ -97,7 +95,7 @@ func SaveFullStateToKubernetes(ctx context.Context, kubeCluster *Cluster, fullSt
 
 func GetStateFromKubernetes(ctx context.Context, kubeCluster *Cluster) (*Cluster, error) {
 	log.Infof(ctx, "[state] Fetching cluster state from Kubernetes")
-	k8sClient, err := k8s.NewClient(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport)
+	k8sClient, err := k8s.NewClient(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create Kubernetes Client: %v", err)
 	}
@@ -145,31 +143,17 @@ func GetK8sVersion(localConfigPath string, k8sWrapTransport k8s.WrapTransport) (
 	return fmt.Sprintf("%#v", *serverVersion), nil
 }
 
-func RebuildState(ctx context.Context, zkeConfig *types.ZKEConfig, oldState *FullState, flags ExternalFlags) (*FullState, error) {
+func RebuildState(ctx context.Context, zkeConfig *types.ZKEConfig, oldState *FullState) (*FullState, error) {
 	newState := &FullState{
 		DesiredState: State{
-			ZcloudKubernetesEngineConfig: zkeConfig.DeepCopy(),
+			ZKEConfig: zkeConfig.DeepCopy(),
 		},
-	}
-
-	if flags.CustomCerts {
-		certBundle, err := pki.ReadCertsAndKeysFromDir(flags.CertificateDir)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to read certificates from dir [%s]: %v", flags.CertificateDir, err)
-		}
-		// make sure all custom certs are included
-		if err := pki.ValidateBundleContent(zkeConfig, certBundle, flags.ClusterFilePath, flags.ConfigDir); err != nil {
-			return nil, fmt.Errorf("Failed to validates certificates from dir [%s]: %v", flags.CertificateDir, err)
-		}
-		newState.DesiredState.CertificatesBundle = certBundle
-		newState.CurrentState = oldState.CurrentState
-		return newState, nil
 	}
 
 	// Rebuilding the certificates of the desired state
 	if oldState.DesiredState.CertificatesBundle == nil {
 		// Get the certificate Bundle
-		certBundle, err := pki.GenerateZKECerts(ctx, *zkeConfig, "", "")
+		certBundle, err := pki.GenerateZKECerts(ctx, *zkeConfig)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to generate certificate bundle: %v", err)
 		}
@@ -177,7 +161,7 @@ func RebuildState(ctx context.Context, zkeConfig *types.ZKEConfig, oldState *Ful
 	} else {
 		// Regenerating etcd certificates for any new etcd nodes
 		pkiCertBundle := oldState.DesiredState.CertificatesBundle
-		if err := pki.GenerateZKEServicesCerts(ctx, pkiCertBundle, *zkeConfig, flags.ClusterFilePath, flags.ConfigDir, false); err != nil {
+		if err := pki.GenerateZKEServicesCerts(ctx, pkiCertBundle, *zkeConfig, false); err != nil {
 			return nil, err
 		}
 		newState.DesiredState.CertificatesBundle = pkiCertBundle

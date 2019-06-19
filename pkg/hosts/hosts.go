@@ -291,12 +291,11 @@ func NodesToHosts(zkeNodes []types.ZKEConfigNode, nodeRole string) []*Host {
 	return hostList
 }
 
-func GetUniqueHostList(etcdHosts, cpHosts, workerHosts, storageHosts, edgeHosts []*Host) []*Host {
+func GetUniqueHostList(etcdHosts, cpHosts, workerHosts, edgeHosts []*Host) []*Host {
 	hostList := []*Host{}
 	hostList = append(hostList, etcdHosts...)
 	hostList = append(hostList, cpHosts...)
 	hostList = append(hostList, workerHosts...)
-	hostList = append(hostList, storageHosts...)
 	hostList = append(hostList, edgeHosts...)
 	// little trick to get a unique host list
 	uniqHostMap := make(map[*Host]bool)

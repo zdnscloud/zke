@@ -26,9 +26,9 @@ const (
 	authnWebhookFileName  = "/etc/kubernetes/kube-api-authn-webhook.yaml"
 )
 
-func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
+func (c *Cluster) TunnelHosts(ctx context.Context) error {
 	c.InactiveHosts = make([]*hosts.Host, 0)
-	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+	uniqueHosts := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 
 	_, err := errgroup.Batch(uniqueHosts, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
@@ -51,7 +51,6 @@ func (c *Cluster) TunnelHosts(ctx context.Context, flags ExternalFlags) error {
 		c.EtcdHosts = removeFromHosts(host, c.EtcdHosts)
 		c.ControlPlaneHosts = removeFromHosts(host, c.ControlPlaneHosts)
 		c.WorkerHosts = removeFromHosts(host, c.WorkerHosts)
-		c.StorageHosts = removeFromHosts(host, c.StorageHosts)
 		c.EdgeHosts = removeFromHosts(host, c.EdgeHosts)
 		c.ZKEConfig.Nodes = removeFromZKENodes(host.ZKEConfigNode, c.ZKEConfig.Nodes)
 	}
@@ -63,7 +62,6 @@ func (c *Cluster) InvertIndexHosts() error {
 	c.EtcdHosts = make([]*hosts.Host, 0)
 	c.WorkerHosts = make([]*hosts.Host, 0)
 	c.ControlPlaneHosts = make([]*hosts.Host, 0)
-	c.StorageHosts = make([]*hosts.Host, 0)
 	c.EdgeHosts = make([]*hosts.Host, 0)
 	for _, host := range c.Nodes {
 		newHost := hosts.Host{
@@ -95,10 +93,6 @@ func (c *Cluster) InvertIndexHosts() error {
 				newHost.IsWorker = true
 				newHost.ToAddLabels[workerRoleLabel] = "true"
 				c.WorkerHosts = append(c.WorkerHosts, &newHost)
-			case services.StorageRole:
-				newHost.IsStorage = true
-				newHost.ToAddLabels[StorageRoleLabel] = "true"
-				c.StorageHosts = append(c.StorageHosts, &newHost)
 			case services.EdgeRole:
 				newHost.IsEdge = true
 				newHost.ToAddLabels[edgeRoleLabel] = "true"
@@ -126,14 +120,12 @@ func (c *Cluster) InvertIndexHosts() error {
 	return nil
 }
 
-func (c *Cluster) SetUpHosts(ctx context.Context, flags ExternalFlags) error {
+func (c *Cluster) SetUpHosts(ctx context.Context) error {
 	if c.AuthnStrategies[AuthnX509Provider] {
 		log.Infof(ctx, "[certificates] Deploying kubernetes certificates to Cluster nodes")
 		forceDeploy := false
-		if flags.CustomCerts {
-			forceDeploy = true
-		}
-		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.StorageHosts, c.EdgeHosts)
+
+		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 		_, err := errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
 			return nil, pki.DeployCertificatesOnPlaneHost(ctx, h.(*hosts.Host), c.ZKEConfig, c.Certificates, c.Image.CertDownloader, c.PrivateRegistriesMap, forceDeploy)
 		})

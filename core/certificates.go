@@ -22,7 +22,7 @@ func SetUpAuthentication(ctx context.Context, kubeCluster, currentCluster *Clust
 func GetClusterCertsFromKubernetes(ctx context.Context, kubeCluster *Cluster) (map[string]pki.CertificatePKI, error) {
 	log.Infof(ctx, "[certificates] Getting Cluster certificates from Kubernetes")
 
-	k8sClient, err := k8s.NewClient(kubeCluster.LocalKubeConfigPath, kubeCluster.K8sWrapTransport)
+	k8sClient, err := k8s.NewClient(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create Kubernetes Client: %v", err)
 	}
