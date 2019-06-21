@@ -94,7 +94,7 @@ func getHealthEtcd(hc http.Client, host *hosts.Host, url string) (string, error)
 func GetEtcdInitialCluster(hosts []*hosts.Host) string {
 	initialCluster := ""
 	for i, host := range hosts {
-		initialCluster += fmt.Sprintf("etcd-%s=https://%s:2380", host.HostnameOverride, host.InternalAddress)
+		initialCluster += fmt.Sprintf("etcd-%s=https://%s:2380", host.NodeName, host.InternalAddress)
 		if i < (len(hosts) - 1) {
 			initialCluster += ","
 		}

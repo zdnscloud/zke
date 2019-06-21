@@ -16,30 +16,29 @@ type ZKEConfig struct {
 }
 
 type ZKEConfigOption struct {
-	SSHUser               string `yaml:"ssh_user" json:"sshUser"`
-	SSHKey                string `yaml:"ssh_key" json:"sshKey"`
-	SSHKeyPath            string `yaml:"ssh_key_path" json:"sshKeyPath"`
-	SSHPort               string `yaml:"ssh_port" json:"sshPort"`
-	DockerSocket          string `yaml:"docker_socket" json:"dockerSocket"`
-	KubernetesVersion     string `yaml:"kubetnetes_version" json:"kubernetesVersion"`
-	IgnoreDockerVersion   bool   `yaml:"ignore_docker_version" json:"ignoreDockerVersion"`
-	ClusterCidr           string `yaml:"cluster_cidr" json:"clusterCidr"`
-	ServiceClusterIpRange string `yaml:"service_cluster_ip_range" json:"serviceClusterIpRange"`
-	ClusterDomain         string `yaml:"cluster_domain" json:"clusterDomain"`
-	ClusterDNSServiceIP   string `yaml:"cluster_dns_serviceip" json:"clusterDNSServiceIP"`
-	DisablePortCheck      bool   `yaml:"disable_port_check" json:"disablePortCheck"`
-	PrefixPath            string `yaml:"prefix_path" json:"prefixPath"`
+	SSHUser               string   `yaml:"ssh_user" json:"sshUser"`
+	SSHKey                string   `yaml:"ssh_key" json:"sshKey"`
+	SSHKeyPath            string   `yaml:"ssh_key_path" json:"sshKeyPath"`
+	SSHPort               string   `yaml:"ssh_port" json:"sshPort"`
+	DockerSocket          string   `yaml:"docker_socket" json:"dockerSocket"`
+	KubernetesVersion     string   `yaml:"kubetnetes_version" json:"kubernetesVersion"`
+	IgnoreDockerVersion   bool     `yaml:"ignore_docker_version" json:"ignoreDockerVersion"`
+	ClusterCidr           string   `yaml:"cluster_cidr" json:"clusterCidr"`
+	ServiceClusterIpRange string   `yaml:"service_cluster_ip_range" json:"serviceClusterIpRange"`
+	ClusterDomain         string   `yaml:"cluster_domain" json:"clusterDomain"`
+	ClusterDNSServiceIP   string   `yaml:"cluster_dns_serviceip" json:"clusterDNSServiceIP"`
+	ClusterUpstreamDNS    []string `yaml:"upstreamnameservers" json:"upstreamnameservers"`
+	DisablePortCheck      bool     `yaml:"disable_port_check" json:"disablePortCheck"`
+	PrefixPath            string   `yaml:"prefix_path" json:"prefixPath"`
 }
 
 type ZKEConfigNode struct {
-	NodeName string `yaml:"node_name" json:"nodeName"`
+	NodeName string `yaml:"name" json:"name"`
 	Address  string `yaml:"address" json:"address"`
 	// Optional - Internal address that will be used for components communication
 	InternalAddress string `yaml:"internal_address" json:"internalAddress"`
 	// Node role in kubernetes cluster (controlplane, worker, etcd, storage or edge)
 	Role []string `yaml:"roles" json:"roles"`
-	// Optional - Hostname of the node
-	HostnameOverride string `yaml:"hostname_override" json:"hostnameOverride"`
 	// SSH config
 	User         string            `yaml:"user" json:"sshUser"`
 	Port         string            `yaml:"port" json:"sshPort"`

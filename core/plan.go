@@ -359,7 +359,7 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) types
 		"enforce-node-allocatable":          "",
 		"event-qps":                         "0",
 		"fail-swap-on":                      strconv.FormatBool(c.Core.Kubelet.FailSwapOn),
-		"hostname-override":                 host.HostnameOverride,
+		"hostname-override":                 host.NodeName,
 		"kubeconfig":                        pki.GetConfigPath(pki.KubeNodeCertName),
 		"make-iptables-util-chains":         "true",
 		"network-plugin":                    "cni",
@@ -474,7 +474,7 @@ func (c *Cluster) BuildKubeProxyProcess(host *hosts.Host, prefixPath string) typ
 		"cluster-cidr":         c.Option.ClusterCidr,
 		"v":                    "2",
 		"healthz-bind-address": "127.0.0.1",
-		"hostname-override":    host.HostnameOverride,
+		"hostname-override":    host.NodeName,
 		"kubeconfig":           pki.GetConfigPath(pki.KubeProxyCertName),
 	}
 	// check if our version has specific options for this component
@@ -674,7 +674,7 @@ func (c *Cluster) BuildEtcdProcess(host *hosts.Host, etcdHosts []*hosts.Host, pr
 	}
 
 	CommandArgs := map[string]string{
-		"name":                        "etcd-" + host.HostnameOverride,
+		"name":                        "etcd-" + host.NodeName,
 		"data-dir":                    services.EtcdDataDir,
 		"advertise-client-urls":       "https://" + host.InternalAddress + ":2379,https://" + host.InternalAddress + ":4001",
 		"listen-client-urls":          "https://" + listenAddress + ":2379",

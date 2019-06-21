@@ -19,10 +19,10 @@ func TestPKI(t *testing.T) {
 	zkeConfig := types.ZKEConfig{
 		Nodes: []types.ZKEConfigNode{
 			types.ZKEConfigNode{
-				Address:          "1.1.1.1",
-				InternalAddress:  "192.168.1.5",
-				Role:             []string{"controlplane"},
-				HostnameOverride: "server1",
+				Address:         "1.1.1.1",
+				InternalAddress: "192.168.1.5",
+				Role:            []string{"controlplane"},
+				NodeName:        "server1",
 			},
 		},
 		Core: types.ZKEConfigCore{
@@ -34,7 +34,7 @@ func TestPKI(t *testing.T) {
 			},
 		},
 	}
-	certificateMap, err := GenerateZKECerts(context.Background(), zkeConfig, "", "")
+	certificateMap, err := GenerateZKECerts(context.Background(), zkeConfig)
 	if err != nil {
 		t.Fatalf("Failed To generate certificates: %v", err)
 	}

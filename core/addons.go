@@ -36,9 +36,9 @@ func (c *Cluster) DoAddonDeploy(ctx context.Context, addonYaml, resourceName str
 	if err != nil {
 		return &AddonError{fmt.Sprintf("%v", err), IsCritical}
 	}
-	node, err := k8s.GetNode(k8sClient, c.ControlPlaneHosts[0].HostnameOverride)
+	node, err := k8s.GetNode(k8sClient, c.ControlPlaneHosts[0].NodeName)
 	if err != nil {
-		return &AddonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].HostnameOverride, err), IsCritical}
+		return &AddonError{fmt.Sprintf("Failed to get Node [%s]: %v", c.ControlPlaneHosts[0].NodeName, err), IsCritical}
 	}
 	addonJob, err := GetAddonsExecuteJob(resourceName, node.Name, c.Core.KubeAPI.Image)
 	if err != nil {

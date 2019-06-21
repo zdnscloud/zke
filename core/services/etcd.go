@@ -132,7 +132,7 @@ func RemoveEtcdPlane(ctx context.Context, etcdHosts []*hosts.Host, force bool) e
 }
 
 func AddEtcdMember(ctx context.Context, toAddEtcdHost *hosts.Host, etcdHosts []*hosts.Host, cert, key []byte) error {
-	log.Infof(ctx, "[add/%s] Adding member [etcd-%s] to etcd cluster", ETCDRole, toAddEtcdHost.HostnameOverride)
+	log.Infof(ctx, "[add/%s] Adding member [etcd-%s] to etcd cluster", ETCDRole, toAddEtcdHost.NodeName)
 	peerURL := fmt.Sprintf("https://%s:2380", toAddEtcdHost.InternalAddress)
 	added := false
 	for _, host := range etcdHosts {
@@ -153,14 +153,14 @@ func AddEtcdMember(ctx context.Context, toAddEtcdHost *hosts.Host, etcdHosts []*
 		break
 	}
 	if !added {
-		return fmt.Errorf("Failed to add etcd member [etcd-%s] to etcd cluster", toAddEtcdHost.HostnameOverride)
+		return fmt.Errorf("Failed to add etcd member [etcd-%s] to etcd cluster", toAddEtcdHost.NodeName)
 	}
-	log.Infof(ctx, "[add/%s] Successfully Added member [etcd-%s] to etcd cluster", ETCDRole, toAddEtcdHost.HostnameOverride)
+	log.Infof(ctx, "[add/%s] Successfully Added member [etcd-%s] to etcd cluster", ETCDRole, toAddEtcdHost.NodeName)
 	return nil
 }
 
 func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*hosts.Host, cert, key []byte) error {
-	log.Infof(ctx, "[remove/%s] Removing member [etcd-%s] from etcd cluster", ETCDRole, etcdHost.HostnameOverride)
+	log.Infof(ctx, "[remove/%s] Removing member [etcd-%s] from etcd cluster", ETCDRole, etcdHost.NodeName)
 	var mID string
 	removed := false
 	for _, host := range etcdHosts {
@@ -176,7 +176,7 @@ func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*ho
 			continue
 		}
 		for _, member := range members {
-			if member.Name == fmt.Sprintf("etcd-%s", etcdHost.HostnameOverride) {
+			if member.Name == fmt.Sprintf("etcd-%s", etcdHost.NodeName) {
 				mID = member.ID
 				break
 			}
@@ -189,9 +189,9 @@ func RemoveEtcdMember(ctx context.Context, etcdHost *hosts.Host, etcdHosts []*ho
 		break
 	}
 	if !removed {
-		return fmt.Errorf("Failed to delete etcd member [etcd-%s] from etcd cluster", etcdHost.HostnameOverride)
+		return fmt.Errorf("Failed to delete etcd member [etcd-%s] from etcd cluster", etcdHost.NodeName)
 	}
-	log.Infof(ctx, "[remove/%s] Successfully removed member [etcd-%s] from etcd cluster", ETCDRole, etcdHost.HostnameOverride)
+	log.Infof(ctx, "[remove/%s] Successfully removed member [etcd-%s] from etcd cluster", ETCDRole, etcdHost.NodeName)
 	return nil
 }
 
@@ -338,7 +338,7 @@ func RestoreEtcdSnapshot(ctx context.Context, etcdHost *hosts.Host, prsMap map[s
 				"--key", pki.GetKeyPath(nodeName),
 				"snapshot", "restore", snapshotPath,
 				"--data-dir=" + EtcdRestorePath,
-				"--name=etcd-" + etcdHost.HostnameOverride,
+				"--name=etcd-" + etcdHost.NodeName,
 				"--initial-cluster=" + initCluster,
 				"--initial-cluster-token=etcd-cluster-1",
 				"--initial-advertise-peer-urls=https://" + etcdHost.InternalAddress + ":2380",

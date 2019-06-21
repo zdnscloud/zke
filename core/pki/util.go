@@ -141,8 +141,8 @@ func GetAltNames(cpHosts []*hosts.Host, clusterDomain string, KubernetesServiceI
 			}
 		}
 		// Add hostname to the ALT dns names
-		if len(host.HostnameOverride) != 0 && host.HostnameOverride != host.Address {
-			dnsNames = append(dnsNames, host.HostnameOverride)
+		if len(host.NodeName) != 0 && host.NodeName != host.Address {
+			dnsNames = append(dnsNames, host.NodeName)
 		}
 	}
 

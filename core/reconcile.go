@@ -285,7 +285,7 @@ func restartComponentsWhenCertChanges(ctx context.Context, currentCluster, kubeC
 		}
 		checkCertificateChanges(ctx, currentCluster, kubeCluster, certMap)
 		if certMap[etcdCertName] || AllCertsMap[pki.CACertName] {
-			if err := docker.DoRestartContainer(ctx, host.DClient, services.EtcdContainerName, host.HostnameOverride); err != nil {
+			if err := docker.DoRestartContainer(ctx, host.DClient, services.EtcdContainerName, host.NodeName); err != nil {
 				return err
 			}
 		}

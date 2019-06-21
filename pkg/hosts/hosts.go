@@ -160,7 +160,7 @@ func DeleteNode(ctx context.Context, toDeleteHost *Host, kubeClient *kubernetes.
 		return nil
 	}
 	log.Infof(ctx, "[hosts] Cordoning host [%s]", toDeleteHost.Address)
-	if _, err := k8s.GetNode(kubeClient, toDeleteHost.HostnameOverride); err != nil {
+	if _, err := k8s.GetNode(kubeClient, toDeleteHost.NodeName); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Warnf(ctx, "[hosts] Can't find node by name [%s]", toDeleteHost.Address)
 			return nil
@@ -168,11 +168,11 @@ func DeleteNode(ctx context.Context, toDeleteHost *Host, kubeClient *kubernetes.
 		return err
 
 	}
-	if err := k8s.CordonUncordon(kubeClient, toDeleteHost.HostnameOverride, true); err != nil {
+	if err := k8s.CordonUncordon(kubeClient, toDeleteHost.NodeName, true); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[hosts] Deleting host [%s] from the cluster", toDeleteHost.Address)
-	if err := k8s.DeleteNode(kubeClient, toDeleteHost.HostnameOverride, ""); err != nil {
+	if err := k8s.DeleteNode(kubeClient, toDeleteHost.NodeName, ""); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[hosts] Successfully deleted host [%s] from the cluster", toDeleteHost.Address)
@@ -181,7 +181,7 @@ func DeleteNode(ctx context.Context, toDeleteHost *Host, kubeClient *kubernetes.
 
 func RemoveTaintFromHost(ctx context.Context, host *Host, taintKey string, kubeClient *kubernetes.Clientset) error {
 	log.Infof(ctx, "[hosts] removing taint [%s] from host [%s]", taintKey, host.Address)
-	if err := k8s.RemoveTaintFromNodeByKey(kubeClient, host.HostnameOverride, taintKey); err != nil {
+	if err := k8s.RemoveTaintFromNodeByKey(kubeClient, host.NodeName, taintKey); err != nil {
 		return err
 	}
 	log.Infof(ctx, "[hosts] Successfully deleted taint [%s] from host [%s]", taintKey, host.Address)
@@ -341,7 +341,7 @@ func DoRunLogCleaner(ctx context.Context, host *Host, alpineImage string, prsMap
 
 func IsNodeInList(host *Host, hostList []*Host) bool {
 	for _, h := range hostList {
-		if h.HostnameOverride == host.HostnameOverride {
+		if h.NodeName == host.NodeName {
 			return true
 		}
 	}

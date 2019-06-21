@@ -77,7 +77,7 @@ func (c *Cluster) RemoveOldNodes(ctx context.Context) error {
 			continue
 		}
 		host := &hosts.Host{}
-		host.HostnameOverride = node.Name
+		host.NodeName = node.Name
 		if !hosts.IsNodeInList(host, uniqueHosts) {
 			if err := k8s.DeleteNode(kubeClient, node.Name, ""); err != nil {
 				log.Warnf(ctx, "Failed to delete old node [%s] from kubernetes")

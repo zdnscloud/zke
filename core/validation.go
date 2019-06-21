@@ -62,8 +62,8 @@ func validateHostsOptions(c *Cluster) error {
 		if len(host.Role) == 0 {
 			return fmt.Errorf("Role for host (%d) is not provided", i+1)
 		}
-		if errs := validation.IsDNS1123Subdomain(host.HostnameOverride); len(errs) > 0 {
-			return fmt.Errorf("Hostname_override [%s] for host (%d) is not valid: %v", host.HostnameOverride, i+1, errs)
+		if errs := validation.IsDNS1123Subdomain(host.NodeName); len(errs) > 0 {
+			return fmt.Errorf("Hostname_override [%s] for host (%d) is not valid: %v", host.NodeName, i+1, errs)
 		}
 		for _, role := range host.Role {
 			if role != services.ETCDRole && role != services.ControlRole && role != services.WorkerRole && role != services.StorageRole && role != services.EdgeRole {
@@ -146,8 +146,8 @@ func validateDuplicateNodes(c *Cluster) error {
 			if c.Nodes[i].Address == c.Nodes[j].Address {
 				return fmt.Errorf("Cluster can't have duplicate node: %s", c.Nodes[i].Address)
 			}
-			if c.Nodes[i].HostnameOverride == c.Nodes[j].HostnameOverride {
-				return fmt.Errorf("Cluster can't have duplicate node: %s", c.Nodes[i].HostnameOverride)
+			if c.Nodes[i].NodeName == c.Nodes[j].NodeName {
+				return fmt.Errorf("Cluster can't have duplicate node: %s", c.Nodes[i].NodeName)
 			}
 		}
 	}

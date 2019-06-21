@@ -135,8 +135,11 @@ func InitClusterObject(ctx context.Context, zkeConfig *types.ZKEConfig) (*Cluste
 	if err != nil {
 		return nil, err
 	}
-	// extract cluster network configuration
-	c.setNetworkOptions()
+	// set cluster kubernetesService ip
+	c.KubernetesServiceIP, err = pki.GetKubernetesServiceIP(c.Core.KubeAPI.ServiceClusterIPRange)
+	if err != nil {
+		return c, fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
+	}
 
 	// set hosts groups
 	if err := c.InvertIndexHosts(); err != nil {
@@ -147,15 +150,6 @@ func InitClusterObject(ctx context.Context, zkeConfig *types.ZKEConfig) (*Cluste
 		return nil, fmt.Errorf("Failed to validate cluster: %v", err)
 	}
 	return c, nil
-}
-
-func (c *Cluster) setNetworkOptions() error {
-	var err error
-	c.KubernetesServiceIP, err = pki.GetKubernetesServiceIP(c.Core.KubeAPI.ServiceClusterIPRange)
-	if err != nil {
-		return fmt.Errorf("Failed to get Kubernetes Service IP: %v", err)
-	}
-	return nil
 }
 
 func (c *Cluster) SetupDialers(ctx context.Context, dailersOptions hosts.DialersOptions) error {
@@ -289,7 +283,7 @@ func (c *Cluster) SyncLabelsAndTaints(ctx context.Context, currentCluster *Clust
 		}
 		hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 		_, err = errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
-			logrus.Debugf("worker starting sync for node [%s]", h.(*hosts.Host).HostnameOverride)
+			logrus.Debugf("worker starting sync for node [%s]", h.(*hosts.Host).NodeName)
 			return nil, setNodeAnnotationsLabelsTaints(k8sClient, h.(*hosts.Host))
 		})
 
@@ -305,9 +299,9 @@ func setNodeAnnotationsLabelsTaints(k8sClient *kubernetes.Clientset, host *hosts
 	node := &v1.Node{}
 	var err error
 	for retries := 0; retries <= 5; retries++ {
-		node, err = k8s.GetNode(k8sClient, host.HostnameOverride)
+		node, err = k8s.GetNode(k8sClient, host.NodeName)
 		if err != nil {
-			logrus.Debugf("[hosts] Can't find node by name [%s], retrying..", host.HostnameOverride)
+			logrus.Debugf("[hosts] Can't find node by name [%s], retrying..", host.NodeName)
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -357,7 +351,7 @@ func RestartClusterPods(ctx context.Context, kubeCluster *Cluster) error {
 		fmt.Sprintf("%s=%s", KubeAppLabel, CalicoNetworkPlugin),
 		fmt.Sprintf("%s=%s", KubeAppLabel, FlannelNetworkPlugin),
 		fmt.Sprintf("%s=%s", AppLabel, NginxIngressAddonAppName),
-		fmt.Sprintf("%s=%s", KubeAppLabel, DefaultMonitoringMetricsProvider),
+		fmt.Sprintf("%s=%s", KubeAppLabel, DefaultMonitorMetricsProvider),
 		fmt.Sprintf("%s=%s", KubeAppLabel, CoreDNSAddonAppName),
 	}
 
