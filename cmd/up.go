@@ -204,6 +204,22 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	return err
 }
 
+func ClusterUpFromUrl(ctx *cli.Context, zkeConfig *types.ZKEConfig) error {
+
+	err := ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{})
+	if err != nil {
+		return err
+	}
+
+	err = validateConfigVersion(zkeConfig)
+	if err != nil {
+		return err
+	}
+
+	err = ClusterUp(context.Background(), hosts.DialersOptions{})
+	return err
+}
+
 func ConfigureCluster(
 	ctx context.Context,
 	zkeConfig types.ZKEConfig,
