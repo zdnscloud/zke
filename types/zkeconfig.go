@@ -1,9 +1,14 @@
 package types
 
+import (
+	resttypes "github.com/zdnscloud/gorest/types"
+)
+
 type ZKEConfig struct {
-	ClusterName string          `yaml:"cluster_name" json:"name"`
-	Option      ZKEConfigOption `yaml:"option" json:"option"`
-	Nodes       []ZKEConfigNode `yaml:"nodes" json:"nodes"`
+	resttypes.Resource `json:",inline"`
+	ClusterName        string          `yaml:"cluster_name" json:"name"`
+	Option             ZKEConfigOption `yaml:"option" json:"option"`
+	Nodes              []ZKEConfigNode `yaml:"nodes" json:"nodes"`
 	// Kubernetes components
 	Core              ZKEConfigCore     `yaml:"core" json:"core"`
 	Network           ZKEConfigNetwork  `yaml:"network" json:"network"`
