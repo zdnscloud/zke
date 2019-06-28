@@ -78,3 +78,7 @@ func clusterRemoveFromCli(ctx *cli.Context) error {
 
 	return ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{})
 }
+
+func ClusterRemoveFromRestClient(zkeConfig *types.ZKEConfig) error {
+	return ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{})
+}

@@ -1,7 +1,0 @@
-1. mv cluster struct to package types
-2. merge package templates and pkg/util
-3. separate cluster/addons.go to pkg/
-4. rename package cluster to core
-5. add cluster node manage funtion
-6. add cluster version manage funtion
-7. add zke rest service

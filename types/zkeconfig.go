@@ -6,7 +6,7 @@ import (
 
 type ZKEConfig struct {
 	resttypes.Resource `json:",inline"`
-	ClusterName        string          `yaml:"cluster_name" json:"name"`
+	ClusterName        string          `yaml:"name" json:"name"`
 	Option             ZKEConfigOption `yaml:"option" json:"option"`
 	Nodes              []ZKEConfigNode `yaml:"nodes" json:"nodes"`
 	// Kubernetes components
@@ -17,6 +17,7 @@ type ZKEConfig struct {
 	Authentication    ZKEConfigAuthn    `yaml:"authentication" json:"authentication"`
 	Authorization     ZKEConfigAuthz    `yaml:"authorization" json:"authorization"`
 	Monitor           ZKEConfigMonitor  `yaml:"monitor" json:"monitor"`
+	SingleCloudAuth   SingleCloudAuth   `yaml:"single_cloud_auth" json:"singleCloudAuth"`
 	Version           string            `yaml:"version" json:"version"`
 }
 
@@ -99,4 +100,9 @@ type ZKEConfigImages struct {
 	// Zcloud image
 	ClusterAgent string `yaml:"cluster_agent" json:"clusterAgent"`
 	NodeAgent    string `yaml:"node_agent" json:"nodeAgent"`
+}
+
+type SingleCloudAuth struct {
+	Url        string `yaml:"url" json:"url"`
+	AdminToken string `yaml:"admin_token" json:"adminToken"`
 }

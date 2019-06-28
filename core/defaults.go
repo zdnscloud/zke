@@ -73,6 +73,9 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	if len(c.ClusterName) == 0 {
 		c.ClusterName = DefaultClusterName
 	}
+	if len(c.Version) == 0 {
+		c.Version = "v1.0.8"
+	}
 
 	c.setClusterOptionDefaults()
 	c.setClusterImageDefaults()
@@ -81,10 +84,7 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	c.setClusterNetworkDefaults()
 	c.setClusterSecurity()
 	c.setPrivateRegistries()
-
-	if len(c.Monitor.MetricsProvider) == 0 {
-		c.Monitor.MetricsProvider = DefaultMonitorMetricsProvider
-	}
+	c.setClusterMonitor()
 	return nil
 }
 
@@ -92,15 +92,27 @@ func (c *Cluster) setClusterSecurity() {
 	if len(c.Authorization.Mode) == 0 {
 		c.Authorization.Mode = DefaultAuthorizationMode
 	}
-	c.setClusterAuthnDefaults()
+	c.setClusterAuthnAndAuthzDefaults()
 }
 
 func (c *Cluster) setPrivateRegistries() {
+	if c.PrivateRegistries == nil {
+		c.PrivateRegistries = []types.PrivateRegistry{}
+	}
 	for _, pr := range c.PrivateRegistries {
 		if pr.URL == "" {
 			pr.URL = docker.DockerRegistryURL
 		}
 		c.PrivateRegistriesMap[pr.URL] = pr
+	}
+}
+
+func (c *Cluster) setClusterMonitor() {
+	if len(c.Monitor.MetricsProvider) == 0 {
+		c.Monitor.MetricsProvider = DefaultMonitorMetricsProvider
+	}
+	if c.Monitor.MetricsOptions == nil {
+		c.Monitor.MetricsOptions = map[string]string{}
 	}
 }
 
@@ -114,17 +126,35 @@ func (c *Cluster) setClusterNetworkDefaults() {
 		c.Network.Plugin = DefaultNetworkPlugin
 	}
 
-	if len(c.Network.Ingress.Provider) == 0 {
-		c.Network.Ingress.Provider = DefaultIngressController
-	}
-	c.Network.Ingress.NodeSelector[DefaultIngressNodeSelector] = "true"
-
 	if len(c.Network.DNS.Provider) == 0 {
 		c.Network.DNS.Provider = DefaultDNSProvider
+	}
+	if c.Network.DNS.UpstreamNameservers == nil {
+		c.Network.DNS.UpstreamNameservers = []string{}
 	}
 	if len(c.Network.DNS.UpstreamNameservers) == 0 {
 		c.Network.DNS.UpstreamNameservers = c.Option.ClusterUpstreamDNS
 	}
+	if c.Network.DNS.ReverseCIDRs == nil {
+		c.Network.DNS.ReverseCIDRs = []string{}
+	}
+	if c.Network.DNS.NodeSelector == nil {
+		c.Network.DNS.NodeSelector = map[string]string{}
+	}
+
+	if len(c.Network.Ingress.Provider) == 0 {
+		c.Network.Ingress.Provider = DefaultIngressController
+	}
+	if c.Network.Ingress.Options == nil {
+		c.Network.Ingress.Options = map[string]string{}
+	}
+	if c.Network.Ingress.ExtraArgs == nil {
+		c.Network.Ingress.ExtraArgs = map[string]string{}
+	}
+	if c.Network.Ingress.NodeSelector == nil {
+		c.Network.Ingress.NodeSelector = map[string]string{}
+	}
+	c.Network.Ingress.NodeSelector[DefaultIngressNodeSelector] = "true"
 
 }
 
@@ -163,6 +193,10 @@ func (c *Cluster) setClusterOptionDefaults() {
 
 	if len(c.Option.ClusterDNSServiceIP) == 0 {
 		c.Option.ClusterDNSServiceIP = DefaultClusterDNSService
+	}
+
+	if c.Option.ClusterUpstreamDNS == nil {
+		c.Option.ClusterUpstreamDNS = []string{}
 	}
 
 	if len(c.Option.ClusterUpstreamDNS) == 0 {
@@ -205,17 +239,24 @@ func (c *Cluster) setClusterNodesDefaults() {
 			c.Nodes[i].DockerSocket = DefaultDockerSockPath
 		}
 
+		if host.Labels == nil {
+			c.Nodes[i].Labels = map[string]string{}
+		}
+
 		c.Nodes[i].NodeName = strings.ToLower(c.Nodes[i].NodeName)
 	}
 }
 
 func (c *Cluster) setClusterServicesDefaults() {
-	// We don't accept per service images anymore.
-	c.Core.KubeAPI.Image = c.Image.Kubernetes
-	c.Core.Scheduler.Image = c.Image.Kubernetes
-	c.Core.KubeController.Image = c.Image.Kubernetes
-	c.Core.Kubelet.Image = c.Image.Kubernetes
-	c.Core.Kubeproxy.Image = c.Image.Kubernetes
+	c.setCoreEtcdDefaults()
+	c.setCoreKubeApiDefaults()
+	c.setCoreKubeControllerDefaults()
+	c.setCoreSchedulerDefaults()
+	c.setCoreKubeletDefaults()
+	c.setCoreKubeproxyDefaults()
+}
+
+func (c *Cluster) setCoreEtcdDefaults() {
 	c.Core.Etcd.Image = c.Image.Etcd
 
 	// enable etcd snapshots by default
@@ -223,26 +264,16 @@ func (c *Cluster) setClusterServicesDefaults() {
 		defaultSnapshot := DefaultEtcdSnapshot
 		c.Core.Etcd.Snapshot = &defaultSnapshot
 	}
-
-	serviceConfigDefaultsMap := map[*string]string{
-		&c.Core.KubeAPI.ServiceClusterIPRange:        c.Option.ServiceClusterIpRange,
-		&c.Core.KubeAPI.ServiceNodePortRange:         DefaultNodePortRange,
-		&c.Core.KubeController.ServiceClusterIPRange: c.Option.ServiceClusterIpRange,
-		&c.Core.KubeController.ClusterCIDR:           c.Option.ClusterCidr,
-		&c.Core.Kubelet.ClusterDNSServer:             c.Option.ClusterDNSServiceIP,
-		&c.Core.Kubelet.ClusterDomain:                c.Option.ClusterDomain,
-		&c.Core.Kubelet.InfraContainerImage:          c.Image.PodInfraContainer,
-		&c.Core.Etcd.Creation:                        DefaultEtcdBackupCreationPeriod,
-		&c.Core.Etcd.Retention:                       DefaultEtcdBackupRetentionPeriod,
-	}
-	for k, v := range serviceConfigDefaultsMap {
-		setDefaultIfEmpty(k, v)
-	}
-	// Add etcd timeouts
 	if c.Core.Etcd.ExtraArgs == nil {
 		c.Core.Etcd.ExtraArgs = make(map[string]string)
 	}
 
+	if len(c.Core.Etcd.Creation) == 0 {
+		c.Core.Etcd.Creation = DefaultEtcdBackupCreationPeriod
+	}
+	if len(c.Core.Etcd.Retention) == 0 {
+		c.Core.Etcd.Retention = DefaultEtcdBackupRetentionPeriod
+	}
 	if _, ok := c.Core.Etcd.ExtraArgs[DefaultEtcdElectionTimeoutName]; !ok {
 		c.Core.Etcd.ExtraArgs[DefaultEtcdElectionTimeoutName] = DefaultEtcdElectionTimeoutValue
 	}
@@ -259,9 +290,109 @@ func (c *Cluster) setClusterServicesDefaults() {
 			c.Core.Etcd.BackupConfig.Retention = DefaultEtcdBackupConfigRetention
 		}
 	}
+
+	if c.Core.Etcd.ExtraArgs == nil {
+		c.Core.Etcd.ExtraArgs = map[string]string{}
+	}
+	if c.Core.Etcd.ExtraBinds == nil {
+		c.Core.Etcd.ExtraBinds = []string{}
+	}
+	if c.Core.Etcd.ExtraEnv == nil {
+		c.Core.Etcd.ExtraEnv = []string{}
+	}
+	if c.Core.Etcd.ExternalURLs == nil {
+		c.Core.Etcd.ExternalURLs = []string{}
+	}
 }
 
-func (c *Cluster) setClusterAuthnDefaults() {
+func (c *Cluster) setCoreKubeApiDefaults() {
+	c.Core.KubeAPI.Image = c.Image.Kubernetes
+	if len(c.Core.KubeAPI.ServiceClusterIPRange) == 0 {
+		c.Core.KubeAPI.ServiceClusterIPRange = c.Option.ServiceClusterIpRange
+	}
+	if len(c.Core.KubeAPI.ServiceNodePortRange) == 0 {
+		c.Core.KubeAPI.ServiceNodePortRange = DefaultNodePortRange
+	}
+	if c.Core.KubeAPI.ExtraArgs == nil {
+		c.Core.KubeAPI.ExtraArgs = map[string]string{}
+	}
+	if c.Core.KubeAPI.ExtraBinds == nil {
+		c.Core.KubeAPI.ExtraBinds = []string{}
+	}
+	if c.Core.KubeAPI.ExtraEnv == nil {
+		c.Core.KubeAPI.ExtraEnv = []string{}
+	}
+}
+
+func (c *Cluster) setCoreKubeControllerDefaults() {
+	c.Core.KubeController.Image = c.Image.Kubernetes
+	if len(c.Core.KubeController.ServiceClusterIPRange) == 0 {
+		c.Core.KubeController.ServiceClusterIPRange = c.Option.ServiceClusterIpRange
+	}
+	if len(c.Core.KubeController.ClusterCIDR) == 0 {
+		c.Core.KubeController.ClusterCIDR = c.Option.ClusterCidr
+	}
+	if c.Core.KubeController.ExtraArgs == nil {
+		c.Core.KubeController.ExtraArgs = map[string]string{}
+	}
+	if c.Core.KubeController.ExtraBinds == nil {
+		c.Core.KubeController.ExtraBinds = []string{}
+	}
+	if c.Core.KubeController.ExtraEnv == nil {
+		c.Core.KubeController.ExtraEnv = []string{}
+	}
+}
+
+func (c *Cluster) setCoreSchedulerDefaults() {
+	c.Core.Scheduler.Image = c.Image.Kubernetes
+	if c.Core.Scheduler.ExtraArgs == nil {
+		c.Core.Scheduler.ExtraArgs = map[string]string{}
+	}
+	if c.Core.Scheduler.ExtraBinds == nil {
+		c.Core.Scheduler.ExtraBinds = []string{}
+	}
+	if c.Core.Scheduler.ExtraEnv == nil {
+		c.Core.Scheduler.ExtraEnv = []string{}
+	}
+}
+
+func (c *Cluster) setCoreKubeletDefaults() {
+	c.Core.Kubelet.Image = c.Image.Kubernetes
+
+	if len(c.Core.Kubelet.ClusterDNSServer) == 0 {
+		c.Core.Kubelet.ClusterDNSServer = c.Option.ClusterDNSServiceIP
+	}
+	if len(c.Core.Kubelet.ClusterDomain) == 0 {
+		c.Core.Kubelet.ClusterDomain = c.Option.ClusterDomain
+	}
+	if len(c.Core.Kubelet.InfraContainerImage) == 0 {
+		c.Core.Kubelet.InfraContainerImage = c.Image.PodInfraContainer
+	}
+	if c.Core.Kubelet.ExtraArgs == nil {
+		c.Core.Kubelet.ExtraArgs = map[string]string{}
+	}
+	if c.Core.Kubelet.ExtraBinds == nil {
+		c.Core.Kubelet.ExtraBinds = []string{}
+	}
+	if c.Core.Kubelet.ExtraEnv == nil {
+		c.Core.Kubelet.ExtraEnv = []string{}
+	}
+}
+
+func (c *Cluster) setCoreKubeproxyDefaults() {
+	c.Core.Kubeproxy.Image = c.Image.Kubernetes
+	if c.Core.Kubeproxy.ExtraArgs == nil {
+		c.Core.Kubeproxy.ExtraArgs = map[string]string{}
+	}
+	if c.Core.Kubeproxy.ExtraBinds == nil {
+		c.Core.Kubeproxy.ExtraBinds = []string{}
+	}
+	if c.Core.Kubeproxy.ExtraEnv == nil {
+		c.Core.Kubeproxy.ExtraEnv = []string{}
+	}
+}
+
+func (c *Cluster) setClusterAuthnAndAuthzDefaults() {
 	setDefaultIfEmpty(&c.Authentication.Strategy, DefaultAuthStrategy)
 
 	for _, strategy := range strings.Split(c.Authentication.Strategy, "|") {
@@ -280,6 +411,14 @@ func (c *Cluster) setClusterAuthnDefaults() {
 		for k, v := range webhookConfigDefaultsMap {
 			setDefaultIfEmpty(k, v)
 		}
+	}
+
+	if c.Authentication.SANs == nil {
+		c.Authentication.SANs = []string{}
+	}
+
+	if c.Authorization.Options == nil {
+		c.Authorization.Options = map[string]string{}
 	}
 }
 
