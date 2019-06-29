@@ -38,7 +38,6 @@ func mainErr() error {
 		cmd.UpCommand(),
 		cmd.RemoveCommand(),
 		cmd.ConfigCommand(),
-		cmd.ServeCommand(),
 	}
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{

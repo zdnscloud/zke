@@ -43,18 +43,6 @@
   version = "v0.4.0"
 
 [[projects]]
-  name = "github.com/gin-contrib/sse"
-  packages = ["."]
-  revision = "54d8467d122d380a14768b6b4e5cd7ca4755938f"
-  version = "v0.1.0"
-
-[[projects]]
-  name = "github.com/gin-gonic/gin"
-  packages = [".","binding","internal/json","render"]
-  revision = "b75d67cd51eb53c3c3a2fc406524c940021ffbda"
-  version = "v1.4.0"
-
-[[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["proto","sortkeys"]
   revision = "ba06b47c162d49f2af050fb4c75bcbc86a159d5c"
@@ -187,12 +175,6 @@
   version = "v1.0.3"
 
 [[projects]]
-  name = "github.com/ugorji/go"
-  packages = ["codec"]
-  revision = "2adff0894ba3bc2eeb9f9aea45fefd49802e1a13"
-  version = "v1.1.4"
-
-[[projects]]
   name = "github.com/urfave/cli"
   packages = ["."]
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
@@ -201,7 +183,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/zdnscloud/cement"
-  packages = ["errgroup","log","log/log4go","reflector","slice"]
+  packages = ["errgroup"]
   revision = "4e659246475c1b00f2644fc6860e49c0c3cdf2b9"
 
 [[projects]]
@@ -209,12 +191,6 @@
   name = "github.com/zdnscloud/gok8s"
   packages = ["client","client/apiutil","client/config","helper","util"]
   revision = "5c4947ada147c0cef43f5b375fd5d1903c638de7"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/zdnscloud/gorest"
-  packages = ["adaptor","api","api/handler","parse","types","util"]
-  revision = "35c1b2df83a5c3e4a83158a1abc33fb7eedcf486"
 
 [[projects]]
   branch = "master"
@@ -257,12 +233,6 @@
   packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "4c25cacc810c02874000e4f7071286a8e96b2515"
   version = "v1.6.0"
-
-[[projects]]
-  name = "gopkg.in/go-playground/validator.v8"
-  packages = ["."]
-  revision = "5f1438d3fca68893a817e4a66806cea46a9e4ebf"
-  version = "v8.18.2"
 
 [[projects]]
   name = "gopkg.in/inf.v0"
@@ -333,6 +303,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d8c0874c1b3111c5afd90e1b64b3d1cfc9ae10fbe01d1d7eeac5a5d6703ff63c"
+  inputs-digest = "a8d577c68febed5aaf257b146317b7ab785903f7789c4b72e52b916bc93e7abe"
   solver-name = "gps-cdcl"
   solver-version = 1

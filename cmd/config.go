@@ -30,7 +30,7 @@ func writeConfig(cluster *types.ZKEConfig, configFile string) error {
 
 func generateConfig(ctx *cli.Context) error {
 	cluster := types.ZKEConfig{}
-	cluster.Version = defaultConfigVersion
+	cluster.ConfigVersion = defaultConfigVersion
 	cluster.Nodes = make([]types.ZKEConfigNode, 1)
 	return writeConfig(&cluster, pki.ClusterConfig)
 }

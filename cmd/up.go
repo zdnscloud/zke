@@ -193,9 +193,16 @@ func clusterUpFromCli(ctx *cli.Context) error {
 		return err
 	}
 
-	if err := ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{}); err != nil {
+	err = ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{})
+	if err != nil {
 		return err
 	}
+
+	err = ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{})
+	if err != nil {
+		return err
+	}
+
 	err = ClusterUp(context.Background(), hosts.DialersOptions{})
 	if err == nil {
 		endUPtime := time.Since(startUPtime) / 1e9
@@ -205,8 +212,12 @@ func clusterUpFromCli(ctx *cli.Context) error {
 }
 
 func ClusterUpFromRestClient(zkeConfig *types.ZKEConfig) error {
-
 	err := ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{})
+	if err != nil {
+		return err
+	}
+
+	err = ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{})
 	if err != nil {
 		return err
 	}

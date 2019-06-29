@@ -62,7 +62,7 @@ func doClusterAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Clien
 func doNodeAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[zcloud] Setting up NodeAgent")
 	cfg := map[string]interface{}{
-		"Image":         c.Image.NodeAgent,
+		Image:           c.Image.NodeAgent,
 		"NodeAgentPort": NodeAgentPort,
 	}
 	return k8s.DoCreateFromTemplate(cli, nodeagent.NodeAgentTemplate, cfg)
