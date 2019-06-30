@@ -38,6 +38,6 @@ func prepare(c *core.Cluster) (map[string]interface{}, client.Client, error) {
 		"MetricsServerMajorVersion": "v0.3",
 		"DeployNamespace":           DeployNamespace,
 	}
-	k8sClient, err := k8s.GetK8sClientFromConfig(pki.KubeAdminConfigName)
+	k8sClient, err := k8s.GetK8sClientFromYaml(c.Certificates[pki.KubeAdminCertName].Config)
 	return templateConfig, k8sClient, err
 }

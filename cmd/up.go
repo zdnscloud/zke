@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -167,6 +168,103 @@ func ClusterUp(ctx context.Context, dialersOptions hosts.DialersOptions) error {
 	return nil
 }
 
+func ClusterUpForRest(ctx context.Context, clusterState *core.FullState, dialersOptions hosts.DialersOptions) (*core.FullState, error) {
+	kubeCluster, err := core.InitClusterObject(ctx, clusterState.DesiredState.ZKEConfig.DeepCopy())
+	if err != nil {
+		return clusterState, err
+	}
+
+	log.Infof(ctx, "Building Kubernetes cluster")
+
+	err = kubeCluster.SetupDialers(ctx, dialersOptions)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = kubeCluster.TunnelHosts(ctx)
+	if err != nil {
+		return clusterState, err
+	}
+
+	currentCluster, err := kubeCluster.GetClusterState(ctx, clusterState)
+	if err != nil {
+		return clusterState, err
+	}
+
+	isNewCluster := true
+	if currentCluster != nil {
+		isNewCluster = false
+	}
+
+	if !kubeCluster.Option.DisablePortCheck {
+		if err = kubeCluster.CheckClusterPorts(ctx, currentCluster); err != nil {
+			return clusterState, err
+		}
+	}
+	core.SetUpAuthentication(ctx, kubeCluster, currentCluster, clusterState)
+
+	err = kubeCluster.SetUpHosts(ctx)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = core.ReconcileCluster(ctx, kubeCluster, currentCluster)
+	if err != nil {
+		return clusterState, err
+	}
+
+	if err := kubeCluster.PrePullK8sImages(ctx); err != nil {
+		return clusterState, err
+	}
+
+	err = kubeCluster.DeployControlPlane(ctx)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = core.ApplyAuthzResources(ctx, kubeCluster.ZKEConfig, dialersOptions)
+	if err != nil {
+		return clusterState, err
+	}
+
+	clusterState, err = kubeCluster.UpdateClusterCurrentStateForRest(ctx, clusterState)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = core.SaveFullStateToKubernetes(ctx, kubeCluster, clusterState)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = kubeCluster.DeployWorkerPlane(ctx)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = kubeCluster.CleanDeadLogs(ctx)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = kubeCluster.SyncLabelsAndTaints(ctx, currentCluster)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = ConfigureCluster(ctx, kubeCluster.ZKEConfig, kubeCluster.Certificates, dialersOptions, isNewCluster)
+	if err != nil {
+		return clusterState, err
+	}
+
+	err = checkAllIncluded(kubeCluster)
+	if err != nil {
+		return clusterState, err
+	}
+	log.Infof(ctx, "Finished building Kubernetes cluster successfully")
+	return clusterState, nil
+}
+
 func checkAllIncluded(cluster *core.Cluster) error {
 	if len(cluster.InactiveHosts) == 0 {
 		return nil
@@ -198,11 +296,6 @@ func clusterUpFromCli(ctx *cli.Context) error {
 		return err
 	}
 
-	err = ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{})
-	if err != nil {
-		return err
-	}
-
 	err = ClusterUp(context.Background(), hosts.DialersOptions{})
 	if err == nil {
 		endUPtime := time.Since(startUPtime) / 1e9
@@ -211,19 +304,26 @@ func clusterUpFromCli(ctx *cli.Context) error {
 	return err
 }
 
-func ClusterUpFromRestClient(zkeConfig *types.ZKEConfig) error {
-	err := ClusterInit(context.Background(), zkeConfig, hosts.DialersOptions{})
+func ClusterUpFromRest(zkeConfig *types.ZKEConfig, clusterStateJson string) (string, string, error) {
+	clusterState, err := core.ReadStateJson(context.TODO(), clusterStateJson)
 	if err != nil {
-		return err
+		return clusterStateJson, "", err
+	}
+	newClusterState, err := ClusterInitForRest(context.Background(), zkeConfig, clusterState, hosts.DialersOptions{})
+	if err != nil {
+		return clusterStateJson, "", err
 	}
 
-	err = ClusterRemove(context.Background(), zkeConfig, hosts.DialersOptions{})
-	if err != nil {
-		return err
-	}
+	newClusterState, err = ClusterUpForRest(context.Background(), newClusterState, hosts.DialersOptions{})
 
-	err = ClusterUp(context.Background(), hosts.DialersOptions{})
-	return err
+	newKubeConfig := newClusterState.CurrentState.CertificatesBundle[pki.KubeAdminCertName].Config
+
+	newClusterStateByte, err := json.MarshalIndent(newClusterState, "", "  ")
+	newClusterStateJson := string(newClusterStateByte)
+	if err != nil {
+		return clusterStateJson, newKubeConfig, err
+	}
+	return newClusterStateJson, newKubeConfig, err
 }
 
 func ConfigureCluster(

@@ -29,6 +29,7 @@ import (
 
 type Cluster struct {
 	types.ZKEConfig      `yaml:",inline"`
+	KubeConfig           string
 	AuthnStrategies      map[string]bool
 	Certificates         map[string]pki.CertificatePKI
 	DockerDialerFactory  hosts.DialerFactory
@@ -184,6 +185,37 @@ func rebuildLocalAdminConfig(ctx context.Context, kubeCluster *Cluster) error {
 		if err := pki.DeployAdminConfig(ctx, newConfig, pki.KubeAdminConfigName); err != nil {
 			return fmt.Errorf("Failed to redeploy local admin config with new host")
 		}
+		workingConfig = newConfig
+		if _, err := GetK8sVersion(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport); err == nil {
+			log.Infof(ctx, "[reconcile] host [%s] is active master on the cluster", cpHost.Address)
+			break
+		}
+	}
+	currentKubeConfig.Config = workingConfig
+	kubeCluster.Certificates[pki.KubeAdminCertName] = currentKubeConfig
+	return nil
+}
+
+func RebuildKubeconfigForRest(ctx context.Context, kubeCluster *Cluster) error {
+	if len(kubeCluster.ControlPlaneHosts) == 0 {
+		return nil
+	}
+	log.Infof(ctx, "[reconcile] Rebuilding and updating local kube config")
+	var workingConfig, newConfig string
+	currentKubeConfig := kubeCluster.Certificates[pki.KubeAdminCertName]
+	caCrt := kubeCluster.Certificates[pki.CACertName].Certificate
+	for _, cpHost := range kubeCluster.ControlPlaneHosts {
+		if (currentKubeConfig == pki.CertificatePKI{}) {
+			kubeCluster.Certificates = make(map[string]pki.CertificatePKI)
+			newConfig = getLocalAdminConfigWithNewAddress(pki.KubeAdminConfigName, cpHost.Address, kubeCluster.ClusterName)
+		} else {
+			kubeURL := fmt.Sprintf("https://%s:6443", cpHost.Address)
+			caData := string(cert.EncodeCertPEM(caCrt))
+			crtData := string(cert.EncodeCertPEM(currentKubeConfig.Certificate))
+			keyData := string(cert.EncodePrivateKeyPEM(currentKubeConfig.Key))
+			newConfig = pki.GetKubeConfigX509WithData(kubeURL, kubeCluster.ClusterName, pki.KubeAdminCertName, caData, crtData, keyData)
+		}
+
 		workingConfig = newConfig
 		if _, err := GetK8sVersion(pki.KubeAdminConfigName, kubeCluster.K8sWrapTransport); err == nil {
 			log.Infof(ctx, "[reconcile] host [%s] is active master on the cluster", cpHost.Address)

@@ -58,3 +58,30 @@ func ClusterInit(ctx context.Context, zkeConfig *types.ZKEConfig, dialersOptions
 	}
 	return zkeState.WriteStateFile(ctx, stateFilePath)
 }
+
+func ClusterInitForRest(ctx context.Context, zkeConfig *types.ZKEConfig, zkeFullState *core.FullState, dialersOptions hosts.DialersOptions) (*core.FullState, error) {
+	log.Infof(ctx, "Initiating Kubernetes cluster")
+	var fullState *core.FullState
+	kubeCluster, err := core.InitClusterObject(ctx, zkeConfig)
+	if err != nil {
+		return zkeFullState, err
+	}
+
+	if err := kubeCluster.SetupDialers(ctx, dialersOptions); err != nil {
+		return zkeFullState, err
+	}
+
+	if err := core.RebuildKubeconfigForRest(ctx, kubeCluster); err != nil {
+		return zkeFullState, err
+	}
+
+	fullState, err = core.RebuildState(ctx, &kubeCluster.ZKEConfig, zkeFullState)
+	if err != nil {
+		return fullState, err
+	}
+	zkeState := core.FullState{
+		DesiredState: fullState.DesiredState,
+		CurrentState: fullState.CurrentState,
+	}
+	return &zkeState, nil
+}

@@ -42,6 +42,12 @@ func (c *Cluster) UpdateClusterCurrentState(ctx context.Context, fullState *Full
 	return fullState.WriteStateFile(ctx, pki.StateFileName)
 }
 
+func (c *Cluster) UpdateClusterCurrentStateForRest(ctx context.Context, fullState *FullState) (*FullState, error) {
+	fullState.CurrentState.ZKEConfig = c.ZKEConfig.DeepCopy()
+	fullState.CurrentState.CertificatesBundle = c.Certificates
+	return fullState, nil
+}
+
 func (c *Cluster) GetClusterState(ctx context.Context, fullState *FullState) (*Cluster, error) {
 	var err error
 	if fullState.CurrentState.ZKEConfig == nil {
@@ -229,6 +235,19 @@ func ReadStateFile(ctx context.Context, statePath string) (*FullState, error) {
 		return zkeFullState, fmt.Errorf("failed to read state file: %v", err)
 	}
 	if err := json.Unmarshal(buf, zkeFullState); err != nil {
+		return zkeFullState, fmt.Errorf("failed to unmarshal the state file: %v", err)
+	}
+	zkeFullState.DesiredState.CertificatesBundle = pki.TransformPEMToObject(zkeFullState.DesiredState.CertificatesBundle)
+	zkeFullState.CurrentState.CertificatesBundle = pki.TransformPEMToObject(zkeFullState.CurrentState.CertificatesBundle)
+	return zkeFullState, nil
+}
+
+func ReadStateJson(ctx context.Context, stateJson string) (*FullState, error) {
+	zkeFullState := &FullState{}
+	if len(stateJson) == 0 {
+		return zkeFullState, nil
+	}
+	if err := json.Unmarshal([]byte(stateJson), zkeFullState); err != nil {
 		return zkeFullState, fmt.Errorf("failed to unmarshal the state file: %v", err)
 	}
 	zkeFullState.DesiredState.CertificatesBundle = pki.TransformPEMToObject(zkeFullState.DesiredState.CertificatesBundle)
