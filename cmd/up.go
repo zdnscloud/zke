@@ -310,7 +310,7 @@ func ClusterUpFromRest(zkeConfig *types.ZKEConfig, clusterState *core.FullState)
 	}
 
 	newClusterState, err = ClusterUpForRest(context.Background(), newClusterState, hosts.DialersOptions{})
-	return clusterState, err
+	return newClusterState, err
 }
 
 func ConfigureCluster(
