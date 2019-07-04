@@ -159,7 +159,7 @@ func (c *Cluster) SetupDialers(ctx context.Context, dailersOptions hosts.Dialers
 	return nil
 }
 
-func RebuildKubeconfig(ctx context.Context, kubeCluster *Cluster) error {
+func RebuildKubeconfig(ctx context.Context, kubeCluster *Cluster, clusterState *FullState) error {
 	return rebuildLocalAdminConfig(ctx, kubeCluster)
 }
 
@@ -172,19 +172,12 @@ func rebuildLocalAdminConfig(ctx context.Context, kubeCluster *Cluster) error {
 	currentKubeConfig := kubeCluster.Certificates[pki.KubeAdminCertName]
 	caCrt := kubeCluster.Certificates[pki.CACertName].Certificate
 	for _, cpHost := range kubeCluster.ControlPlaneHosts {
-		// if (currentKubeConfig == pki.CertificatePKI{}) {
-		// kubeCluster.Certificates = make(map[string]pki.CertificatePKI)
-		// newConfig = getLocalAdminConfigWithNewAddress(pki.KubeAdminConfigName, cpHost.Address, kubeCluster.ClusterName)
-		// } else {
 		kubeURL := fmt.Sprintf("https://%s:6443", cpHost.Address)
 		caData := string(cert.EncodeCertPEM(caCrt))
 		crtData := string(cert.EncodeCertPEM(currentKubeConfig.Certificate))
 		keyData := string(cert.EncodePrivateKeyPEM(currentKubeConfig.Key))
 		newConfig = pki.GetKubeConfigX509WithData(kubeURL, kubeCluster.ClusterName, pki.KubeAdminCertName, caData, crtData, keyData)
-		// }
-		// if err := pki.DeployAdminConfig(ctx, newConfig, pki.KubeAdminConfigName); err != nil {
-		// return fmt.Errorf("Failed to redeploy local admin config with new host")
-		// }
+
 		workingConfig = newConfig
 		kubeConfig, err := config.BuildConfig([]byte(newConfig))
 		if err != nil {

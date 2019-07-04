@@ -44,10 +44,10 @@ func doUpgradeLegacyCluster(ctx context.Context, kubeCluster *core.Cluster, full
 	}
 	// We have a kubeconfig and no current state. This is a legacy cluster or a new cluster with old kubeconfig
 	// let's try to upgrade
-	log.Infof(ctx, "[state] Possible legacy cluster detected, trying to upgrade")
-	if err := core.RebuildKubeconfig(ctx, kubeCluster); err != nil {
-		return err
-	}
+	// log.Infof(ctx, "[state] Possible legacy cluster detected, trying to upgrade")
+	// if err := core.RebuildKubeconfig(ctx, kubeCluster); err != nil {
+	// return err
+	// }
 	recoveredCluster, err := core.GetStateFromKubernetes(ctx, kubeCluster)
 	if err != nil {
 		return err
