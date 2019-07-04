@@ -71,7 +71,7 @@ func ClusterInitForRest(ctx context.Context, zkeConfig *types.ZKEConfig, zkeFull
 		return zkeFullState, err
 	}
 
-	if err := core.RebuildKubeconfigForRest(ctx, kubeCluster); err != nil {
+	if err := core.RebuildKubeconfig(ctx, kubeCluster); err != nil {
 		return zkeFullState, err
 	}
 
