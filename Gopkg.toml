@@ -14,10 +14,6 @@
  branch = "release-1.13"
  name = "k8s.io/metrics"
 
-[[constraint]]
-  name = "github.com/zdnscloud/gorest"
-  branch = "master"
-
-[[constraint]]
-  name = "github.com/gin-gonic/gin"
-  version = "1.4.0"
+[prune]
+  go-tests = true
+  unused-packages = true

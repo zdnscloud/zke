@@ -73,8 +73,8 @@ func (c *Cluster) setClusterDefaults(ctx context.Context) error {
 	if len(c.ClusterName) == 0 {
 		c.ClusterName = DefaultClusterName
 	}
-	if len(c.Version) == 0 {
-		c.Version = "v1.0.8"
+	if len(c.ConfigVersion) == 0 {
+		c.ConfigVersion = "v1.0.8"
 	}
 
 	c.setClusterOptionDefaults()
@@ -183,8 +183,8 @@ func (c *Cluster) setClusterOptionDefaults() {
 		c.Option.ClusterCidr = DefaultClusterCIDR
 	}
 
-	if len(c.Option.ServiceClusterIpRange) == 0 {
-		c.Option.ServiceClusterIpRange = DefaultServiceClusterIPRange
+	if len(c.Option.ServiceCidr) == 0 {
+		c.Option.ServiceCidr = DefaultServiceClusterIPRange
 	}
 
 	if len(c.Option.ClusterDomain) == 0 {
@@ -308,7 +308,7 @@ func (c *Cluster) setCoreEtcdDefaults() {
 func (c *Cluster) setCoreKubeApiDefaults() {
 	c.Core.KubeAPI.Image = c.Image.Kubernetes
 	if len(c.Core.KubeAPI.ServiceClusterIPRange) == 0 {
-		c.Core.KubeAPI.ServiceClusterIPRange = c.Option.ServiceClusterIpRange
+		c.Core.KubeAPI.ServiceClusterIPRange = c.Option.ServiceCidr
 	}
 	if len(c.Core.KubeAPI.ServiceNodePortRange) == 0 {
 		c.Core.KubeAPI.ServiceNodePortRange = DefaultNodePortRange
@@ -327,7 +327,7 @@ func (c *Cluster) setCoreKubeApiDefaults() {
 func (c *Cluster) setCoreKubeControllerDefaults() {
 	c.Core.KubeController.Image = c.Image.Kubernetes
 	if len(c.Core.KubeController.ServiceClusterIPRange) == 0 {
-		c.Core.KubeController.ServiceClusterIPRange = c.Option.ServiceClusterIpRange
+		c.Core.KubeController.ServiceClusterIPRange = c.Option.ServiceCidr
 	}
 	if len(c.Core.KubeController.ClusterCIDR) == 0 {
 		c.Core.KubeController.ClusterCIDR = c.Option.ClusterCidr

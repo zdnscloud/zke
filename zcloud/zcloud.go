@@ -28,7 +28,7 @@ const (
 )
 
 func DeployZcloudManager(ctx context.Context, c *core.Cluster) error {
-	k8sClient, err := k8s.GetK8sClientFromConfig(pki.KubeAdminConfigName)
+	k8sClient, err := k8s.GetK8sClientFromYaml(c.Certificates[pki.KubeAdminCertName].Config)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func doClusterAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Clien
 func doNodeAgentDeploy(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[zcloud] Setting up NodeAgent")
 	cfg := map[string]interface{}{
-		"Image":         c.Image.NodeAgent,
+		Image:           c.Image.NodeAgent,
 		"NodeAgentPort": NodeAgentPort,
 	}
 	return k8s.DoCreateFromTemplate(cli, nodeagent.NodeAgentTemplate, cfg)

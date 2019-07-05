@@ -39,3 +39,11 @@ func GetK8sClientFromConfig(kubeConfigPath string) (client.Client, error) {
 	}
 	return client.New(cfg, client.Options{})
 }
+
+func GetK8sClientFromYaml(kubeConfig string) (client.Client, error) {
+	cfg, err := config.BuildConfig([]byte(kubeConfig))
+	if err != nil {
+		return nil, err
+	}
+	return client.New(cfg, client.Options{})
+}

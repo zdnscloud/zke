@@ -51,7 +51,7 @@ const (
 )
 
 func DeployNetwork(ctx context.Context, c *core.Cluster) error {
-	k8sClient, err := k8s.GetK8sClientFromConfig(pki.KubeAdminConfigName)
+	k8sClient, err := k8s.GetK8sClientFromYaml(c.Certificates[pki.KubeAdminCertName].Config)
 	if err != nil {
 		return err
 	}
