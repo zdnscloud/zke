@@ -67,17 +67,23 @@ func RunEtcdPlane(
 	var healthy bool
 	var checkTimes = 0
 	for {
-		for _, host := range etcdHosts {
-			_, _, healthCheckURL := GetProcessConfig(etcdNodePlanMap[host.Address].Processes[EtcdContainerName])
-			if healthy = isEtcdHealthy(ctx, host, clientCert, clientkey, healthCheckURL); healthy {
+		select {
+		case <-ctx.Done():
+			log.Infof(context.TODO(), "cluster build has beed canceled")
+			return nil
+		default:
+			for _, host := range etcdHosts {
+				_, _, healthCheckURL := GetProcessConfig(etcdNodePlanMap[host.Address].Processes[EtcdContainerName])
+				if healthy = isEtcdHealthy(ctx, host, clientCert, clientkey, healthCheckURL); healthy {
+					break
+				}
+			}
+			if !healthy {
+				checkTimes = checkTimes + 1
+				log.Warnf(ctx, "[Etcd] Etcd Cluster is not healthy, has checked [%s] times!", strconv.Itoa(checkTimes))
+			} else {
 				break
 			}
-		}
-		if !healthy {
-			checkTimes = checkTimes + 1
-			log.Warnf(ctx, "[Etcd] Etcd Cluster is not healthy, has checked [%s] times!", strconv.Itoa(checkTimes))
-		} else {
-			break
 		}
 	}
 	return nil

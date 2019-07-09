@@ -70,12 +70,18 @@ func CleanHeritageStorge(ctx context.Context, h *Host, removeImage string, prsMa
 	}
 	waitCheckTime := 0
 	for {
-		_, err := docker.WaitForContainer(ctx, h.DClient, h.Address, "zke-storge-remover")
-		if err == nil {
-			break
+		select {
+		case <-ctx.Done():
+			log.Infof(context.TODO(), "Host Clean has been canceled")
+			return nil
+		default:
+			_, err := docker.WaitForContainer(ctx, h.DClient, h.Address, "zke-storge-remover")
+			if err == nil {
+				break
+			}
+			waitCheckTime = waitCheckTime + 1
+			log.Warnf(ctx, "waitting for container zke-storge-remover exited on host [%s], has checked [%s] times", h.Address, strconv.Itoa(waitCheckTime))
 		}
-		waitCheckTime = waitCheckTime + 1
-		log.Warnf(ctx, "waitting for container zke-storge-remover exited on host [%s], has checked [%s] times", h.Address, strconv.Itoa(waitCheckTime))
 	}
 	return docker.DoRemoveContainer(ctx, h.DClient, "zke-storge-remover", h.Address)
 }
