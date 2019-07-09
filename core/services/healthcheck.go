@@ -58,8 +58,7 @@ func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, u
 	for {
 		select {
 		case <-ctx.Done():
-			log.Infof(context.TODO(), "cluster build has been canceled")
-			return nil
+			return fmt.Errorf("cluster build has been canceled")
 		default:
 			if err = getHealthz(client, serviceName, host.Address, url); err != nil {
 				checkTimes = checkTimes + 1
