@@ -12,8 +12,36 @@ spec:
     listKind: ClusterList
     plural: clusters
     singular: cluster
-  scope: Namespaced
+  scope: Cluster
   version: v1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            storageType:
+              pattern: ^(lvm|ceph)$
+              type: string
+            hosts:
+              properties:
+                nodeName:
+                  type: string
+                blockDevices:
+                  type: array
+              required:
+              - nodeName
+              - blockDevices
+          required:
+          - storageType
+          - hosts
+  additionalPrinterColumns:
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
+    - name: State
+      type: string
+      description: Current State
+      JSONPath: .status.state
 ---
 {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1
