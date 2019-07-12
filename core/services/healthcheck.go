@@ -15,7 +15,6 @@ import (
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 
-	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/util/cert"
 )
 
@@ -63,7 +62,7 @@ func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, u
 			if err = getHealthz(client, serviceName, host.Address, url); err != nil {
 				checkTimes = checkTimes + 1
 				log.Warnf(ctx, "[healthcheck] service [%s] on host [%s] is not healthy,has checked [%s] times", serviceName, host.Address, strconv.Itoa(checkTimes))
-				logrus.Debugf("[healthcheck] %v", err)
+				log.Debugf("[healthcheck] %v", err)
 				time.Sleep(5 * time.Second)
 				continue
 			}
@@ -71,7 +70,7 @@ func runHealthcheck(ctx context.Context, host *hosts.Host, serviceName string, u
 			return nil
 		}
 	}
-	logrus.Debug("Checking container logs")
+	log.Debugf("Checking container logs")
 	containerLog, _, logserr := docker.GetContainerLogsStdoutStderr(ctx, host.DClient, serviceName, "1", false)
 	containerLog = strings.TrimSuffix(containerLog, "\n")
 	if logserr != nil {
