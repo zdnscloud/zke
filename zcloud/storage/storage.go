@@ -23,14 +23,7 @@ spec:
               pattern: ^(lvm|ceph)$
               type: string
             hosts:
-              properties:
-                nodeName:
-                  type: string
-                blockDevices:
-                  type: array
-              required:
-              - nodeName
-              - blockDevices
+              type: array
           required:
           - storageType
           - hosts
@@ -41,7 +34,7 @@ spec:
     - name: State
       type: string
       description: Current State
-      JSONPath: .status.state
+      JSONPath: .status.phase
 ---
 {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1
@@ -76,7 +69,7 @@ rules:
     verbs: ["get" ,"list" ,"watch" ,"update", "create", "delete"]
   - apiGroups: [""]
     resources: ["services"]
-    verbs: ["create", "delete"]
+    verbs: ["create", "delete", "get"]
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["create", "get", "list"]
