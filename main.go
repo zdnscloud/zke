@@ -28,7 +28,7 @@ func mainErr() error {
 		if ctx.GlobalBool("debug") {
 			log.ZKELogLevel = cementlog.Debug
 		}
-		log.Init()
+		log.InitConsoleLog()
 		log.Debugf("ZKE version %s build at %s", app.Version, BUILD)
 		return nil
 	}
