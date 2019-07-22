@@ -26,7 +26,7 @@ func mainErr() error {
 	app.Usage = "ZDNS Kubernetes Engine, an extremely simple, lightning fast Kubernetes installer that works everywhere"
 	app.Before = func(ctx *cli.Context) error {
 		if ctx.GlobalBool("debug") {
-			log.ZKELogLevel = cementlog.Debug
+			log.DefaultLogLevel = cementlog.Debug
 		}
 		log.InitConsoleLog()
 		log.Debugf("ZKE version %s build at %s", app.Version, BUILD)
