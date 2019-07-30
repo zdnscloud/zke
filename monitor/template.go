@@ -119,8 +119,8 @@ spec:
         - /metrics-server
         {{- if eq .MetricsServerMajorVersion "v0.3" }}
         - --kubelet-insecure-tls
-		- --kubelet-preferred-address-types=InternalIP
-		- --metric-resolution=30s
+        - --kubelet-preferred-address-types=InternalIP
+        - --metric-resolution=30s
         - --logtostderr
         {{- else }}
         - --source=kubernetes.summary_api:https://kubernetes.default.svc?kubeletHttps=true&kubeletPort=10250&useServiceAccount=true&insecure=true
