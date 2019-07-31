@@ -17,6 +17,7 @@ func main() {
 	if err := mainErr(); err != nil {
 		log.Fatal(err)
 	}
+	log.ZKELogger.Close()
 }
 
 func mainErr() error {
