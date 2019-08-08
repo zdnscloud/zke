@@ -247,6 +247,12 @@ spec:
             # no effect. This should fall within --cluster-cidr.
             - name: CALICO_IPV4POOL_CIDR
               value: "{{.ClusterCIDR}}"
+            {{- if .CalicoInterface}}
+            - name: IP_AUTODETECTION_METHOD
+              value: "interface={{.CalicoInterface}}"
+            - name: IP6_AUTODETECTION_METHOD
+              value: "interface={{.CalicoInterface}}"
+            {{- end}}
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"
@@ -832,8 +838,12 @@ spec:
             # Auto-detect the BGP IP address.
             - name: IP
               value: "autodetect"
+            {{- if .CalicoInterface}}
             - name: IP_AUTODETECTION_METHOD
-              value: "interface=eno*"
+              value: "interface={{.CalicoInterface}}"
+            - name: IP6_AUTODETECTION_METHOD
+              value: "interface={{.CalicoInterface}}"
+            {{- end}}
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"

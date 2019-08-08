@@ -37,6 +37,7 @@ const (
 	CalicoNetworkPlugin = "calico"
 	CalicoCloudProvider = "calico_cloud_provider"
 	Calicoctl           = "Calicoctl"
+	CalicoInterface     = "CalicoInterface"
 
 	CoreDNSResourceName = "zke-dns-plugin"
 
@@ -115,6 +116,7 @@ func doCalicoDeploy(ctx context.Context, c *core.Cluster, cli client.Client) err
 	calicoConfig := map[string]interface{}{
 		KubeCfg:           clientConfig,
 		ClusterCIDR:       c.Option.ClusterCidr,
+		CalicoInterface:   c.Network.Iface,
 		CNIImage:          c.Image.CalicoCNI,
 		NodeImage:         c.Image.CalicoNode,
 		Calicoctl:         c.Image.CalicoCtl,
