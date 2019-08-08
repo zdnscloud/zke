@@ -832,6 +832,8 @@ spec:
             # Auto-detect the BGP IP address.
             - name: IP
               value: "autodetect"
+            - name: IP_AUTODETECTION_METHOD
+              value: "interface=eno*"
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"
