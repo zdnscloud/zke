@@ -129,7 +129,7 @@ func (c *Cluster) SetUpHosts(ctx context.Context) error {
 	default:
 		if c.AuthnStrategies[AuthnX509Provider] {
 			log.Infof(ctx, "[certificates] Deploying kubernetes certificates to Cluster nodes")
-			forceDeploy := true
+			forceDeploy := false
 
 			hostList := hosts.GetUniqueHostList(c.EtcdHosts, c.ControlPlaneHosts, c.WorkerHosts, c.EdgeHosts)
 			_, err := errgroup.Batch(hostList, func(h interface{}) (interface{}, error) {
