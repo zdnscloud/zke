@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/zdnscloud/zke/cmd"
@@ -15,9 +16,8 @@ var BUILD string
 
 func main() {
 	if err := mainErr(); err != nil {
-		log.Fatal(err)
+		fmt.Printf("zke err %s", err.Error())
 	}
-	log.ZKELogger.Close()
 }
 
 func mainErr() error {
@@ -27,10 +27,9 @@ func mainErr() error {
 	app.Usage = "ZDNS Kubernetes Engine, an extremely simple, lightning fast Kubernetes installer that works everywhere"
 	app.Before = func(ctx *cli.Context) error {
 		if ctx.GlobalBool("debug") {
-			log.DefaultLogLevel = cementlog.Debug
+			log.LogLevel = cementlog.Debug
 		}
-		log.InitConsoleLog()
-		log.Debugf("ZKE version %s build at %s", app.Version, BUILD)
+		// log.Debugf("ZKE version %s build at %s", app.Version, BUILD)
 		return nil
 	}
 	app.Author = "Zcloud"
