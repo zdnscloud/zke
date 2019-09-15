@@ -38,6 +38,7 @@ func mainErr() error {
 		cmd.UpCommand(),
 		cmd.RemoveCommand(),
 		cmd.ConfigCommand(),
+		cmd.LoadImageCommand(),
 	}
 
 	app.Flags = []cli.Flag{
