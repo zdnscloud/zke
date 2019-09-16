@@ -563,6 +563,8 @@ func LoadImage(ctx context.Context, dClient *client.Client, hostname, filePath s
 	}
 	defer imageFile.Close()
 
+	log.Infof(ctx, "Loading images for host [%s]", hostname)
+
 	resp, err := dClient.ImageLoad(ctx, imageFile, false)
 	if err != nil {
 		return fmt.Errorf("Can't load images for host [%s]: %v", hostname, err)

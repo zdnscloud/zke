@@ -68,7 +68,7 @@ func LoadImage(ctx context.Context, zkeConfig *types.ZKEConfig, imageFilePath st
 	if err != nil {
 		return err
 	}
-	log.Debugf(ctx, "Starting load images")
+	log.Infof(ctx, "Starting load images")
 
 	allHosts := hosts.GetUniqueHostList(kubeCluster.ControlPlaneHosts, kubeCluster.EtcdHosts, kubeCluster.WorkerHosts, kubeCluster.EdgeHosts)
 
