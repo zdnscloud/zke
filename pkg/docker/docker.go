@@ -559,7 +559,7 @@ func GetContainerOutput(ctx context.Context, dClient *client.Client, containerNa
 func LoadImage(ctx context.Context, dClient *client.Client, hostname, filePath string) error {
 	imageFile, err := os.Open(filePath)
 	if err != nil {
-		log.Fatal(ctx, "open %s failed:%s", filePath, err.Error())
+		return err
 	}
 	defer imageFile.Close()
 

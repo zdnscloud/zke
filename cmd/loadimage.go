@@ -9,6 +9,7 @@ import (
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
+	"github.com/zdnscloud/zke/types"
 
 	"github.com/urfave/cli"
 	"github.com/zdnscloud/cement/errgroup"
@@ -18,7 +19,7 @@ import (
 func LoadImageCommand() cli.Command {
 	loadImageFlags := []cli.Flag{
 		cli.StringFlag{
-			Name:  "image-file",
+			Name:  "input-file",
 			Usage: "Specify the images tar file",
 			Value: "zcloud-images.tar",
 		},
@@ -32,7 +33,7 @@ func LoadImageCommand() cli.Command {
 }
 
 func loadImageFromCli(cliCtx *cli.Context) error {
-	imagePath := cliCtx.String("image-file")
+	imageFilePath := cliCtx.String("input-file")
 
 	parentCtx := context.Background()
 	logger := cementlog.NewLog4jConsoleLogger(log.LogLevel)
@@ -52,6 +53,10 @@ func loadImageFromCli(cliCtx *cli.Context) error {
 		return fmt.Errorf("Failed to parse cluster file: %v", err)
 	}
 
+	return LoadImage(ctx, zkeConfig, imageFilePath)
+}
+
+func LoadImage(ctx context.Context, zkeConfig *types.ZKEConfig, imageFilePath string) error {
 	kubeCluster, err := core.InitClusterObject(ctx, zkeConfig)
 	if err != nil {
 		return err
@@ -69,12 +74,8 @@ func loadImageFromCli(cliCtx *cli.Context) error {
 
 	_, err = errgroup.Batch(allHosts, func(h interface{}) (interface{}, error) {
 		runHost := h.(*hosts.Host)
-		return nil, docker.LoadImage(ctx, runHost.DClient, runHost.Address, imagePath)
+		return nil, docker.LoadImage(ctx, runHost.DClient, runHost.Address, imageFilePath)
 	})
 
-	if err != nil {
-		log.Fatal(ctx, "load image failed %s", err)
-	}
-
-	return nil
+	return err
 }
