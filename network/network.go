@@ -98,7 +98,7 @@ func doFlannelDeploy(ctx context.Context, c *core.Cluster, cli client.Client) er
 		CNIImage:         c.Image.FlannelCNI,
 		FlannelInterface: c.Network.Iface,
 		FlannelBackend: map[string]interface{}{
-			"Type": 	 "vxlan",
+			"Type":          "vxlan",
 			"Directrouting": "true",
 		},
 		RBACConfig:            c.Authorization.Mode,
