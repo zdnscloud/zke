@@ -98,6 +98,7 @@ var (
 			KubernetesServicesSidecar: "zdnscloud/zke-tools:v0.1.40",
 			Flannel:                   "zdnscloud/coreos-flannel:v0.10.0",
 			FlannelCNI:                "zdnscloud/coreos-flannel-cni:v0.3.0",
+			FlannelSidecar:		   "zdnscloud/flannel-directrouting:v0.0.1",
 			CalicoNode:                "zdnscloud/calico-node:v3.4.0",
 			CalicoCNI:                 "zdnscloud/calico-cni:v3.4.0",
 			CalicoCtl:                 "zdnscloud/calico-ctl:v2.0.0",
