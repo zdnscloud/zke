@@ -108,10 +108,10 @@ var (
 			CoreDNS:                   "zdnscloud/coredns:1.2.6",
 			CoreDNSAutoscaler:         "zdnscloud/cluster-proportional-autoscaler-amd64:1.0.0",
 			ClusterAgent:              "zdnscloud/cluster-agent:v3.1",
-			NodeAgent:                 "zdnscloud/node-agent:v1.2",
+			NodeAgent:                 "zdnscloud/node-agent:v1.3",
 			MetricsServer:             "zdnscloud/metrics-server-amd64:v0.3.3",
 			ZKERemover:                "zdnscloud/zke-remove:v0.7",
-			StorageOperator:           "zdnscloud/storage-operator:v3.5",
+			StorageOperator:           "zdnscloud/storage-operator:v3.5.1",
 			ZcloudShell:               "zdnscloud/kubectl:v1.13.10",
 		},
 	}
