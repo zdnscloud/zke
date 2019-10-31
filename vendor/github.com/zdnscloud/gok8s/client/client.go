@@ -61,6 +61,8 @@ func New(config *rest.Config, options Options) (Client, error) {
 		return nil, err
 	}
 
+	originalTimeout := config.Timeout
+	config.Timeout = 10 * time.Second
 	metricsClient, err := metricsclientset.NewForConfig(config)
 	if err != nil {
 		metricsClient = nil
@@ -71,6 +73,7 @@ func New(config *rest.Config, options Options) (Client, error) {
 		discoveryClient = nil
 	}
 
+	config.Timeout = originalTimeout
 	return &client{
 		discoveryClient: discoveryClient,
 		metricsClient:   metricsClient,
@@ -131,6 +134,34 @@ func (c *client) GetNodeMetrics(name string, selector labels.Selector) (*metrics
 	}
 	metrics := &metricsapi.NodeMetricsList{}
 	err = metricsV1beta1api.Convert_v1beta1_NodeMetricsList_To_metrics_NodeMetricsList(versionedMetrics, metrics, nil)
+	if err != nil {
+		return nil, err
+	}
+	return metrics, nil
+}
+
+func (c *client) GetPodMetrics(namespace, name string, selector labels.Selector) (*metricsapi.PodMetricsList, error) {
+	if c.metricsClient == nil {
+		return nil, errMetricsServerIsNotValiable
+	}
+
+	var err error
+	versionedMetrics := &metricsV1beta1api.PodMetricsList{}
+	nm := c.metricsClient.MetricsV1beta1().PodMetricses(namespace)
+	if name != "" {
+		m, err := nm.Get(name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		versionedMetrics.Items = []metricsV1beta1api.PodMetrics{*m}
+	} else {
+		versionedMetrics, err = nm.List(metav1.ListOptions{LabelSelector: selector.String()})
+		if err != nil {
+			return nil, err
+		}
+	}
+	metrics := &metricsapi.PodMetricsList{}
+	err = metricsV1beta1api.Convert_v1beta1_PodMetricsList_To_metrics_PodMetricsList(versionedMetrics, metrics, nil)
 	if err != nil {
 		return nil, err
 	}

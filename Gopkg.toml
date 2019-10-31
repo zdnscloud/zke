@@ -10,6 +10,10 @@
   revision = "a9fbbdc8dd8794b20af358382ab780559bca589d"
   name = "github.com/docker/docker"
 
+[[constraint]]
+  name = "github.com/urfave/cli"
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+
 [[override]]
  branch = "release-1.13"
  name = "k8s.io/metrics"
