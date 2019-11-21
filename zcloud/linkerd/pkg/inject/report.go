@@ -76,7 +76,7 @@ func newReport(conf *ResourceConfig) *Report {
 	if conf.pod.meta != nil && conf.pod.spec != nil {
 		report.InjectDisabled, report.InjectDisabledReason, report.InjectAnnotationAt = report.disableByAnnotation(conf)
 		report.HostNetwork = conf.pod.spec.HostNetwork
-		report.Sidecar = healthcheck.HasExistingSidecars(conf.pod.spec)
+		report.Sidecar = hasExistingSidecars(conf.pod.spec)
 		report.UDP = checkUDPPorts(conf.pod.spec)
 		report.TracingEnabled = conf.pod.meta.Annotations[k8s.ProxyTraceCollectorSvcAddr] != "" || conf.nsAnnotations[k8s.ProxyTraceCollectorSvcAddr] != ""
 	} else {

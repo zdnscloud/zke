@@ -8,9 +8,9 @@ import (
 	"github.com/zdnscloud/zke/zcloud/linkerd/pkg/k8s"
 )
 
-// HasExistingSidecars returns true if the pod spec already has the proxy init
+// hasExistingSidecars returns true if the pod spec already has the proxy init
 // and sidecar containers injected. Otherwise, it returns false.
-func HasExistingSidecars(podSpec *corev1.PodSpec) bool {
+func hasExistingSidecars(podSpec *corev1.PodSpec) bool {
 	for _, container := range podSpec.Containers {
 		if strings.HasPrefix(container.Image, "gcr.io/linkerd-io/proxy:") ||
 			strings.HasPrefix(container.Image, "gcr.io/istio-release/proxyv2:") ||
