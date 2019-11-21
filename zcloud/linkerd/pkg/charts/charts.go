@@ -2,20 +2,17 @@ package charts
 
 import (
 	"bytes"
-	"io/ioutil"
 	"path"
 
 	"k8s.io/helm/pkg/chartutil"
 	helmChart "k8s.io/helm/pkg/proto/hapi/chart"
 	"k8s.io/helm/pkg/renderutil"
 	"k8s.io/helm/pkg/timeconv"
+
+	"github.com/zdnscloud/zke/zcloud/linkerd/pkg/charts/static"
 )
 
 // Chart holds the necessary info to render a Helm chart
-const (
-	chartsRoot = "charts/"
-)
-
 type Chart struct {
 	Name      string
 	Dir       string
@@ -87,13 +84,16 @@ func filesReader(dir string, files []*chartutil.BufferedFile) error {
 		if dir == "" {
 			filename = filename[7:]
 		}
-
-		data, err := ioutil.ReadFile(path.Join(chartsRoot, filename))
+		file, err := static.Templates.Open(filename)
 		if err != nil {
 			return err
 		}
+		defer file.Close()
 
-		f.Data = data
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(file)
+
+		f.Data = buf.Bytes()
 	}
 	return nil
 }
