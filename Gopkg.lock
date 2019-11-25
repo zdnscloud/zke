@@ -257,16 +257,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8eab99879a13465709dc273a241f82bafba8f131945bd7f1a31210d93bc3ae30"
+  digest = "1:f54e01654eb33541ae535c28c135e42685a940ad05995588d279843bf5d032cb"
   name = "github.com/zdnscloud/cement"
   packages = [
     "errgroup",
     "log",
     "log/log4go",
     "slice",
+    "uuid",
   ]
   pruneopts = "UT"
-  revision = "28c1280e43f239c7b6864ec1c19215a86dcae3f8"
+  revision = "e70d68aebdadfacf1a5168fb29b1f5554f977966"
 
 [[projects]]
   branch = "master"
@@ -297,24 +298,24 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:494765a2000cd2bf92e2777b7ffeebde0ed8bc71a54ba54ea64aaf60900a6de3"
+  digest = "1:5dbccac477f4980f8e6f7a0c547375d585a99513608298edc5d5cba7124ca122"
   name = "golang.org/x/crypto"
   packages = [
+    "chacha20",
     "curve25519",
     "ed25519",
     "ed25519/internal/edwards25519",
-    "internal/chacha20",
     "internal/subtle",
     "poly1305",
     "ssh",
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "8986dd9e96cf0a6f74da406c005ba3df38527c04"
+  revision = "4f8c1d86b1ba699e7a66cd649947ed270a74e0bb"
 
 [[projects]]
   branch = "master"
-  digest = "1:bd256f38caeb73b483ebb3e0984f2765e42287959a4e0335733e98b53451907a"
+  digest = "1:75fe903986f9179e73a2a492859f60c123f859554530f29a717c3f91723101ea"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -327,7 +328,7 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "fe3aa8a4527195a6057b3fad46619d7d090e99b5"
+  revision = "fc4aabc6c91483155dade6fbb627cc953a723260"
 
 [[projects]]
   branch = "master"
@@ -342,7 +343,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d5e7a8fb63a2fb2a878b04c1f58ce095ede573c01878c93a1d72f6f5ff23e818"
+  digest = "1:87f7dc29b0f36aa4651ee98363f8653bd85369ab62cbd81e998495d589692b2c"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -350,7 +351,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "f43be2a4598cf3a47be9f94f0c28197ed9eae611"
+  revision = "bd437916bb0eb726b873ee8e9b2dcf212d32e2fd"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -410,12 +411,12 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:59f10c1537d2199d9115d946927fe31165959a95190849c82ff11e05803528b0"
+  digest = "1:b75b3deb2bce8bc079e16bb2aecfe01eb80098f5650f9e93e5643ca8b7b73737"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
-  version = "v2.2.4"
+  revision = "1f64d6156d11335c3f22d9330b0ad14fc1e789ce"
+  version = "v2.2.7"
 
 [[projects]]
   branch = "release-1.13"
@@ -640,6 +641,7 @@
     "github.com/urfave/cli",
     "github.com/zdnscloud/cement/errgroup",
     "github.com/zdnscloud/cement/log",
+    "github.com/zdnscloud/cement/uuid",
     "github.com/zdnscloud/gok8s/client",
     "github.com/zdnscloud/gok8s/client/config",
     "github.com/zdnscloud/gok8s/helper",
