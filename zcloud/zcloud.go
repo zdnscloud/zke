@@ -2,6 +2,7 @@ package zcloud
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/zdnscloud/zke/core"
 	"github.com/zdnscloud/zke/core/pki"
@@ -16,7 +17,6 @@ import (
 	zcloudshell "github.com/zdnscloud/zke/zcloud/zcloud-shell"
 
 	"github.com/zdnscloud/gok8s/client"
-	"github.com/zdnscloud/gok8s/helper"
 )
 
 const (
@@ -55,7 +55,7 @@ func DeployZcloudManager(ctx context.Context, c *core.Cluster) error {
 		if err := doZcloudShell(ctx, c, k8sClient); err != nil {
 			return err
 		}
-		if err := doLinkerd(ctx, c, k8sClient); err != nil {
+		if err := deployLinkerd(ctx, c, k8sClient); err != nil {
 			return err
 		}
 		return nil
@@ -103,12 +103,12 @@ func doZcloudShell(ctx context.Context, c *core.Cluster, cli client.Client) erro
 	return k8s.DoCreateFromTemplate(cli, zcloudshell.ZcloudShellTemplate, cfg)
 }
 
-func doLinkerd(ctx context.Context, c *core.Cluster, cli client.Client) error {
+func deployLinkerd(ctx context.Context, c *core.Cluster, cli client.Client) error {
 	log.Infof(ctx, "[zcloud] deploy linkerd")
-	yaml, err := linkerd.GetDeployYaml(c.ZKEConfig.Option.ClusterDomain)
+	cfg, err := linkerd.GetDeployConfig(c.ZKEConfig.Option.ClusterDomain)
 	if err != nil {
-		fmt.Errorf("get linkerd deploy yaml failed: %s", err.Error())
+		return fmt.Errorf("get linkerd deploy config failed: %s", err.Error())
 	}
 
-	return helper.CreateResourceFromYaml(cli, yaml)
+	return k8s.DoCreateFromTemplate(cli, linkerd.LinkerdTemplate, cfg)
 }

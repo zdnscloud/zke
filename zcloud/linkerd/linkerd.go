@@ -1,196 +1,194 @@
 package linkerd
 
 import (
-	"bufio"
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
-	"io"
+	"math/big"
+	"net"
+	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	yamlDecoder "k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/helm/pkg/chartutil"
-	"sigs.k8s.io/yaml"
+	"github.com/zdnscloud/cement/uuid"
 
-	"github.com/zdnscloud/zke/zcloud/linkerd/pkg/charts"
-	"github.com/zdnscloud/zke/zcloud/linkerd/pkg/pbconfig"
+	"github.com/zdnscloud/zke/zcloud/linkerd/pkg/tls"
 )
 
 const (
-	configStage          = "config"
-	controlPlaneStage    = "control-plane"
-	helmDefaultChartName = "linkerd2"
-	helmDefaultChartDir  = "linkerd2"
+	caLifeTime = 10 * 365
+	issuerName = "identity.linkerd."
 )
 
-var (
-	templatesConfigStage = []string{
-		"templates/namespace.yaml",
-		"templates/identity-rbac.yaml",
-		"templates/controller-rbac.yaml",
-		"templates/destination-rbac.yaml",
-		"templates/heartbeat-rbac.yaml",
-		"templates/web-rbac.yaml",
-		"templates/serviceprofile-crd.yaml",
-		"templates/trafficsplit-crd.yaml",
-		"templates/prometheus-rbac.yaml",
-		"templates/grafana-rbac.yaml",
-		"templates/proxy-injector-rbac.yaml",
-		"templates/sp-validator-rbac.yaml",
-		"templates/tap-rbac.yaml",
-		"templates/psp.yaml",
-	}
-
-	templatesControlPlaneStage = []string{
-		"templates/_validate.tpl",
-		"templates/_affinity.tpl",
-		"templates/_config.tpl",
-		"templates/_helpers.tpl",
-		"templates/_nodeselector.tpl",
-		"templates/config.yaml",
-		"templates/identity.yaml",
-		"templates/controller.yaml",
-		"templates/destination.yaml",
-		"templates/heartbeat.yaml",
-		"templates/web.yaml",
-		"templates/prometheus.yaml",
-		"templates/grafana.yaml",
-		"templates/proxy-injector.yaml",
-		"templates/sp-validator.yaml",
-		"templates/tap.yaml",
-	}
-)
-
-func GetDeployYaml(clusterDomain string) (string, error) {
-	var buf bytes.Buffer
-	if err := installRunE(newInstallOptionsWithDefaults(clusterDomain), &buf); err != nil {
-		return err
-	}
-
-	return buf.String(), nil
-}
-
-func installRunE(options *InstallOptions, out io.Writer) error {
-	values, configs, err := options.validateAndBuild()
+func GetDeployConfig(clusterDomain string) (map[string]interface{}, error) {
+	spValidatorCA, err := generateCertificateAuthority("linkerd-sp-validator.linkerd.svc", caLifeTime)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("gen linkerd-sp-validator certificate failed: %s", err.Error())
 	}
 
-	return render(out, values, configs)
-}
-
-func render(w io.Writer, values *charts.Values, configs *pbconfig.All) error {
-	rawValues, err := yaml.Marshal(values)
+	proxyInjectCA, err := generateCertificateAuthority("linkerd-proxy-injector.linkerd.svc", caLifeTime)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("gen linkerd-proxy-injector certificate failed: %s", err.Error())
 	}
 
-	files := []*chartutil.BufferedFile{
-		{Name: chartutil.ChartfileName},
-	}
-
-	if values.Stage == "" || values.Stage == configStage {
-		for _, template := range templatesConfigStage {
-			files = append(files, &chartutil.BufferedFile{
-				Name: template,
-			})
-		}
-	}
-
-	if values.Stage == "" || values.Stage == controlPlaneStage {
-		for _, template := range templatesControlPlaneStage {
-			files = append(files, &chartutil.BufferedFile{
-				Name: template,
-			})
-		}
-	}
-
-	chart := &charts.Chart{
-		Name:      helmDefaultChartName,
-		Dir:       helmDefaultChartDir,
-		Namespace: defaultNamespace,
-		RawValues: rawValues,
-		Files:     files,
-	}
-	buf, err := chart.Render()
+	tapCA, err := generateCertificateAuthority("linkerd-tap.linkerd.svc", caLifeTime)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("gen linkerd-tap certificate failed: %s", err.Error())
 	}
 
-	return processYAML(&buf, w, resourceTransformerInject{
-		injectProxy: true,
-		configs:     configs,
-	})
+	installUUID, err := uuid.Gen()
+	if err != nil {
+		return nil, fmt.Errorf("gen linkerd config install uuid failed: %s", err.Error())
+	}
+
+	root, err := tls.GenerateRootCAWithDefaults(issuerName + clusterDomain)
+	if err != nil {
+		return nil, fmt.Errorf("gen root certificate for identity failed: %s", err.Error())
+	}
+
+	return map[string]interface{}{
+		"ClusterDomain":                 clusterDomain,
+		"LinkerdProxyInjectorTLSCrtPEM": b64enc(proxyInjectCA.Cert),
+		"LinkerdProxyInjectorTLSKeyPEM": b64enc(proxyInjectCA.Key),
+		"LinkerdSpValidatorTLSCrtPEM":   b64enc(spValidatorCA.Cert),
+		"LinkerdSpValidatorTLSKeyPEM":   b64enc(spValidatorCA.Key),
+		"LinkerdTapTLSCrtPEM":           b64enc(tapCA.Cert),
+		"LinkerdTapTLSKeyPEM":           b64enc(tapCA.Key),
+		"LinkerdIdentityIsserCrtPEM":    b64enc(strings.TrimSpace(root.Cred.Crt.EncodeCertificatePEM())),
+		"LinkerdIdentityIsserKeyPEM":    b64enc(strings.TrimSpace(root.Cred.EncodePrivateKeyPEM())),
+		"TrustAnchorsPEM":               strings.TrimSpace(root.Cred.Crt.EncodeCertificatePEM()),
+		"LinkerdConfigInstallUUID":      installUUID,
+		"LinkerdIdentityIssuerExpiry":   root.Cred.Crt.Certificate.NotAfter.Format(time.RFC3339),
+	}, nil
 }
 
-func processYAML(in io.Reader, out io.Writer, rt resourceTransformerInject) error {
-	reader := yamlDecoder.NewYAMLReader(bufio.NewReaderSize(in, 4096))
-	for {
-		bytes, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		var result []byte
-		isList, err := kindIsList(bytes)
-		if err != nil {
-			return err
-		}
-		if isList {
-			result, err = processList(bytes, rt)
-		} else {
-			result, err = rt.transform(bytes)
-		}
-		if err != nil {
-			return err
-		}
-
-		out.Write(result)
-		out.Write([]byte("---\n"))
-	}
-
-	return nil
+func b64enc(v string) string {
+	return base64.StdEncoding.EncodeToString([]byte(v))
 }
 
-func kindIsList(bytes []byte) (bool, error) {
-	var meta metav1.TypeMeta
-	if err := yaml.Unmarshal(bytes, &meta); err != nil {
-		return false, err
-	}
-	return meta.Kind == "List", nil
+type certificate struct {
+	Cert string
+	Key  string
 }
 
-func processList(bytes []byte, rt resourceTransformerInject) ([]byte, error) {
-	var sourceList corev1.List
-	if err := yaml.Unmarshal(bytes, &sourceList); err != nil {
-		return nil, err
+func generateCertificateAuthority(cn string, daysValid int) (certificate, error) {
+	ca := certificate{}
+
+	template, err := getBaseCertTemplate(cn, nil, nil, daysValid)
+	if err != nil {
+		return ca, err
 	}
 
-	items := []runtime.RawExtension{}
-	for _, item := range sourceList.Items {
-		result, err := rt.transform(item.Raw)
-		if err != nil {
-			return nil, err
-		}
+	template.KeyUsage = x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign
+	template.IsCA = true
 
-		injected, err := yaml.YAMLToJSON(result)
-		if err != nil {
-			return nil, err
-		}
-
-		items = append(items, runtime.RawExtension{Raw: injected})
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return ca, fmt.Errorf("error generating rsa key: %s", err)
 	}
 
-	sourceList.Items = items
-	result, err := yaml.Marshal(sourceList)
+	ca.Cert, ca.Key, err = getCertAndKey(template, priv, template, priv)
+	if err != nil {
+		return ca, err
+	}
+
+	return ca, nil
+}
+
+func getBaseCertTemplate(cn string, ips []interface{}, alternateDNS []interface{}, daysValid int) (*x509.Certificate, error) {
+	ipAddresses, err := getNetIPs(ips)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	dnsNames, err := getAlternateDNSStrs(alternateDNS)
+	if err != nil {
+		return nil, err
+	}
+	serialNumberUpperBound := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberUpperBound)
+	if err != nil {
+		return nil, err
+	}
+	return &x509.Certificate{
+		SerialNumber:          serialNumber,
+		Subject:               pkix.Name{CommonName: cn},
+		IPAddresses:           ipAddresses,
+		DNSNames:              dnsNames,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(time.Hour * 24 * time.Duration(daysValid)),
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+		BasicConstraintsValid: true,
+	}, nil
+}
+
+func getNetIPs(ips []interface{}) ([]net.IP, error) {
+	if ips == nil {
+		return []net.IP{}, nil
+	}
+	var ipStr string
+	var ok bool
+	var netIP net.IP
+	netIPs := make([]net.IP, len(ips))
+	for i, ip := range ips {
+		ipStr, ok = ip.(string)
+		if !ok {
+			return nil, fmt.Errorf("error parsing ip: %v is not a string", ip)
+		}
+		netIP = net.ParseIP(ipStr)
+		if netIP == nil {
+			return nil, fmt.Errorf("error parsing ip: %s", ipStr)
+		}
+		netIPs[i] = netIP
+	}
+	return netIPs, nil
+}
+
+func getAlternateDNSStrs(alternateDNS []interface{}) ([]string, error) {
+	if alternateDNS == nil {
+		return []string{}, nil
+	}
+	var dnsStr string
+	var ok bool
+	alternateDNSStrs := make([]string, len(alternateDNS))
+	for i, dns := range alternateDNS {
+		dnsStr, ok = dns.(string)
+		if !ok {
+			return nil, fmt.Errorf(
+				"error processing alternate dns name: %v is not a string",
+				dns,
+			)
+		}
+		alternateDNSStrs[i] = dnsStr
+	}
+	return alternateDNSStrs, nil
+}
+
+func getCertAndKey(template *x509.Certificate, signeeKey *rsa.PrivateKey, parent *x509.Certificate, signingKey *rsa.PrivateKey) (string, string, error) {
+	derBytes, err := x509.CreateCertificate(rand.Reader, template, parent, &signeeKey.PublicKey, signingKey)
+	if err != nil {
+		return "", "", fmt.Errorf("error creating certificate: %s", err)
+	}
+
+	certBuffer := bytes.Buffer{}
+	if err := pem.Encode(&certBuffer, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		return "", "", fmt.Errorf("error pem-encoding certificate: %s", err)
+	}
+
+	keyBuffer := bytes.Buffer{}
+	if err := pem.Encode(
+		&keyBuffer,
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(signeeKey),
+		},
+	); err != nil {
+		return "", "", fmt.Errorf("error pem-encoding key: %s", err)
+	}
+
+	return string(certBuffer.Bytes()), string(keyBuffer.Bytes()), nil
 }
