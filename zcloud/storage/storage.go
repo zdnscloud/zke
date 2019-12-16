@@ -147,5 +147,5 @@ spec:
       containers:
       - name: storage-operator
         image: {{.StorageOperatorImage}}
-        command: ["/bin/sh", "-c", "sleep 86400"]
+        command: ["/bin/sh", "-c", "/operator -logtostderr"]
 `
