@@ -64,7 +64,7 @@ var (
 			StorageOperator:           "zdnscloud/storage-operator:v3.5.7",
 			ZcloudShell:               "zdnscloud/kubectl:v1.13.10",
 			ZcloudProxy:               "zdnscloud/zcloud-proxy:v1.0.1",
-			ZcloudLBController:        "zdnscloud/elb-controller:v0.0.2",
+			ZcloudLBController:        "zdnscloud/elb-controller:v0.0.3",
 		},
 	}
 )

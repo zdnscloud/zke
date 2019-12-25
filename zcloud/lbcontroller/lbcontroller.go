@@ -55,7 +55,7 @@ func genDeploy(c *core.Cluster) *appsv1.Deployment {
 							Name:    deployName,
 							Image:   c.Image.ZcloudLBController,
 							Command: []string{"/elbc"},
-							Args:    []string{"-master", c.LoadBalance.MasterServer, "-backup", c.LoadBalance.BackupServer, "-user", c.LoadBalance.User, "-password", c.LoadBalance.Password, "-cluster", c.ClusterName},
+							Args:    []string{"-masterserver", c.LoadBalance.MasterServer, "-backupserver", c.LoadBalance.BackupServer, "-user", c.LoadBalance.User, "-password", c.LoadBalance.Password, "-cluster", c.ClusterName},
 						},
 					},
 					RestartPolicy:      corev1.RestartPolicyAlways,
