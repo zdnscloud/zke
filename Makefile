@@ -7,4 +7,9 @@ GOSRC = $(shell find . -type f -name '*.go')
 build: zke
 
 zke: $(GOSRC)
+	go generate types/generate.go
 	go build ${LDFLAGS}
+	rm -f types/initer.go
+
+clean:
+	rm -f zke
