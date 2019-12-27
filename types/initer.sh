@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 cat >>initer.go <<EOF
 package types

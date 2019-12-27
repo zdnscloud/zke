@@ -1,3 +1,3 @@
 package types
 
-//go:generate ./initer.sh ../image_config.yml
+//go:generate sh initer.sh ../image_config.yml
