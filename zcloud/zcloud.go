@@ -10,9 +10,9 @@ import (
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
 	clusteragent "github.com/zdnscloud/zke/zcloud/cluster-agent"
-	"github.com/zdnscloud/zke/zcloud/linkerd"
 	nodeagent "github.com/zdnscloud/zke/zcloud/node-agent"
 	zcloudsa "github.com/zdnscloud/zke/zcloud/sa"
+	"github.com/zdnscloud/zke/zcloud/servicemesh"
 	"github.com/zdnscloud/zke/zcloud/storage"
 	zcloudshell "github.com/zdnscloud/zke/zcloud/zcloud-shell"
 
@@ -55,7 +55,7 @@ func DeployZcloudManager(ctx context.Context, c *core.Cluster) error {
 		if err := doZcloudShell(ctx, c, k8sClient); err != nil {
 			return err
 		}
-		if err := deployLinkerd(ctx, c, k8sClient); err != nil {
+		if err := deployServiceMesh(ctx, c, k8sClient); err != nil {
 			return err
 		}
 		return nil
@@ -103,12 +103,12 @@ func doZcloudShell(ctx context.Context, c *core.Cluster, cli client.Client) erro
 	return k8s.DoCreateFromTemplate(cli, zcloudshell.ZcloudShellTemplate, cfg)
 }
 
-func deployLinkerd(ctx context.Context, c *core.Cluster, cli client.Client) error {
-	log.Infof(ctx, "[zcloud] deploy linkerd")
-	cfg, err := linkerd.GetDeployConfig(c.ZKEConfig.Option.ClusterDomain)
+func deployServiceMesh(ctx context.Context, c *core.Cluster, cli client.Client) error {
+	log.Infof(ctx, "[zcloud] deploy servicemesh")
+	cfg, err := servicemesh.GetDeployConfig(c.ZKEConfig.Option.ClusterDomain, c.Image.ServiceMesh)
 	if err != nil {
-		return fmt.Errorf("get linkerd deploy config failed: %s", err.Error())
+		return fmt.Errorf("get servicemesh deploy config failed: %s", err.Error())
 	}
 
-	return k8s.DoCreateFromTemplate(cli, linkerd.LinkerdTemplate, cfg)
+	return k8s.DoCreateFromTemplate(cli, servicemesh.Template, cfg)
 }
