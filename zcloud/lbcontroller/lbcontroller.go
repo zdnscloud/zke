@@ -29,6 +29,19 @@ func CreateOrUpdate(cli client.Client, cluster *core.Cluster) error {
 	return cli.Update(context.TODO(), genDeploy(cluster))
 }
 
+func DeleteIfExist(cli client.Client, cluster *core.Cluster) error {
+	deploy := appsv1.Deployment{}
+	err := cli.Get(context.TODO(), k8stypes.NamespacedName{deployNamespace, deployName}, &deploy)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+	return cli.Delete(context.TODO(), &deploy)
+}
+
 func genDeploy(c *core.Cluster) *appsv1.Deployment {
 	replicas := int32(deployReplicas)
 	return &appsv1.Deployment{

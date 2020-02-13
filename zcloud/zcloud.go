@@ -81,11 +81,6 @@ func DeployZcloudProxy(ctx context.Context, c *core.Cluster) error {
 }
 
 func DeployZcloudLBController(ctx context.Context, c *core.Cluster) error {
-	if !c.LoadBalance.Enable {
-		log.Infof(ctx, "[zcloud] LoadBalance disabled, skip deploy ZcloudLBController")
-		return nil
-	}
-	log.Infof(ctx, "[zcloud] deploy ZcloudLBController")
 	select {
 	case <-ctx.Done():
 		return util.CancelErr
@@ -94,6 +89,13 @@ func DeployZcloudLBController(ctx context.Context, c *core.Cluster) error {
 		if err != nil {
 			return err
 		}
+
+		if !c.LoadBalance.Enable {
+			log.Infof(ctx, "[zcloud] LoadBalance disabled, will delete it if exist")
+			return lbcontroller.DeleteIfExist(k8sClient, c)
+		}
+
+		log.Infof(ctx, "[zcloud] deploy ZcloudLBController")
 		return lbcontroller.CreateOrUpdate(k8sClient, c)
 	}
 }
