@@ -8,6 +8,7 @@ import (
 	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/transport"
 )
 
 const (
@@ -21,7 +22,7 @@ type k8sCall func(*kubernetes.Clientset, interface{}) error
 
 type WrapTransport func(rt http.RoundTripper) http.RoundTripper
 
-func NewClient(kubeConfigPath string, k8sWrapTransport WrapTransport) (*kubernetes.Clientset, error) {
+func NewClient(kubeConfigPath string, k8sWrapTransport transport.WrapperFunc) (*kubernetes.Clientset, error) {
 	// use the current admin kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {

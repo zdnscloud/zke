@@ -10,6 +10,7 @@ import (
 
 	"github.com/zdnscloud/zke/core/authz"
 	"github.com/zdnscloud/zke/core/pki"
+	"github.com/zdnscloud/zke/core/pki/cert"
 	"github.com/zdnscloud/zke/core/services"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
@@ -24,7 +25,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/cert"
 )
 
 type Cluster struct {

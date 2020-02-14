@@ -345,7 +345,6 @@ func (c *Cluster) BuildKubeletProcess(host *hosts.Host, prefixPath string) types
 
 	CommandArgs := map[string]string{
 		"address":                           "0.0.0.0",
-		"allow-privileged":                  "true",
 		"anonymous-auth":                    "false",
 		"authentication-token-webhook":      "true",
 		"cgroups-per-qos":                   "True",
