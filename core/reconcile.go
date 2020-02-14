@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/zdnscloud/zke/core/pki"
+	"github.com/zdnscloud/zke/core/pki/cert"
 	"github.com/zdnscloud/zke/core/services"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
@@ -13,7 +14,6 @@ import (
 	"github.com/zdnscloud/zke/types"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/cert"
 )
 
 const (

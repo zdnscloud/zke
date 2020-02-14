@@ -20,11 +20,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zdnscloud/zke/core/pki/cert"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/types"
-
-	"k8s.io/client-go/util/cert"
 )
 
 func GenerateSignedCertAndKey(

@@ -1,13 +1,13 @@
 package ingress
 
 type IngressOptions struct {
-	RBACConfig     string
-	Options        map[string]string
-	NodeSelector   map[string]string
-	ExtraArgs      map[string]string
-	AlpineImage    string
-	IngressImage   string
-	IngressBackend string
+  RBACConfig     string
+  Options        map[string]string
+  NodeSelector   map[string]string
+  ExtraArgs      map[string]string
+  AlpineImage    string
+  IngressImage   string
+  IngressBackend string
 }
 
 const NginxIngressTemplate = `
@@ -15,6 +15,9 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -22,7 +25,8 @@ metadata:
   name: nginx-configuration
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 data:
 {{ range $k,$v := .Options }}
   {{ $k }}: "{{ $v }}"
@@ -33,12 +37,18 @@ apiVersion: v1
 metadata:
   name: tcp-services
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 ---
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: udp-services
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 {{if eq .RBACConfig "rbac"}}
 ---
 apiVersion: v1
@@ -46,11 +56,17 @@ kind: ServiceAccount
 metadata:
   name: nginx-ingress-serviceaccount
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: nginx-ingress-clusterrole
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 rules:
   - apiGroups:
       - ""
@@ -78,23 +94,24 @@ rules:
       - list
       - watch
   - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
       - "extensions"
+      - "networking.k8s.io"
     resources:
       - ingresses
-      - daemonsets
     verbs:
       - get
       - list
       - watch
   - apiGroups:
-      - ""
-    resources:
-        - events
-    verbs:
-        - create
-        - patch
-  - apiGroups:
       - "extensions"
+      - "networking.k8s.io"
     resources:
       - ingresses/status
     verbs:
@@ -105,6 +122,9 @@ kind: Role
 metadata:
   name: nginx-ingress-role
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 rules:
   - apiGroups:
       - ""
@@ -146,6 +166,9 @@ kind: RoleBinding
 metadata:
   name: nginx-ingress-role-nisa-binding
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -159,6 +182,9 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: nginx-ingress-clusterrole-nisa-binding
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -169,23 +195,29 @@ subjects:
     namespace: ingress-nginx
 {{ end }}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: nginx-ingress-controller
   namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   selector:
     matchLabels:
-      app: ingress-nginx
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/part-of: ingress-nginx
   template:
     metadata:
       labels:
-        app: ingress-nginx
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/part-of: ingress-nginx
       annotations:
         prometheus.io/port: '10254'
         prometheus.io/scrape: 'true'
     spec:
+      terminationGracePeriodSeconds: 300
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -224,6 +256,7 @@ spec:
             - --configmap=$(POD_NAMESPACE)/nginx-configuration
             - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
             - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
+            - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
           {{ range $k, $v := .ExtraArgs }}
             - --{{ $k }}{{if ne $v "" }}={{ $v }}{{end}}
@@ -249,8 +282,10 @@ spec:
           ports:
           - name: http
             containerPort: 80
+            protocol: TCP
           - name: https
             containerPort: 443
+            protocol: TCP
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -260,7 +295,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
             successThreshold: 1
-            timeoutSeconds: 1
+            timeoutSeconds: 10
           readinessProbe:
             failureThreshold: 3
             httpGet:
@@ -269,9 +304,14 @@ spec:
               scheme: HTTP
             periodSeconds: 10
             successThreshold: 1
-            timeoutSeconds: 1
+            timeoutSeconds: 10
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /wait-shutdown
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: default-http-backend
@@ -280,6 +320,9 @@ metadata:
   namespace: ingress-nginx
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: default-http-backend
   template:
     metadata:
       labels:

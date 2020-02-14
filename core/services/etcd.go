@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/zdnscloud/zke/core/pki"
+	"github.com/zdnscloud/zke/core/pki/cert"
 	"github.com/zdnscloud/zke/pkg/docker"
 	"github.com/zdnscloud/zke/pkg/hosts"
 	"github.com/zdnscloud/zke/pkg/log"
@@ -19,7 +20,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/pkg/errors"
 	"github.com/zdnscloud/cement/errgroup"
-	"k8s.io/client-go/util/cert"
 )
 
 const (

@@ -1,14 +1,14 @@
 package coredns
 
 type CoreDNSOptions struct {
-	RBACConfig             string
-	CoreDNSImage           string
-	CoreDNSAutoScalerImage string
-	ClusterDomain          string
-	ClusterDNSServer       string
-	ReverseCIDRs           []string
-	UpstreamNameservers    []string
-	NodeSelector           map[string]string
+  RBACConfig             string
+  CoreDNSImage           string
+  CoreDNSAutoScalerImage string
+  ClusterDomain          string
+  ClusterDNSServer       string
+  ReverseCIDRs           []string
+  UpstreamNameservers    []string
+  NodeSelector           map[string]string
 }
 
 const CoreDNSTemplate = `
@@ -81,9 +81,9 @@ data:
         }
         prometheus :9153
 	{{- if .UpstreamNameservers }}
-        proxy . {{range $i, $v := .UpstreamNameservers}}{{if $i}} {{end}}{{.}}{{end}}
+        forward . {{range $i, $v := .UpstreamNameservers}}{{if $i}} {{end}}{{.}}{{end}}
 	{{- else }}
-        proxy . "/etc/resolv.conf"
+        forward . "/etc/resolv.conf"
 	{{- end }}
         cache 30
         loop
@@ -91,7 +91,7 @@ data:
         loadbalance
     }
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: coredns

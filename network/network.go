@@ -170,6 +170,7 @@ func doIngressDeploy(ctx context.Context, c *core.Cluster, cli client.Client) er
 			ingressConfig.AlpineImage = c.Image.Alpine
 		}
 	}
+
 	if err := k8s.DoCreateFromTemplate(cli, ingress.NginxIngressTemplate, ingressConfig); err != nil {
 		return err
 	}

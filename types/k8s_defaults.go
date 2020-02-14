@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	DefaultK8s = "v1.13.10"
+	DefaultK8s = "v1.17.2"
 )
 
 var (
 	imageConfig        string
 	K8sVersionsCurrent = []string{
-		"v1.13.10",
+		"v1.17.2",
 	}
 
 	// K8sVersionServiceOptions - service options per k8s version
