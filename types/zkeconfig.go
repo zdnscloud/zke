@@ -14,6 +14,7 @@ type ZKEConfig struct {
 	Monitor            ZKEConfigMonitor  `yaml:"monitor,omitempty" json:"monitor,omitempty"`
 	SingleCloudAddress string            `yaml:"single_cloud_address,omitempty" json:"singleCloudAddress"`
 	LoadBalance        ZKELBConfig       `yaml:"loadbalance,omitempty" json:"loadbalance,omitempty"`
+	DisableLinkerd     bool              `yaml:"disable_linkerd,omitempty" json:"disableLinkerd,omitempty"`
 	ConfigVersion      string            `yaml:"config_version" json:"configVersion"`
 }
 

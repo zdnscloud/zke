@@ -142,6 +142,10 @@ func deployZcloudShell(ctx context.Context, c *core.Cluster, cli client.Client) 
 }
 
 func deployServiceMesh(ctx context.Context, c *core.Cluster, cli client.Client) error {
+	if c.DisableLinkerd {
+		log.Infof(ctx, "[zcloud] linkerd disabled, skip it")
+		return nil
+	}
 	log.Infof(ctx, "[zcloud] deploy servicemesh")
 	cfg, err := servicemesh.GetDeployConfig(c.ZKEConfig.Option.ClusterDomain, c.Image.ServiceMesh)
 	if err != nil {
