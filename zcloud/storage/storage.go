@@ -81,7 +81,7 @@ rules:
     verbs: ["use"]
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses", "volumeattachments", "csinodes"]
-    verbs: ["get", "list", "watch", "create", "update", "delete"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "update", "watch"]
@@ -108,6 +108,9 @@ rules:
     verbs: ["get", "watch", "list", "delete", "update", "create"]
   - apiGroups: ["batch"]
     resources: ["jobs"]
+    verbs: ["get", "watch", "list", "delete", "update", "create"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
     verbs: ["get", "watch", "list", "delete", "update", "create"]
 ---
 kind: ClusterRoleBinding
