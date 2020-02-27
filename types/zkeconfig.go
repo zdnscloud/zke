@@ -103,6 +103,7 @@ type ZKEConfigImages struct {
 	ZcloudLBController string `yaml:"zcloud_lbcontroller" json:"zcloudLBController"`
 	//ServiceMesh image
 	ServiceMesh ServiceMeshImages `yaml:"service_mesh" json:"serviceMesh"`
+	CICD        CICDImages        `yaml:"cicd" json:"cicd"`
 }
 
 type ZKELBConfig struct {
@@ -120,4 +121,17 @@ type ServiceMeshImages struct {
 	Web        string `yaml:"web" json:"web"`
 	Prometheus string `yaml:"prometheus" json:"prometheus"`
 	Grafana    string `yaml:"grafana" json:"grafana"`
+}
+
+type CICDImages struct {
+	Controller          string `yaml:"controller" json:"controller"`
+	KubeConfigWriter    string `yaml:"kube_config_writer" json:"kubeConfigWriter"`
+	CredsIniter         string `yaml:"creds_initer" json:"credsIniter"`
+	GitIniter           string `yaml:"git_initer" json:"gitIniter"`
+	Entrypointer        string `yaml:"entrypointer" json:"entrypointer"`
+	ImageDigestExporter string `yaml:"image_digest_exporter" json:"imageDigestExporter"`
+	PullRequestIniter   string `yaml:"pull_request_initer" json:"pullRequestInit"`
+	GCSFetcher          string `yaml:"gcs_fetcher" json:"gcsFetcher"`
+	Webhook             string `yaml:"webhook" json:"webhook"`
+	Dashboard           string `yaml:"dashboard" json:"dashboard"`
 }

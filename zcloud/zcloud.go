@@ -9,6 +9,7 @@ import (
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
+	"github.com/zdnscloud/zke/zcloud/cicd"
 	clusteragent "github.com/zdnscloud/zke/zcloud/cluster-agent"
 	"github.com/zdnscloud/zke/zcloud/lbcontroller"
 	nodeagent "github.com/zdnscloud/zke/zcloud/node-agent"
@@ -42,6 +43,7 @@ var deploys []deployFunc = []deployFunc{
 	deployStorageOperator,
 	deployZcloudShell,
 	deployServiceMesh,
+	deployCICD,
 }
 
 func DeployZcloudComponents(ctx context.Context, c *core.Cluster) error {
@@ -153,4 +155,12 @@ func deployServiceMesh(ctx context.Context, c *core.Cluster, cli client.Client) 
 	}
 
 	return k8s.DoCreateFromTemplate(cli, servicemesh.Template, cfg)
+}
+
+func deployCICD(ctx context.Context, c *core.Cluster, cli client.Client) error {
+	log.Infof(ctx, "[zcloud] deploy cicd")
+	if err := k8s.DoCreateFromTemplate(cli, cicd.TektonTemplate, cicd.GetDeployConfig(c)); err != nil {
+		return err
+	}
+	return k8s.DoCreateFromTemplate(cli, cicd.TektonDashBoardTemplate, cicd.GetDeployConfig(c))
 }
