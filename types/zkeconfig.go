@@ -103,6 +103,8 @@ type ZKEConfigImages struct {
 	ZcloudLBController string `yaml:"zcloud_lbcontroller" json:"zcloudLBController"`
 	//ServiceMesh image
 	ServiceMesh ServiceMeshImages `yaml:"service_mesh" json:"serviceMesh"`
+	//ApplicationOperator image
+	ApplicationOperator string `yaml:"application_operator" json:"applicationOperator"`
 }
 
 type ZKELBConfig struct {

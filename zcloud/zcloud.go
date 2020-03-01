@@ -9,6 +9,7 @@ import (
 	"github.com/zdnscloud/zke/pkg/k8s"
 	"github.com/zdnscloud/zke/pkg/log"
 	"github.com/zdnscloud/zke/pkg/util"
+	appoperator "github.com/zdnscloud/zke/zcloud/application-operator"
 	clusteragent "github.com/zdnscloud/zke/zcloud/cluster-agent"
 	"github.com/zdnscloud/zke/zcloud/lbcontroller"
 	nodeagent "github.com/zdnscloud/zke/zcloud/node-agent"
@@ -42,6 +43,7 @@ var deploys []deployFunc = []deployFunc{
 	deployStorageOperator,
 	deployZcloudShell,
 	deployServiceMesh,
+	deployApplicationOperator,
 }
 
 func DeployZcloudComponents(ctx context.Context, c *core.Cluster) error {
@@ -153,4 +155,12 @@ func deployServiceMesh(ctx context.Context, c *core.Cluster, cli client.Client) 
 	}
 
 	return k8s.DoCreateFromTemplate(cli, servicemesh.Template, cfg)
+}
+
+func deployApplicationOperator(ctx context.Context, c *core.Cluster, cli client.Client) error {
+	log.Infof(ctx, "[zcloud] deploy application operator")
+	appOperatorConfig := map[string]interface{}{
+		Image: c.Image.ApplicationOperator,
+	}
+	return k8s.DoCreateFromTemplate(cli, appoperator.ApplicationOperatorTemplate, appOperatorConfig)
 }
