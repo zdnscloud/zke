@@ -74,5 +74,36 @@ subjects:
 - kind: ServiceAccount
   name: zcloud-cluster-readonly
   namespace: zcloud
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: zcloud-workflow-deployer
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - 'deployment'
+  - 'pvc'
+  verbs:
+  - create
+  - update
+  - delete
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: zcloud-workflow-deployer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: zcloud-workflow-deployer
 {{- end}}
   `
