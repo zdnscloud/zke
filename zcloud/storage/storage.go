@@ -36,6 +36,82 @@ spec:
       description: Current State
       JSONPath: .status.phase
 ---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: iscsis.storage.zcloud.cn
+spec:
+  group: storage.zcloud.cn
+  names:
+    kind: Iscsi
+    listKind: IscsiList
+    plural: iscsis
+    singular: iscsi
+  scope: Cluster
+  version: v1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            target:
+              type: string
+            port:
+              type: string
+            iqn:
+              type: string
+            chap:
+              type: boolean
+            initiators:
+              type: array
+          required:
+          - target
+          - port
+          - iqn
+          - initiators
+  additionalPrinterColumns:
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
+    - name: State
+      type: string
+      description: Current State
+      JSONPath: .status.phase
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: nfss.storage.zcloud.cn
+spec:
+  group: storage.zcloud.cn
+  names:
+    kind: Nfs
+    listKind: NfsList
+    plural: nfss
+    singular: nfs
+  scope: Cluster
+  version: v1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            server:
+              type: string
+            path:
+              type: string
+          required:
+          - server
+          - path
+  additionalPrinterColumns:
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
+    - name: State
+      type: string
+      description: Current State
+      JSONPath: .status.phase
+---
 {{- if eq .RBACConfig "rbac"}}
 apiVersion: v1
 kind: ServiceAccount
