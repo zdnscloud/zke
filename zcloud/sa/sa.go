@@ -88,7 +88,9 @@ rules:
   - '*'
   resources:
   - 'deployment'
-  - 'pvc'
+  - 'deployments'
+  - 'persistentvolumeclaim'
+  - 'persistentvolumeclaims'
   verbs:
   - create
   - update
