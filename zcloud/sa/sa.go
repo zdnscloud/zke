@@ -93,6 +93,7 @@ rules:
   - 'persistentvolumeclaims'
   verbs:
   - create
+  - patch
   - update
   - delete
   - get
