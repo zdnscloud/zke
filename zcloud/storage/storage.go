@@ -227,4 +227,6 @@ spec:
       - name: storage-operator
         image: {{.StorageOperatorImage}}
         command: ["/bin/sh", "-c", "/operator -logtostderr"]
+        securityContext:
+          privileged: true
 `
