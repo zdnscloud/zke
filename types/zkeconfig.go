@@ -104,6 +104,8 @@ type ZKEConfigImages struct {
 	//ServiceMesh image
 	ServiceMesh ServiceMeshImages `yaml:"service_mesh" json:"serviceMesh"`
 	CICD        CICDImages        `yaml:"cicd" json:"cicd"`
+	//ApplicationOperator image
+	ApplicationOperator string `yaml:"application_operator" json:"applicationOperator"`
 }
 
 type ZKELBConfig struct {
