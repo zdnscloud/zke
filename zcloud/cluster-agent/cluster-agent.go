@@ -44,6 +44,10 @@ spec:
         - name: cluster-agent
           containerPort: 8090
         env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
           - name: CACHE_TIME
-            value: "60"
+            value: "30"
 `
