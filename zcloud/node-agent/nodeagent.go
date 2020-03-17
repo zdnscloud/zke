@@ -17,6 +17,7 @@ spec:
       labels:
         app: node-agent
     spec:
+      serviceAccount: zcloud-cluster-admin
       hostNetwork: true
       tolerations:
       - operator: Exists
