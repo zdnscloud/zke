@@ -17,6 +17,7 @@ spec:
       labels:
         app: node-agent
     spec:
+      hostNetwork: true
       tolerations:
       - operator: Exists
         effect: NoSchedule
@@ -44,10 +45,15 @@ spec:
             name: lib
           - mountPath: /dev
             name: host-dev
+          - mountPath: /host/iscsi
+            name: iscsi-cfg
       volumes:
         - name: lib
           hostPath:
             path: /var/lib
+        - name: iscsi-cfg
+          hostPath:
+            path: /etc/iscsi
         - name: host-dev
           hostPath:
             path: /dev`

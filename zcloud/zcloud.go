@@ -26,7 +26,7 @@ import (
 const (
 	RBACConfig               = "RBACConfig"
 	Image                    = "Image"
-	NodeAgentPort            = "80"
+	NodeAgentPort            = "9001"
 	ClusterAgentResourceName = "cluster-agent"
 	SAResourceName           = "sa"
 	ClusterAgentJobName      = "zcloud-cluster-agent"
