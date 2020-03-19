@@ -54,8 +54,8 @@ spec:
       properties:
         spec:
           properties:
-            target:
-              type: string
+            targets:
+              type: array 
             port:
               type: string
             iqn:
@@ -65,7 +65,7 @@ spec:
             initiators:
               type: array
           required:
-          - target
+          - targets
           - port
           - iqn
           - initiators
