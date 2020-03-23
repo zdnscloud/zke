@@ -172,7 +172,7 @@ rules:
     verbs: ["watch", "list", "get"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list", "create", "delete"]
+    verbs: ["get", "list", "create", "delete", "watch"]
   - apiGroups: ["apps"]
     resources: ["daemonsets", "statefulsets", "deployments"]
     verbs: ["get", "list", "watch", "create", "update", "delete"]
