@@ -20,18 +20,17 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.10.1
-	github.com/prometheus/client_golang v1.4.0 // indirect
+	github.com/prometheus/client_golang v1.11.1 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200122045848-3419fae592fc // indirect
 	github.com/urfave/cli v1.20.0
 	github.com/zdnscloud/cement v0.0.0-20191114151602-e70d68aebdad
 	github.com/zdnscloud/gok8s v0.0.0-20200212071629-b06587f54ee6
 	go.uber.org/zap v1.13.0 // indirect
-	golang.org/x/crypto v0.0.0-20191119213627-4f8c1d86b1ba
-	golang.org/x/net v0.0.0-20191119073136-fc4aabc6c914 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	google.golang.org/grpc v1.27.0 // indirect
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v0.17.2
