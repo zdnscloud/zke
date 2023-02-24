@@ -28,8 +28,8 @@ require (
 	github.com/zdnscloud/cement v0.0.0-20191114151602-e70d68aebdad
 	github.com/zdnscloud/gok8s v0.0.0-20200212071629-b06587f54ee6
 	go.uber.org/zap v1.13.0 // indirect
-	golang.org/x/crypto v0.0.0-20191119213627-4f8c1d86b1ba
-	golang.org/x/net v0.0.0-20191119073136-fc4aabc6c914 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/net v0.7.0 // indirect
 	google.golang.org/grpc v1.27.0 // indirect
 	gopkg.in/yaml.v2 v2.2.7
 	k8s.io/api v0.17.2
